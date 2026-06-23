@@ -1,0 +1,161 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>RD Route — интерфейс</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0a0a0f;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:40px}
+.wrap{width:1200px;background:#111118;border-radius:16px;border:1px solid rgba(255,255,255,0.06);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.top{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.lg{display:flex;align-items:center;gap:10px;font-weight:700;font-size:0.95rem;color:#fff}
+.lg .ic{width:26px;height:26px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.6rem}
+.c{padding:24px}
+.ttl{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}
+.ttl h2{font-size:1.1rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px}
+.ttl h2 .badge{padding:3px 10px;border-radius:100px;font-size:0.6rem;font-weight:600;background:rgba(249,115,22,0.1);color:#f97316;text-transform:uppercase;letter-spacing:0.04em}
+.ttl .tabs{display:flex;gap:6px}
+.ttl .tabs span{padding:5px 14px;border-radius:100px;font-size:0.7rem;font-weight:500;color:#6b7280;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);cursor:pointer}
+.ttl .tabs span.a{background:rgba(249,115,22,0.1);color:#f97316;border-color:rgba(249,115,22,0.15)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.col{display:flex;flex-direction:column;gap:16px}
+.card{background:rgba(255,255,255,0.02);border-radius:12px;border:1px solid rgba(255,255,255,0.05);padding:18px}
+.card-h{font-size:0.7rem;font-weight:600;color:#8b8b9e;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.card-h .g{width:6px;height:6px;border-radius:50%;min-width:6px}
+.card-h .g.bl{background:#3b82f6}
+.card-h .g.og{background:#f97316}
+.card-h .g.gr{background:#10b981}
+.card-h .g.rd{background:#ef4444}
+.heatmap{display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(4,1fr);gap:6px;height:180px}
+.hcell{border-radius:6px;background:rgba(255,255,255,0.04);position:relative;display:flex;align-items:center;justify-content:center;font-size:0.55rem;color:#6b7280;transition:background 0.2s}
+.hcell.h{background:rgba(59,130,246,0.15)}
+.hcell.hm{background:rgba(59,130,246,0.25)}
+.hcell.hi{background:rgba(249,115,22,0.2)}
+.hcell.hv{background:rgba(249,115,22,0.35)}
+.hcell.hx{background:rgba(239,68,68,0.25)}
+.hcell .hl{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);font-size:0.5rem;color:#6b7280;white-space:nowrap}
+.reqs{display:flex;flex-direction:column;gap:8px}
+.req{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.req:last-child{border-bottom:none}
+.req .rv{width:28px;height:28px;min-width:28px;border-radius:6px;background:rgba(249,115,22,0.08);display:flex;align-items:center;justify-content:center;color:var(--orange);font-size:0.7rem}
+.req .ri{flex:1}
+.req .ri h5{font-size:0.78rem;font-weight:600;color:#fff;margin-bottom:1px}
+.req .ri p{font-size:0.65rem;color:#6b7280}
+.req .rc{font-size:0.7rem;font-weight:600;color:#f97316}
+.req .rc.g{color:#10b981}
+.req .rc.r{color:#ef4444}
+.btmstats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.bs{text-align:center;padding:14px 8px;background:rgba(255,255,255,0.02);border-radius:10px;border:1px solid rgba(255,255,255,0.04)}
+.bs .v{font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:2px}
+.bs .v span{color:#f97316}
+.bs .l{font-size:0.65rem;color:#6b7280}
+</style></head><body>
+<div class="wrap">
+<div class="top">
+<div class="lg"><span class="ic">R</span> RDETECTOR <span style="color:#6b7280;font-weight:400;font-size:0.8rem;margin-left:4px">· RD Route</span></div>
+<div style="display:flex;align-items:center;gap:8px;color:#8b8b9e;font-size:0.7rem">
+  <span style="padding:3px 10px;border-radius:100px;background:rgba(16,185,129,0.1);color:#10b981;font-weight:600">Новое</span>
+  11.06.2026
+</div>
+</div>
+<div class="c">
+<div class="ttl">
+<h2>Умные маршруты <span class="badge">Beta</span></h2>
+<div class="tabs"><span class="a">Запросы сотрудников</span><span>Аналитика маршрутов</span><span>Обратная связь</span></div>
+</div>
+
+<div class="row">
+<div class="col">
+<!-- Heatmap -->
+<div class="card">
+<div class="card-h"><span class="g og"></span> Активность запросов по районам</div>
+<div class="heatmap">
+<div class="hcell hv">24</div>
+<div class="hcell hi">15</div>
+<div class="hcell hm">8</div>
+<div class="hcell h">3</div>
+<div class="hcell">1</div>
+<div class="hcell"><div class="hl">Сев.</div></div>
+<div class="hcell hx">32</div>
+<div class="hcell hv">21</div>
+<div class="hcell hi">12</div>
+<div class="hcell hm">7</div>
+<div class="hcell h">2</div>
+<div class="hcell"><div class="hl">Южн.</div></div>
+<div class="hcell hi">11</div>
+<div class="hcell h">4</div>
+<div class="hcell">0</div>
+<div class="hcell h">5</div>
+<div class="hcell hm">9</div>
+<div class="hcell"><div class="hl">Вост.</div></div>
+<div class="hcell hm">6</div>
+<div class="hcell hi">14</div>
+<div class="hcell hv">18</div>
+<div class="hcell hi">10</div>
+<div class="hcell h">2</div>
+<div class="hcell"><div class="hl">Зап.</div></div>
+</div>
+</div>
+
+<!-- Stats -->
+<div class="btmstats">
+<div class="bs"><div class="v"><span>47</span></div><div class="l">активных запросов</div></div>
+<div class="bs"><div class="v"><span>12</span></div><div class="l">предложено остановок</div></div>
+<div class="bs"><div class="v"><span>3</span></div><div class="l">района с высоким спросом</div></div>
+<div class="bs"><div class="v"><span>89%</span></div><div class="l">удовлетворённость</div></div>
+</div>
+</div>
+
+<div class="col">
+<!-- Requests list -->
+<div class="card" style="flex:1">
+<div class="card-h"><span class="g bl"></span> Последние запросы на новые остановки</div>
+<div class="reqs">
+<div class="req">
+<div class="rv">📍</div>
+<div class="ri"><h5>ул. Ленина, д. 15</h5><p>Район: Северный · 7 сотрудников</p></div>
+<div class="rc">23 заявки</div>
+</div>
+<div class="req">
+<div class="rv">📍</div>
+<div class="ri"><h5>мкр. Солнечный, остановка «Поликлиника»</h5><p>Район: Южный · 12 сотрудников</p></div>
+<div class="rc">18 заявок</div>
+</div>
+<div class="req">
+<div class="rv">📍</div>
+<div class="ri"><h5>ул. Промышленная, д. 8</h5><p>Район: Западный · 5 сотрудников</p></div>
+<div class="rc">9 заявок</div>
+</div>
+<div class="req">
+<div class="rv">📍</div>
+<div class="ri"><h5>Ж/д станция «Восток»</h5><p>Район: Восточный · 4 сотрудника</p></div>
+<div class="rc">6 заявок</div>
+</div>
+</div>
+</div>
+
+<!-- Feedback -->
+<div class="card">
+<div class="card-h"><span class="g gr"></span> Обратная связь по качеству</div>
+<div class="reqs">
+<div class="req">
+<div class="rv" style="color:#10b981">👍</div>
+<div class="ri"><h5>Анна C.</h5><p>«Автобус пришёл вовремя, спасибо»</p></div>
+<div class="rc g">сегодня</div>
+</div>
+<div class="req">
+<div class="rv" style="color:#ef4444">👎</div>
+<div class="ri"><h5>Иван П.</h5><p>«Опоздали на 15 мин, маршрут №3»</p></div>
+<div class="rc r">вчера</div>
+</div>
+<div class="req">
+<div class="rv" style="color:#10b981">👍</div>
+<div class="ri"><h5>Сергей М.</h5><p>«Водитель вежливый, кондиционер работал»</p></div>
+<div class="rc g">вчера</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</body></html>

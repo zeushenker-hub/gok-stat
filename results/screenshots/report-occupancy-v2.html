@@ -1,0 +1,47 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Наполненность</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0a0a0f;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.w{width:580px;background:#111118;border-radius:12px;border:1px solid rgba(255,255,255,0.06);overflow:hidden;box-shadow:0 15px 40px rgba(0,0,0,0.5)}
+.t{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.l{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.8rem;color:#fff}
+.l .i{width:22px;height:22px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.5rem}
+.c{padding:14px}
+h3{font-size:.85rem;font-weight:700;color:#fff;margin-bottom:12px}
+.tbl{width:100%;border-collapse:collapse;font-size:.65rem}
+.tbl th{text-align:left;padding:6px 8px;color:#8b8b9e;font-weight:600;font-size:.55rem;text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid rgba(255,255,255,0.04)}
+.tbl td{padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.03);color:#d1d5db}
+.tbl td .nm{font-weight:600;color:#fff;font-size:.6rem}
+.bv{display:flex;align-items:center;gap:4px}
+.bv .tr{flex:1;height:5px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;max-width:60px}
+.bv .tr .fl{height:100%;border-radius:2px}
+.bv .pv{font-weight:600;font-size:.65rem;min-width:30px;text-align:right}
+.badge{padding:1px 7px;border-radius:100px;font-size:.5rem;font-weight:600;display:inline-block}
+.badge.g{background:rgba(16,185,129,0.1);color:#10b981}
+.badge.o{background:rgba(249,115,22,0.1);color:#f97316}
+.badge.r{background:rgba(239,68,68,0.1);color:#ef4444}
+.s{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.04)}
+.si{text-align:center;padding:4px}
+.si .v{font-size:.9rem;font-weight:800;color:#fff;margin-bottom:1px}
+.si .v span{color:#f97316}
+.si .l{font-size:.5rem;color:#6b7280}
+</style></head><body>
+<div class="w">
+<div class="t"><div class="l"><span class="i">R</span>RDETECTOR</div><div style="font-size:.55rem;color:#6b7280">Наполненность · июнь</div></div>
+<div class="c">
+<h3>Загрузка по маршрутам</h3>
+<table class="tbl"><thead><tr><th>Маршрут</th><th>Загрузка</th><th>Пасс.</th><th>Статус</th></tr></thead><tbody>
+<tr><td><div class="nm">Маршрут №1</div><div style="font-size:.5rem;color:#6b7280">КПП-1 → Завод</div></td><td><div class="bv"><div class="tr"><div class="fl" style="width:79%;background:#f97316"></div></div><div class="pv" style="color:#f97316">79%</div></div></td><td>836</td><td><span class="badge o">Средняя</span></td></tr>
+<tr><td><div class="nm">Маршрут №2</div><div style="font-size:.5rem;color:#6b7280">Вокзал → Склад</div></td><td><div class="bv"><div class="tr"><div class="fl" style="width:85%;background:#10b981"></div></div><div class="pv" style="color:#10b981">85%</div></div></td><td>467</td><td><span class="badge g">Высокая</span></td></tr>
+<tr><td><div class="nm">Маршрут №3</div><div style="font-size:.5rem;color:#6b7280">Солнечный → Офис</div></td><td><div class="bv"><div class="tr"><div class="fl" style="width:94%;background:#10b981"></div></div><div class="pv" style="color:#10b981">94%</div></div></td><td>726</td><td><span class="badge g">Высокая</span></td></tr>
+<tr><td><div class="nm">Маршрут №4</div><div style="font-size:.5rem;color:#6b7280">Вокзал → Промузел</div></td><td><div class="bv"><div class="tr"><div class="fl" style="width:60%;background:#f97316"></div></div><div class="pv" style="color:#f97316">60%</div></div></td><td>1 320</td><td><span class="badge o">Средняя</span></td></tr>
+<tr><td><div class="nm">Маршрут №5</div><div style="font-size:.5rem;color:#6b7280">Автовокзал → Промзона</div></td><td><div class="bv"><div class="tr"><div class="fl" style="width:42%;background:#ef4444"></div></div><div class="pv" style="color:#ef4444">42%</div></div></td><td>176</td><td><span class="badge r">Низкая</span></td></tr>
+<tr><td><div class="nm">Маршрут №6</div><div style="font-size:.5rem;color:#6b7280">Общежитие → Завод</div></td><td><div class="bv"><div class="tr"><div class="fl" style="width:96%;background:#10b981"></div></div><div class="pv" style="color:#10b981">96%</div></div></td><td>528</td><td><span class="badge g">Высокая</span></td></tr>
+<tr><td><div class="nm">Маршрут №7</div><div style="font-size:.5rem;color:#6b7280">Город → Удалённый</div></td><td><div class="bv"><div class="tr"><div class="fl" style="width:24%;background:#ef4444"></div></div><div class="pv" style="color:#ef4444">24%</div></div></td><td>60</td><td><span class="badge r">Критичная</span></td></tr>
+<tr><td><div class="nm">Маршрут №8</div><div style="font-size:.5rem;color:#6b7280">Метро → Бизнес-парк</div></td><td><div class="bv"><div class="tr"><div class="fl" style="width:75%;background:#f97316"></div></div><div class="pv" style="color:#f97316">75%</div></div></td><td>660</td><td><span class="badge o">Средняя</span></td></tr>
+</tbody></table>
+<div class="s"><div class="si"><div class="v">8</div><div class="l">маршрутов</div></div><div class="si"><div class="v"><span>4 773</span></div><div class="l">пассажиров</div></div><div class="si"><div class="v"><span>69%</span></div><div class="l">средняя загрузка</div></div><div class="si"><div class="v"><span>2</span></div><div class="l">ниже 50%</div></div></div>
+</div></div>
+</body></html>

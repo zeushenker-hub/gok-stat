@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Оценки — Self Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #fff;
+      color: #0D0B68;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 10px;
+      gap: 30px;
+      position: relative;
+      width: 1512px;
+    }
+
+    /* ========== HEADER ========== */
+    .header {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 0;
+      gap: 40px;
+      width: 1314px;
+      height: 59px;
+    }
+    .logo-row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 0;
+      gap: 2px;
+      width: 165px;
+      height: 34px;
+    }
+    .logo-shape1 {
+      width: 61.5px;
+      height: 34px;
+      background: #0D0B68;
+      border-radius: 6px 0 0 6px;
+    }
+    .logo-shape2 {
+      width: 65px;
+      height: 34px;
+      background: #7D71FF;
+      border-radius: 0 6px 6px 0;
+    }
+    .search-bar {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 20px 15px;
+      gap: 5px;
+      width: 626px;
+      height: 59px;
+      background: rgba(130,135,165,0.1);
+      border-radius: 10px;
+    }
+    .search-bar span {
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 19px;
+      color: #8287A5;
+    }
+    .feedback-btn {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 5px;
+      gap: 5px;
+      width: 84px;
+      height: 43px;
+      border-radius: 500px;
+      border: none;
+      background: none;
+      cursor: pointer;
+    }
+    .feedback-icon {
+      position: relative;
+      width: 30px;
+      height: 33px;
+    }
+    .feedback-icon svg { position: absolute; top: 4.5px; left: 3px; }
+    .feedback-count {
+      width: 39px;
+      height: 19px;
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 19px;
+      color: #0D0B68;
+    }
+    .user-block {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 0;
+      gap: 5px;
+      width: 210px;
+      height: 56px;
+    }
+    .user-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #fff;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 0;
+      gap: 5px;
+    }
+    .user-name {
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 19px;
+      color: #0D0B68;
+    }
+    .user-vacation {
+      padding: 5px;
+      background: #7D72FF;
+      border-radius: 5px;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 17px;
+      color: #EFF0FF;
+    }
+
+    /* ========== MAIN LAYOUT ========== */
+    .main-layout {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      padding: 0;
+      gap: 40px;
+      width: 1404px;
+      height: 1360px;
+    }
+
+    /* ========== SIDEBAR LEFT ========== */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 0;
+      gap: 15px;
+      width: 240px;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 0 20px;
+      gap: 10px;
+      width: 240px;
+      height: 49px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 19px;
+      color: #0D0B68;
+      text-decoration: none;
+    }
+    .nav-item.active {
+      background: #7D72FF;
+      color: #fff;
+    }
+    .nav-item.active svg path { fill: #fff; }
+    .nav-item svg { flex-shrink: 0; }
+
+    /* ========== CONTENT ========== */
+    .content {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 0;
+      gap: 30px;
+      width: 750px;
+    }
+
+    .section-title {
+      font-weight: 400;
+      font-size: 24px;
+      line-height: 29px;
+      color: #0D0B68;
+      width: 100%;
+    }
+
+    .tabs-row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 0;
+      gap: 15px;
+    }
+    .tab-item {
+      padding: 10px 0;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 19px;
+      color: #8287A5;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+    .tab-item.active {
+      font-weight: 600;
+      color: #7D72FF;
+      border-bottom: 4px solid #7D72FF;
+      padding: 10px 0;
+    }
+
+    /* timeline */
+    .timeline {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 0;
+      width: 100%;
+      overflow-x: auto;
+    }
+    .tl-arrow {
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .tl-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 5px;
+      gap: 5px;
+    }
+    .tl-date {
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 17px;
+      text-align: center;
+      color: #8287A5;
+    }
+    .tl-date.active { color: #0ACF83; }
+    .tl-date.warning { color: #E4BE00; }
+    .tl-dot {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 15px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .tl-dot.green { background: #0ACF83; }
+    .tl-dot.yellow { background: #E4BE00; }
+    .tl-dot.lg { width: 38px; height: 38px; font-size: 14px; }
+    .tl-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 0;
+      gap: 2px;
+      width: 5px;
+      transform: rotate(-90deg);
+    }
+    .tl-bar span {
+      width: 5px;
+      height: 5px;
+      border-radius: 100px;
+      background: #34C58C;
+    }
+    .tl-bar.yellow span { background: #E4BE00; }
+
+    /* current review card */
+    .review-card {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 0;
+      gap: 179px;
+      width: 100%;
+      border-radius: 20px;
+    }
+    .review-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 0;
+      gap: 15px;
+    }
+    .status-badge {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+      gap: 10px;
+      background: rgba(255,221,51,0.1);
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 10px;
+      line-height: 12px;
+      color: #BD9F0B;
+    }
+    .status-badge svg { width: 16px; height: 16px; }
+    .employee-name {
+      font-weight: 400;
+      font-size: 20px;
+      line-height: 24px;
+      color: #0D0B68;
+    }
+    .period {
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 17px;
+      color: #8287A5;
+    }
+    .btn-send {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 15px;
+      gap: 10px;
+      background: #7D72FF;
+      border-radius: 10px;
+      border: none;
+      font-weight: 500;
+      font-size: 12px;
+      line-height: 15px;
+      color: #fff;
+      cursor: pointer;
+    }
+    .progress-ring {
+      position: relative;
+      width: 89px;
+      height: 89px;
+    }
+    .progress-ring svg { width: 89px; height: 89px; }
+    .progress-ring .bg { fill: none; stroke: #F2F3F6; stroke-width: 5; }
+    .progress-ring .fg { fill: none; stroke: #CFAE0A; stroke-width: 4; stroke-dasharray: 251; stroke-dashoffset: 125.5; }
+    .progress-ring .pct {
+      position: absolute;
+      top: 33px;
+      left: 30px;
+      font-weight: 400;
+      font-size: 20px;
+      line-height: 24px;
+      color: #8287A5;
+    }
+
+    .divider {
+      width: 100%;
+      height: 2px;
+      background: rgba(130,135,165,0.1);
+    }
+
+    /* goals header */
+    .goals-header {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 0;
+      gap: 501px;
+      width: 100%;
+    }
+    .goals-title {
+      font-weight: 400;
+      font-size: 20px;
+      line-height: 24px;
+      color: #0D0B68;
+    }
+
+    /* GOAL ITEM — stars instead of checkboxes */
+    .goal-group { width: 100%; }
+    .goal-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      padding: 0 15px 0 0;
+      gap: 15px;
+      width: 100%;
+    }
+    .goal-label {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 5px;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 17px;
+      color: #8287A5;
+    }
+    .goal-body {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      padding: 0;
+      gap: 5px;
+      width: 100%;
+    }
+    .goal-check {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+    .goal-check svg { width: 24px; height: 24px; }
+    .goal-content {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 50px;
+      flex: 1;
+    }
+    .goal-desc {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 15px;
+      flex: 1;
+    }
+    .goal-title-label {
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 17px;
+      color: #212122;
+      white-space: nowrap;
+    }
+    .goal-text {
+      font-weight: 400;
+      font-size: 10px;
+      line-height: 12px;
+      color: #212122;
+    }
+    .goal-result-area {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 15px;
+      flex: 1;
+    }
+    .result-label {
+      font-weight: 700;
+      font-size: 14px;
+      line-height: 17px;
+      color: #212122;
+      white-space: nowrap;
+    }
+    .result-box {
+      padding: 20px;
+      border: 2px solid rgba(130,135,165,0.1);
+      border-radius: 15px;
+      background: #fff;
+      flex: 1;
+    }
+    .result-box .goal-text { color: #212122; }
+
+    /* stars rating */
+    .stars {
+      display: flex;
+      flex-direction: row;
+      gap: 2px;
+      margin-top: 6px;
+    }
+    .star {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+    .star:hover { transform: scale(1.2); }
+    .star svg { width: 18px; height: 18px; display: block; }
+    .star.filled svg path { fill: #FFD233; }
+    .star.half svg path:nth-child(1) { fill: #FFD233; }
+    .rating-row { display: flex; align-items: center; gap: 8px; }
+    .rating-label { font-weight: 500; font-size: 11px; line-height: 13px; color: #8287A5; white-space: nowrap; width: 72px; }
+
+    /* comment area */
+    .comment-label {
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 17px;
+      color: #8287A5;
+    }
+    .comment-field {
+      width: 100%;
+      padding: 10px 15px;
+      border: 2px solid rgba(130,135,165,0.1);
+      border-radius: 10px;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 15px;
+      color: #212122;
+      font-family: inherit;
+      resize: none;
+    }
+    .self-rating-field {
+      width: 100%;
+      padding: 5px 15px;
+      border: 2px solid rgba(130,135,165,0.1);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .self-rating-field .stars { margin: 8px 0; }
+
+    /* ========== RIGHT SIDEBAR ========== */
+    .right-sidebar {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 0;
+      gap: 30px;
+      width: 250px;
+    }
+    .sidebar-card {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 15px;
+      gap: 15px;
+      width: 100%;
+      background: rgba(130,135,165,0.1);
+      border-radius: 10px;
+    }
+    .sidebar-card-title {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 5px;
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 19px;
+      color: #8287A5;
+    }
+    .sidebar-card-title svg { width: 24px; height: 24px; }
+    .task-item {
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
+      gap: 10px;
+      background: #fff;
+      border-radius: 10px;
+    }
+    .task-name {
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 17px;
+      color: #0D0B68;
+    }
+    .task-sub {
+      font-weight: 500;
+      font-size: 12px;
+      line-height: 15px;
+      color: #8287A5;
+    }
+    .task-btn {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 15px;
+      gap: 10px;
+      background: #EFF0FF;
+      border-radius: 10px;
+      border: none;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 17px;
+      color: #7D72FF;
+      cursor: pointer;
+    }
+    .task-btn.small { font-size: 12px; }
+    .inline-actions {
+      display: flex;
+      flex-direction: row;
+      gap: 5px;
+    }
+    .icon-btn {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 10px 15px;
+      gap: 10px;
+      background: rgba(130,135,165,0.1);
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+    }
+    .birthday-filter {
+      display: flex;
+      flex-direction: row;
+      gap: 5px;
+    }
+    .filter-pill {
+      padding: 5px;
+      border-radius: 5px;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 17px;
+      cursor: pointer;
+      border: none;
+    }
+    .filter-pill.active { background: #7D72FF; color: #EFF0FF; }
+    .filter-pill.inactive { background: #fff; color: #8287A5; }
+    .person-row {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 5px;
+    }
+    .person-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #f0f0f0;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .person-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .person-meta {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 5px;
+    }
+    .person-name {
+      font-weight: 500;
+      font-size: 16px;
+      line-height: 19px;
+      color: #0D0B68;
+    }
+    .person-date {
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 17px;
+      color: #8287A5;
+    }
+    .person-date.highlight { color: #7D72FF; }
+    .event-item {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 10px;
+      gap: 5px;
+      background: rgba(130,135,165,0.1);
+      border-radius: 5px;
+      width: 100%;
+    }
+    .event-info {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1;
+    }
+    .event-name {
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 17px;
+      color: #0D0B68;
+    }
+    .event-date {
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 15px;
+      color: #8287A5;
+    }
+    .arrow-right svg { transform: rotate(90deg); width: 16px; height: 16px; }
+    .arrow-right svg path { fill: #8287A5; }
+    .see-all {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 5px;
+      font-weight: 500;
+      font-size: 12px;
+      line-height: 15px;
+      color: #7D72FF;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+    /* App shortcuts */
+    .app-shortcuts {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 15px;
+    }
+    .app-icon {
+      width: 44px;
+      height: 44px;
+      background: rgba(130,135,165,0.1);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .app-icon.add { background: #F2F3F6; }
+  </style>
+</head>
+<body>
+
+<!-- ========== HEADER ========== -->
+<div class="header">
+  <div class="logo-row">
+    <div class="logo-shape1"></div>
+    <div class="logo-shape2"></div>
+  </div>
+
+  <div class="search-bar">
+    <span>AI-Поиск</span>
+  </div>
+
+  <div class="feedback-btn">
+    <div class="feedback-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" fill="#7D72FF"/>
+        <path d="M12 6V12L16 15" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span class="feedback-count">1000</span>
+  </div>
+
+  <div class="user-block">
+    <div class="user-avatar">
+      <div style="width:56px;height:56px;background:linear-gradient(135deg,#7D72FF,#0D0B68);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:20px;">ИА</div>
+    </div>
+    <div class="user-info">
+      <div class="user-name">Иванов Александр</div>
+      <div class="user-vacation">В отпуске c 15.01-24.01.2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== MAIN ========== -->
+<div class="main-layout">
+
+  <!-- LEFT NAV -->
+  <div class="sidebar">
+    <a class="nav-item active" href="#">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" fill="#fff" stroke="#0D0B68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9 22V12H15V22" fill="#fff" stroke="#0D0B68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Главная
+    </a>
+    <a class="nav-item" href="#">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="4" width="18" height="18" rx="2" fill="#fff" stroke="#0D0B68" stroke-width="2"/>
+        <path d="M3 10H21" stroke="#0D0B68" stroke-width="2"/>
+        <path d="M16 2V6" stroke="#0D0B68" stroke-width="2" stroke-linecap="round"/>
+        <path d="M8 2V6" stroke="#0D0B68" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Календарь
+    </a>
+    <a class="nav-item" href="#">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M19 3H5C3.89543 3 3 3.89543 3 5V19C3 20.1046 3.89543 21 5 21H19C20.1046 21 21 20.1046 21 19V5C21 3.89543 20.1046 3 19 3Z" fill="#fff" stroke="#0D0B68" stroke-width="2"/>
+        <path d="M7 7H17" stroke="#0D0B68" stroke-width="2" stroke-linecap="round"/>
+        <path d="M7 12H17" stroke="#0D0B68" stroke-width="2" stroke-linecap="round"/>
+        <path d="M7 17H13" stroke="#0D0B68" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      События
+    </a>
+    <a class="nav-item" href="#">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="#0D0B68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="#0D0B68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="#0D0B68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="#0D0B68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Орг. структура
+    </a>
+    <a class="nav-item" href="#">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M4 6H20M4 12H20M4 18H20" stroke="#0D0B68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="8" cy="6" r="1" fill="#0D0B68"/>
+        <circle cx="8" cy="12" r="1" fill="#0D0B68"/>
+        <circle cx="8" cy="18" r="1" fill="#0D0B68"/>
+      </svg>
+      Новости
+    </a>
+    <a class="nav-item" href="#">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M6 2L3 6V20C3 20.5304 3.21071 21.0391 3.58579 21.4142C3.96086 21.7893 4.46957 22 5 22H19C19.5304 22 20.0391 21.7893 20.4142 21.4142C20.7893 21.0391 21 20.5304 21 20V6L18 2H6Z" fill="#fff" stroke="#0D0B68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M3 6H21" stroke="#0D0B68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M16 10C16 11.0609 15.5786 12.0783 14.8284 12.8284C14.0783 13.5786 13.0609 14 12 14C10.9391 14 9.92172 13.5786 9.17157 12.8284C8.42143 12.0783 8 11.0609 8 10" stroke="#0D0B68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Магазин
+    </a>
+    <a class="nav-item active" href="#">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="none" stroke="currentColor" stroke-width="2"/>
+      </svg>
+      Оценки
+    </a>
+  </div>
+
+  <!-- ========== CONTENT ========== -->
+  <div class="content">
+
+    <div class="section-title">Оценки</div>
+
+    <div class="tabs-row">
+      <button class="tab-item active">Self Review</button>
+      <button class="tab-item">ДНК-fit</button>
+      <button class="tab-item">Оценка грейда</button>
+    </div>
+
+    <!-- timeline -->
+    <div class="timeline">
+      <div class="tl-arrow">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M15 6L9 12L15 18" stroke="#7D72FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-date">01.26</div>
+        <div class="tl-dot green">M1</div>
+        <div class="tl-date active">01.26</div>
+      </div>
+      <div class="tl-bar"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+      <div class="tl-item">
+        <div class="tl-date">01.26</div>
+        <div class="tl-dot green">M2</div>
+        <div class="tl-date active">02.26</div>
+      </div>
+      <div class="tl-bar"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+      <div class="tl-item">
+        <div class="tl-date">01.26</div>
+        <div class="tl-dot green">M3</div>
+        <div class="tl-date active">03.26</div>
+      </div>
+      <div class="tl-bar"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+      <div class="tl-item">
+        <div class="tl-date active">01.26</div>
+        <div class="tl-dot green lg">Q1</div>
+        <div class="tl-date active">03.26</div>
+      </div>
+      <div class="tl-bar yellow"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+      <div class="tl-item">
+        <div class="tl-date">01.26</div>
+        <div class="tl-dot yellow">M4</div>
+        <div class="tl-date warning">04.26</div>
+      </div>
+      <div class="tl-bar yellow"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+      <div class="tl-item">
+        <div class="tl-date">01.26</div>
+        <div class="tl-dot yellow">M5</div>
+        <div class="tl-date warning">05.26</div>
+      </div>
+      <div class="tl-bar yellow"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+      <div class="tl-item">
+        <div class="tl-date">01.26</div>
+        <div class="tl-dot yellow">M6</div>
+        <div class="tl-date warning">06.26</div>
+      </div>
+      <div class="tl-bar yellow"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+
+      <div class="tl-item">
+        <div class="tl-date warning">04.26</div>
+        <div class="tl-dot yellow lg">Q2</div>
+        <div class="tl-date warning">06.26</div>
+      </div>
+
+      <div class="tl-arrow">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M9 6L15 12L9 18" stroke="#7D72FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- review card -->
+    <div class="review-card">
+      <div class="review-info">
+        <div class="status-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="#BD9F0B" stroke-width="2"/>
+            <path d="M12 6V12L16 16" stroke="#BD9F0B" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          В работе до 25.04.2026
+        </div>
+        <div class="employee-name">Артамонова Екатерина Вячеславовна</div>
+        <div class="period">Период от 01.04.2026 до 30.06.2026</div>
+        <button class="btn-send">Отправить на оценку</button>
+      </div>
+      <div class="progress-ring">
+        <svg viewBox="0 0 89 89">
+          <circle class="bg" cx="44.5" cy="44.5" r="40"/>
+          <circle class="fg" cx="44.5" cy="44.5" r="40" transform="rotate(-90 44.5 44.5)"/>
+        </svg>
+        <div class="pct">50%</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- goals -->
+    <div class="goals-header">
+      <div class="goals-title">Мои цели</div>
+    </div>
+
+    <!-- GOAL 1 -->
+    <div class="goal-group">
+      <div class="goal-body">
+        <div class="goal-check">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="18" height="18" rx="3" fill="#34C58C"/>
+            <path d="M8 12L11 15L16 9" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="goal-content">
+          <div class="goal-desc" style="flex-direction:column;">
+            <div class="goal-title-label">Цель 1</div>
+            <div class="goal-text">Сократить среднее время первого ответа (FRT) по критическим тикетам с 2 часов до 30 минут к концу года за счет внедрения чат-бота и расширения штата дежурных инженеров</div>
+
+            <div class="rating-row"><span class="rating-label">Я</span><div class="stars" data-rater="self" data-goal="1"><div class="star filled"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div><div class="star filled"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div><div class="star"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div></div></div>
+            <div class="rating-row"><span class="rating-label">Руководитель</span><div class="stars" data-rater="chief" data-goal="1"><div class="star filled"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div><div class="star"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div><div class="star"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div></div></div>
+          </div>
+          <div class="goal-result-area" style="flex-direction:column;">
+            <div class="result-label">Результат</div>
+            <div class="result-box">
+              <div class="goal-text">Я сократил среднее время первого ответа по критическим тикетам в 4 раза — с 2 часов до 30 минут, внедрив чат-бота и оптимизировав работу дежурных инженеров до конца года</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GOAL 2 -->
+    <div class="goal-group">
+      <div class="goal-body">
+        <div class="goal-check">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="3" y="3" width="18" height="18" rx="3" fill="none" stroke="#8287A5" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="goal-content">
+          <div class="goal-desc" style="flex-direction:column;">
+            <div class="goal-title-label">Цель 2</div>
+            <div class="goal-text">Нам нужно значительно повысить качество кода и ускорить разработку в ближайшее время</div>
+
+            <div class="rating-row"><span class="rating-label">Я</span><div class="stars" data-rater="self" data-goal="2"><div class="star"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div><div class="star"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div><div class="star"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div></div></div>
+            <div class="rating-row"><span class="rating-label">Руководитель</span><div class="stars" data-rater="chief" data-goal="2"><div class="star"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div><div class="star"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div><div class="star"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div></div></div>
+          </div>
+          <div class="goal-result-area" style="flex-direction:column;">
+            <div class="result-label">Результат</div>
+            <div class="result-box">
+              <div class="goal-text">Сам не понял и не сделал :((</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- comment -->
+    <div style="width:100%;">
+      <div class="comment-label">Комментарий</div>
+      <div class="comment-field" style="padding:10px 15px;margin-top:5px;">Я не успел всё, что хотели, но успел сделать то, что хотел я</div>
+    </div>
+
+    <!-- self rating with stars -->
+    <div style="width:100%;">
+      <div class="comment-label">Как оцениваешь результаты своей работы?</div>
+      <div class="self-rating-field">
+        <div class="stars" data-goal="self">
+          <div class="star"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div>
+          <div class="star"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div>
+          <div class="star"><svg viewBox="0 0 18 18" fill="none"><path d="M9 1L11.09 6.26L18 7.27L13 12.14L14.18 19.02L9 15.77L3.82 19.02L5 12.14L0 7.27L6.91 6.26L9 1Z" fill="#E4E4E4"/></svg></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== RIGHT SIDEBAR ========== -->
+  <div class="right-sidebar">
+
+    <!-- Pit-stop -->
+    <div class="sidebar-card" style="gap:15px;">
+      <div class="sidebar-card-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="4" width="20" height="16" rx="2" stroke="#8287A5" stroke-width="2"/>
+          <path d="M8 8H16" stroke="#8287A5" stroke-width="2" stroke-linecap="round"/>
+          <path d="M8 12H12" stroke="#8287A5" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Pit-stop
+      </div>
+
+      <div class="task-item">
+        <div class="task-name">Назначен опрос</div>
+        <div class="task-sub">Обратная связь по ПР</div>
+        <button class="task-btn">Пройти опрос</button>
+      </div>
+
+      <div class="task-item">
+        <div class="task-name">Подтвердите отпуск</div>
+        <div class="task-sub">с 12.01.2025 до 26.01.2025</div>
+        <div class="inline-actions">
+          <button class="icon-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M8 12L11 15L16 9" stroke="#34C58C" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="icon-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M4 4L20 20M20 4L4 20" stroke="#8287A5" stroke-width="2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="task-item">
+        <div class="task-name">Требуется подпись</div>
+        <div class="task-sub">Положение о премировании</div>
+        <button class="task-btn">Ознакомиться</button>
+      </div>
+
+      <div class="task-item">
+        <div class="task-name">Требуется подпись</div>
+        <div class="task-sub">Правила внутреннего распоря...</div>
+        <button class="task-btn">Ознакомиться</button>
+      </div>
+
+      <div class="task-item">
+        <div class="task-name">Ответ по заявке №1234</div>
+        <button class="task-btn small">Посмотреть заявку</button>
+      </div>
+    </div>
+
+    <!-- Дни рождения -->
+    <div class="sidebar-card">
+      <div class="sidebar-card-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="6" width="20" height="14" rx="2" stroke="#8287A5" stroke-width="2"/>
+          <path d="M12 2V6" stroke="#8287A5" stroke-width="2" stroke-linecap="round"/>
+          <path d="M8 10H16" stroke="#8287A5" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Дни рождения
+      </div>
+      <div class="birthday-filter">
+        <button class="filter-pill active">Сегодня</button>
+        <button class="filter-pill inactive">Завтра</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:15px;width:100%;">
+        <div class="person-row">
+          <div class="person-avatar">
+            <div style="width:56px;height:56px;background:#f0f0f0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;color:#666;">ДД</div>
+          </div>
+          <div class="person-meta">
+            <div class="person-name">Денис Давыдов</div>
+            <div class="person-date highlight">Сегодня</div>
+          </div>
+        </div>
+        <div class="person-row">
+          <div class="person-avatar">
+            <div style="width:56px;height:56px;background:#f0f0f0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;color:#666;">МЩ</div>
+          </div>
+          <div class="person-meta">
+            <div class="person-name">Мария Щиплюк</div>
+            <div class="person-date">25 февраля</div>
+          </div>
+        </div>
+        <div class="person-row">
+          <div class="person-avatar">
+            <div style="width:56px;height:56px;background:#f0f0f0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;color:#666;">СО</div>
+          </div>
+          <div class="person-meta">
+            <div class="person-name">Стас Овечкин</div>
+            <div class="person-date">25 февраля</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ближайшие события -->
+    <div class="sidebar-card">
+      <div class="sidebar-card-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="6" width="20" height="14" rx="2" stroke="#8287A5" stroke-width="2"/>
+          <path d="M2 10H22" stroke="#8287A5" stroke-width="2"/>
+          <path d="M8 2V6" stroke="#8287A5" stroke-width="2" stroke-linecap="round"/>
+          <path d="M16 2V6" stroke="#8287A5" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Ближайшие события
+      </div>
+      <div class="birthday-filter">
+        <button class="filter-pill active">Все события</button>
+        <button class="filter-pill inactive">Участвую</button>
+      </div>
+      <div class="event-item">
+        <div class="event-info">
+          <div class="event-name">Виски-брейк</div>
+          <div class="event-date">Сегодня</div>
+        </div>
+        <div class="arrow-right"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 4L16 12L8 20" stroke="#8287A5" stroke-width="2"/></svg></div>
+      </div>
+      <div class="event-item">
+        <div class="event-info">
+          <div class="event-name">Новогодний корпоратив</div>
+          <div class="event-date">31 декабря 2025</div>
+        </div>
+        <div class="arrow-right"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 4L16 12L8 20" stroke="#8287A5" stroke-width="2"/></svg></div>
+      </div>
+      <div class="event-item">
+        <div class="event-info">
+          <div class="event-name">Обсуждение планов н...</div>
+          <div class="event-date">18 января 2026</div>
+        </div>
+        <div class="arrow-right"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 4L16 12L8 20" stroke="#8287A5" stroke-width="2"/></svg></div>
+      </div>
+      <button class="see-all">
+        Посмотреть все
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 4L16 12L8 20" stroke="#7D72FF" stroke-width="2"/></svg>
+      </button>
+    </div>
+
+    <!-- App shortcuts -->
+    <div class="app-shortcuts">
+      <div class="app-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M8 8H16V16H8V8Z" fill="#2684FF"/></svg></div>
+      <div class="app-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F24E1E"/></svg></div>
+      <div class="app-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="3" fill="#0ACF83"/></svg></div>
+      <div class="app-icon" style="background:#F2F3F6;">+</div>
+      <div class="app-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#4EA7F8"/></svg></div>
+      <div class="app-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" rx="3" fill="#FFDD33"/></svg></div>
+      <div class="app-icon add">+</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function calcAverage() {
+    const selfGoals = document.querySelectorAll('.stars[data-rater="self"]');
+    let total = 0, count = 0;
+    selfGoals.forEach(g => {
+      const filled = g.querySelectorAll('.star.filled').length;
+      total += filled;
+      count += 1;
+    });
+    const avg = count > 0 ? total / count : 0;
+    const pct = Math.round((avg / 3) * 100);
+    document.querySelector('.progress-ring .pct').textContent = pct + '%';
+    const circle = document.querySelector('.progress-ring .fg');
+    const circumference = 2 * Math.PI * 40;
+    circle.style.strokeDashoffset = circumference - (pct / 100) * circumference;
+  }
+
+  document.querySelectorAll('.stars .star').forEach(star => {
+    star.addEventListener('click', function() {
+      const container = this.parentElement;
+      const isSame = this.classList.contains('filled');
+      container.querySelectorAll('.star').forEach(s => s.classList.remove('filled'));
+      if (!isSame) {
+        let idx = 0;
+        container.querySelectorAll('.star').forEach(s => {
+          if (idx <= Array.from(container.querySelectorAll('.star')).indexOf(this)) {
+            s.classList.add('filled');
+          }
+          idx++;
+        });
+      }
+      calcAverage();
+    });
+  });
+
+  calcAverage();
+</script>
+
+</body>
+</html>

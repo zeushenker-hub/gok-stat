@@ -2,8 +2,16 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Домашний трекер</title>
+  <meta name="description" content="Трекер домашних дел, покупок и событий для семьи" />
+  <meta name="theme-color" content="#7bc47f" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon-192.png" sizes="192x192" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="ДомTracker" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23A8D5BA'/><path d='M50 15 L15 45 L25 45 L25 85 L45 85 L45 60 L55 60 L55 85 L75 85 L75 45 L85 45 Z' fill='white'/></svg>" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -230,11 +238,26 @@
     <input type="hidden" id="purchaseId" />
     <div class="form-group">
       <label>Название</label>
-      <input id="purchaseTitle" placeholder="Например: холодильник" />
+      <input id="purchaseTitle" placeholder="Например: молоко" />
     </div>
     <div class="form-group">
       <label>Тип</label>
       <select id="purchaseType"><option value="regular">Повседневная</option><option value="large">Крупная</option></select>
+    </div>
+    <div class="form-group">
+      <label>Категория товара</label>
+      <select id="purchaseCategory">
+        <option value="Продукты">🥩 Продукты</option>
+        <option value="Хозяйственные">🧴 Хозяйственные</option>
+        <option value="Ремонт">🔧 Товары для ремонта</option>
+        <option value="Одежда">👕 Одежда</option>
+        <option value="Техника">💻 Техника</option>
+        <option value="Другое">📦 Другое</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Дата покупки</label>
+      <input id="purchaseDate" type="date" />
     </div>
     <div class="form-group">
       <label>Сумма (₽)</label>
@@ -242,7 +265,7 @@
     </div>
     <div class="form-group">
       <label>Комментарий</label>
-      <input id="purchaseComment" placeholder="Где купить, бренд и т.д." />
+      <input id="purchaseComment" placeholder="Магазин, бренд и т.д." />
     </div>
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeModal('purchaseModal')">Отмена</button>
@@ -535,6 +558,8 @@ function openPurchaseModal(purchase) {
   document.getElementById('purchaseId').value = purchase ? purchase.id : '';
   document.getElementById('purchaseTitle').value = purchase ? purchase.title : '';
   document.getElementById('purchaseType').value = purchase ? purchase.type : 'regular';
+  document.getElementById('purchaseCategory').value = purchase ? (purchase.category||'Продукты') : 'Продукты';
+  document.getElementById('purchaseDate').value = purchase ? purchase.date : todayStr();
   document.getElementById('purchaseAmount').value = purchase ? purchase.amount : '';
   document.getElementById('purchaseComment').value = purchase ? (purchase.comment||'') : '';
   openModal('purchaseModal');
@@ -548,6 +573,8 @@ function savePurchase() {
   const data = {
     title,
     type: document.getElementById('purchaseType').value,
+    category: document.getElementById('purchaseCategory').value,
+    date: document.getElementById('purchaseDate').value || todayStr(),
     amount: Number(document.getElementById('purchaseAmount').value) || 0,
     comment: document.getElementById('purchaseComment').value.trim(),
     done: false
@@ -586,33 +613,66 @@ function renderPurchases() {
   let filtered = purchases;
   if (activePurchaseTab === 'large') filtered = filtered.filter(p => p.type === 'large');
   else if (activePurchaseTab === 'regular') filtered = filtered.filter(p => p.type === 'regular');
-  filtered.sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
 
+  // group by date, newest first
+  const groups = {};
+  filtered.forEach(p => {
+    const key = p.date || 'Без даты';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(p);
+  });
+  const sortedDates = Object.keys(groups).sort((a, b) => {
+    if (a === 'Без даты') return 1;
+    if (b === 'Без даты') return -1;
+    return b.localeCompare(a);
+  });
+
+  const totalAll = purchases.length;
   const totalLarge = purchases.filter(p => p.type === 'large').length;
   const totalRegular = purchases.filter(p => p.type === 'regular').length;
-  document.getElementById('purchasesTotal').textContent = `Крупных: ${totalLarge} · Повседневных: ${totalRegular}`;
+  document.getElementById('purchasesTotal').textContent = `Всего: ${totalAll} · Крупных: ${totalLarge} · Повседневных: ${totalRegular}`;
 
-  if (filtered.length === 0) {
+  if (sortedDates.length === 0) {
     container.innerHTML = '<div class="empty-state">Нет покупок</div>';
     return;
   }
-  container.innerHTML = filtered.map(p => {
-    const typeTag = p.type === 'large' ? '<span class="tag tag-large">Крупная</span>' : '<span class="tag tag-regular">Повседневная</span>';
-    const amountStr = p.amount ? p.amount.toLocaleString('ru-RU')+' ₽' : '';
-    return `<div class="item${p.done?' done':''}">
-      <input class="item-checkbox" type="checkbox" ${p.done?'checked':''} onchange="togglePurchase('${p.id}')" />
-      <div class="item-info">
-        <div class="item-title">${escHtml(p.title)} ${typeTag}</div>
-        <div class="item-meta">
-          ${amountStr ? '<span>💰 '+amountStr+'</span>' : ''}
-          ${p.comment ? '<span style="margin-left:6px">💬 '+escHtml(p.comment)+'</span>' : ''}
+
+  const CAT_COLORS = {
+    'Продукты': '#7bc47f', 'Хозяйственные': '#7bc47f',
+    'Ремонт': '#f7c948', 'Одежда': '#c4a8d5',
+    'Техника': '#a9d3f2', 'Другое': '#cdd6d8'
+  };
+
+  container.innerHTML = sortedDates.map(dateKey => {
+    const items = groups[dateKey];
+    const dayTotal = items.reduce((s, p) => s + (p.amount || 0), 0);
+    items.sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
+    const itemsHtml = items.map(p => {
+      const typeTag = p.type === 'large' ? '<span class="tag tag-large">Крупная</span>' : '<span class="tag tag-regular">Повседневная</span>';
+      const amountStr = p.amount ? p.amount.toLocaleString('ru-RU')+' ₽' : '';
+      const catColor = CAT_COLORS[p.category] || '#cdd6d8';
+      return `<div class="item${p.done?' done':''}">
+        <input class="item-checkbox" type="checkbox" ${p.done?'checked':''} onchange="togglePurchase('${p.id}')" />
+        <div class="item-info">
+          <div class="item-title"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${catColor};margin-right:6px;vertical-align:middle"></span>${escHtml(p.title)} ${typeTag}</div>
+          <div class="item-meta">
+            ${amountStr ? '<span style="font-weight:600;font-size:14px">💰 '+amountStr+'</span>' : ''}
+            ${p.comment ? '<span style="margin-left:8px">💬 '+escHtml(p.comment)+'</span>' : ''}
+            <span style="margin-left:8px;font-size:12px;color:#999">${escHtml(p.category||'')}</span>
+          </div>
         </div>
-      </div>
-      <div class="item-actions">
-        <button class="btn btn-sm btn-secondary" onclick="openPurchaseModal(purchases.find(x=>x.id==='${p.id}'))">✎</button>
-        <button class="btn btn-sm btn-danger" onclick="deletePurchase('${p.id}')">✕</button>
-      </div>
-    </div>`;
+        <div class="item-actions">
+          <button class="btn btn-sm btn-secondary" onclick="openPurchaseModal(purchases.find(x=>x.id==='${p.id}'))">✎</button>
+          <button class="btn btn-sm btn-danger" onclick="deletePurchase('${p.id}')">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    const dateLabel = dateKey === 'Без даты' ? 'Без даты' : formatDate(dateKey);
+    return `<div style="font-size:13px;font-weight:700;color:#2d5a3e;margin:8px 0 2px;display:flex;align-items:center;justify-content:space-between">
+      <span>📅 ${dateLabel}</span>
+      <span style="font-size:14px;background:#e8ece8;padding:2px 10px;border-radius:8px">${dayTotal.toLocaleString('ru-RU')} ₽</span>
+    </div>` + itemsHtml;
   }).join('');
 }
 
@@ -815,6 +875,10 @@ function init() {
   renderChores();
   renderPurchases();
   renderEvents();
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
 }
 init();
 </script>

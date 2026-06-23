@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Как RDETECTOR считает пассажиров</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#0a0a0f;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.w{width:1100px;background:#111118;border-radius:20px;border:1px solid rgba(255,255,255,0.06);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.t{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.lg{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1rem;color:#fff}
+.lg .i{width:28px;height:28px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.7rem}
+.c{padding:28px}
+h2{font-size:1.15rem;font-weight:700;color:#fff;margin-bottom:24px;display:flex;align-items:center;gap:10px}
+h2 .b{padding:3px 10px;border-radius:100px;font-size:.6rem;font-weight:600;background:rgba(249,115,22,0.1);color:#f97316;text-transform:uppercase}
+.steps{display:flex;align-items:center;margin-bottom:24px;gap:0}
+.st{flex:1;text-align:center;padding:8px 4px}
+.st .s{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:1.1rem;position:relative;transition:all .3s;background:rgba(255,255,255,0.03);border:2px solid rgba(255,255,255,0.06)}
+.st .s.a{background:rgba(249,115,22,0.12);border-color:#f97316;box-shadow:0 0 16px rgba(249,115,22,0.15)}
+.st .s.d{background:rgba(16,185,129,0.1);border-color:#10b981}
+.st .s .n{position:absolute;top:-3px;right:-3px;width:16px;height:16px;border-radius:50%;background:#f97316;color:#fff;font-size:.5rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+.st .l{font-size:.65rem;color:#6b7280;transition:color .3s}
+.st .l.a{color:#f97316}
+.ar{width:24px;min-width:24px;height:1px;background:rgba(255,255,255,0.06);position:relative;margin-bottom:18px}
+.v{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px;min-height:250px}
+.vl{background:rgba(255,255,255,0.02);border-radius:14px;border:1px solid rgba(255,255,255,0.05);padding:20px}
+.vr{background:rgba(255,255,255,0.02);border-radius:14px;border:1px solid rgba(255,255,255,0.05);padding:20px}
+.vh{font-size:.65rem;font-weight:600;color:#8b8b9e;text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.vh .d{width:5px;height:5px;border-radius:50%;min-width:5px;background:#f97316}
+.road{position:relative;height:110px;overflow:hidden;border-bottom:1px dashed rgba(255,255,255,0.06);margin-bottom:6px}
+.bus{position:absolute;left:-80px;top:22px;width:60px;height:36px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:5px 5px 3px 3px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.5rem;font-weight:700;z-index:2}
+.bus::before{content:'';position:absolute;bottom:-3px;left:8px;width:10px;height:5px;background:rgba(255,255,255,0.12);border-radius:50%;box-shadow:25px 0 0 rgba(255,255,255,0.12)}
+.stop{position:absolute;right:25px;top:18px;width:4px;height:35px;background:rgba(255,255,255,0.08);border-radius:2px}
+.stop::before{content:'🚏';position:absolute;top:-18px;left:-6px;font-size:.8rem}
+.dr{position:absolute;right:30px;top:20px;width:14px;height:38px;background:rgba(249,115,22,0.12);border-radius:2px;border:1px solid rgba(249,115,22,0.15);opacity:0;transition:opacity .3s;display:flex;align-items:center;justify-content:center;font-size:.4rem;color:#f97316;font-weight:600}
+.dr.o{opacity:1}
+.ppl{display:flex;gap:3px;flex-wrap:wrap;padding:4px 0;min-height:30px;align-items:center}
+.p{width:20px;height:20px;border-radius:50%;background:rgba(249,115,22,0.08);display:flex;align-items:center;justify-content:center;font-size:.45rem;transition:all .3s;opacity:0;transform:scale(0)}
+.p.s{opacity:1;transform:scale(1)}
+.p.m{animation:pm .5s ease forwards}
+@keyframes pm{0%{opacity:0;transform:scale(0) translateY(10px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+.ma{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:90px}
+.mi{font-size:2rem;margin-bottom:6px;opacity:.3;transition:opacity .3s}
+.mt{font-size:.7rem;color:#6b7280;text-align:center;transition:color .3s}
+.mt.a{color:#f97316}
+.ct{display:flex;gap:14px;justify-content:center;margin-top:10px}
+.ci{text-align:center;padding:6px 14px;background:rgba(255,255,255,0.03);border-radius:8px;min-width:65px}
+.ci .cv{font-size:1.2rem;font-weight:800;color:#fff}
+.ci .cv.g{color:#10b981}
+.ci .cv.r{color:#ef4444}
+.ci .cv.o{color:#f97316}
+.ci .cl{font-size:.6rem;color:#6b7280;margin-top:1px}
+.ev{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.04)}
+.ev .ei{flex:1;padding:5px 8px;background:rgba(255,255,255,0.02);border-radius:6px;font-size:.6rem;color:#6b7280;text-align:center;border:1px solid rgba(255,255,255,0.04);transition:all .3s}
+.ev .ei.a{background:rgba(249,115,22,0.06);border-color:#f97316;color:#f97316}
+.ev .ei .et{font-weight:600;font-size:.6rem;color:#8b8b9e;margin-bottom:1px}
+.ev .ei .ed{font-size:.55rem}
+.st{display:flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.04);font-size:.7rem;color:#8b8b9e;margin-top:10px}
+.st .dt{width:5px;height:5px;border-radius:50%;background:#6b7280;display:inline-block}
+.st .dt.g{background:#10b981}
+.st .dt.o{background:#f97316}
+.bts{display:flex;gap:10px;justify-content:center;margin-top:14px}
+.bt{padding:7px 18px;border-radius:8px;border:none;cursor:pointer;font-weight:600;font-size:.75rem;transition:all .2s}
+.bt.p{background:linear-gradient(135deg,#f97316,#ea580c);color:#fff}
+.bt.p:hover{opacity:.9}
+.bt.s{background:rgba(255,255,255,0.06);color:#d1d5db;border:1px solid rgba(255,255,255,0.08)}
+.bt.s:hover{background:rgba(255,255,255,0.1)}
+</style></head><body>
+<div class="w">
+<div class="t"><div class="lg"><span class="i">R</span> RDETECTOR</div><div style="font-size:.65rem;color:#6b7280">Демо: как ML считает пассажиров</div></div>
+<div class="c">
+<h2>Как происходит подсчёт <span class="b">Нажмите «▶ Запустить»</span></h2>
+
+<div class="steps" id="steps">
+<div class="st"><div class="s a" id="st1"><div class="n">1</div>🚍</div><div class="l a" id="sl1">Подъезд</div></div>
+<div class="ar"></div>
+<div class="st"><div class="s" id="st2"><div class="n">2</div>🚪</div><div class="l" id="sl2">Дверь</div></div>
+<div class="ar"></div>
+<div class="st"><div class="s" id="st3"><div class="n">3</div>🧠</div><div class="l" id="sl3">ML анализ</div></div>
+<div class="ar"></div>
+<div class="st"><div class="s" id="st4"><div class="n">4</div>💾</div><div class="l" id="sl4">Запись</div></div>
+</div>
+
+<div class="v">
+<div class="vl">
+<div class="vh"><span class="d"></span> Что видит камера в салоне</div>
+<div class="road">
+<div class="bus" id="bus">RD</div>
+<div class="stop"></div>
+<div class="dr" id="dr">🚪</div>
+</div>
+<div class="ppl" id="pplInside">
+<div class="p s">👤</div><div class="p s">👤</div><div class="p s">👤</div>
+</div>
+</div>
+<div class="vr">
+<div class="vh"><span class="d"></span> Что считает ML</div>
+<div class="ma">
+<div class="mi" id="mi">👤</div>
+<div class="mt" id="mt">Ожидание...</div>
+</div>
+<div class="ct">
+<div class="ci"><div class="cv g" id="cIn">0</div><div class="cl">Вошло</div></div>
+<div class="ci"><div class="cv r" id="cOut">0</div><div class="cl">Вышло</div></div>
+<div class="ci"><div class="cv o" id="cInside">3</div><div class="cl">В салоне</div></div>
+</div>
+</div>
+</div>
+
+<div class="ev">
+<div class="ei a" data-e="1"><div class="et">07:15</div><div class="ed">Подъезд к остановке</div></div>
+<div class="ei" data-e="2"><div class="et">07:15</div><div class="ed">Открытие двери</div></div>
+<div class="ei" data-e="3"><div class="et">07:15</div><div class="ed">ML: +2 вход / −1 выход</div></div>
+<div class="ei" data-e="4"><div class="et">07:15</div><div class="ed">Сохранение в БД</div></div>
+<div class="ei" data-e="5"><div class="et">07:16</div><div class="ed">Дверь закрыта</div></div>
+</div>
+
+<div class="st" id="sts"><span class="dt" id="stsDot"></span><span id="stsText">Готов. Нажмите «▶ Запустить»</span></div>
+
+<div class="bts">
+<button class="bt p" onclick="go()">▶ Запустить</button>
+<button class="bt s" onclick="rs()">↺ Сброс</button>
+</div>
+</div></div>
+
+<script>
+var run=false,to=[];
+
+function clr(){to.forEach(function(t){clearTimeout(t)});to=[]}
+function sl(ms){return new Promise(function(r){var t=setTimeout(r,ms);to.push(t)})}
+
+function stg(n){
+  var els=document.querySelectorAll('.st .s');
+  for(var i=0;i<els.length;i++){els[i].classList.toggle('a',i+1===n);els[i].classList.toggle('d',i+1<n)}
+  var ls=document.querySelectorAll('.st .l');
+  for(var i=0;i<ls.length;i++){ls[i].classList.toggle('a',i+1===n)}
+}
+
+function evt(n){
+  var els=document.querySelectorAll('.ei');
+  for(var i=0;i<els.length;i++){els[i].classList.toggle('a',i+1===n)}
+}
+
+function sts(t,c){
+  document.getElementById('stsText').textContent=t;
+  document.getElementById('stsDot').className='dt'+(c?' '+c:'');
+}
+
+var bus=document.getElementById('bus'),dr=document.getElementById('dr');
+var ppl=document.getElementById('pplInside');
+var mi=document.getElementById('mi'),mt=document.getElementById('mt');
+var cIn=document.getElementById('cIn'),cOut=document.getElementById('cOut'),cIn=document.getElementById('cInside');
+var inner=3,tIn=0,tOut=0;
+
+function upd(){
+  document.getElementById('cIn').textContent=tIn;
+  document.getElementById('cOut').textContent=tOut;
+  document.getElementById('cInside').textContent=inner;
+}
+
+function addP(){
+  var p=document.createElement('div');p.className='p m';p.textContent='👤';
+  ppl.appendChild(p);setTimeout(function(){p.classList.add('s')},20);
+}
+
+function rmP(){
+  var ps=ppl.querySelectorAll('.p:not(.m)');
+  if(ps.length>0)ps[ps.length-1].remove();
+}
+
+async function go(){
+  if(run)return;run=true;clr();rs();await sl(400);
+  
+  stg(1);evt(1);sts('🚍 Автобус подъезжает к остановке «Завод»','o');
+  bus.style.transition='left 1.5s ease-in';bus.style.left='calc(100% - 120px)';
+  await sl(1700);
+  
+  stg(2);evt(2);sts('🚪 Дверь открыта — система фиксирует событие','o');
+  dr.classList.add('o');await sl(700);
+  
+  stg(3);evt(3);sts('🧠 ML анализирует фрагмент','g');
+  
+  mi.textContent='🚶';mi.style.opacity='1';
+  mt.textContent='Обнаружен выход';mt.style.color='#ef4444';mt.className='mt a';
+  await sl(400);rmP();inner--;tOut++;upd();await sl(300);
+  
+  mi.textContent='🚶';mi.style.opacity='1';
+  mt.textContent='Обнаружен вход';mt.style.color='#10b981';
+  await sl(400);addP();inner++;tIn++;upd();await sl(300);
+  
+  mi.textContent='🚶';mi.style.opacity='1';
+  await sl(400);addP();inner++;tIn++;upd();await sl(300);
+  
+  mt.textContent='✅ ML: +2 вход / −1 выход. Счёт завершён';
+  mt.style.color='#10b981';await sl(800);
+  
+  stg(4);evt(4);
+  mt.textContent='💾 Данные сохранены. Доступны в личном кабинете.';
+  await sl(600);
+  
+  evt(5);dr.classList.remove('o');
+  sts('✅ Готово. Пассажиры учтены, данные в системе.','g');
+  mt.textContent='✅ Запись: +2 чел, −1 чел. Остановка «Завод»';
+  mt.style.color='#10b981';run=false;
+}
+
+function rs(){
+  clr();run=false;
+  bus.style.transition='none';bus.style.left='-80px';
+  dr.classList.remove('o');
+  ppl.innerHTML='';
+  for(var i=0;i<3;i++){var p=document.createElement('div');p.className='p s';p.textContent='👤';ppl.appendChild(p)}
+  inner=3;tIn=0;tOut=0;upd();
+  mi.textContent='👤';mi.style.opacity='.3';
+  mt.textContent='Ожидание события...';mt.style.color='#6b7280';mt.className='mt';
+  stg(1);evt(1);sts('Готов. Нажмите «▶ Запустить»','');
+}
+</script></body></html>

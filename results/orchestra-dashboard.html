@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Оркестра — Мониторинг процессов</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#F5F6F8;padding:24px;display:flex;flex-direction:column;align-items:center;color:#404449;-webkit-font-smoothing:antialiased}
+
+.app{width:1340px;max-width:100%;display:flex;flex-direction:column;gap:16px}
+
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;background:#fff;border-radius:20px;border:1px solid rgba(154,163,175,0.2);box-shadow:0 2px 8px rgba(0,0,0,0.04)}
+.hdr-l{display:flex;align-items:center;gap:12px}
+.hdr-l .logo{width:36px;height:36px;background:linear-gradient(135deg,#5B8CFF,#3B6FDF);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.8rem}
+.hdr-l .name{font-weight:800;font-size:1.1rem;color:#404449;letter-spacing:-.02em}
+.hdr-l .badge{padding:4px 12px;border-radius:100px;font-size:.65rem;font-weight:600;background:rgba(91,140,255,0.08);color:#5B8CFF;text-transform:uppercase}
+.hdr-r{display:flex;align-items:center;gap:20px;font-size:.75rem;color:#9AA3AF}
+.hdr-r .user{display:flex;align-items:center;gap:8px;font-weight:500;color:#404449}
+.hdr-r .avatar{width:32px;height:32px;border-radius:50%;background:rgba(91,140,255,0.1);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:#5B8CFF;font-weight:700}
+.hdr-r .stat-dot{width:8px;height:8px;border-radius:50%;background:#2EC379;display:inline-block}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;padding:4px;background:#fff;border-radius:14px;border:1px solid rgba(154,163,175,0.15);box-shadow:0 1px 4px rgba(0,0,0,0.03)}
+.tab{padding:8px 18px;border-radius:10px;font-size:.8rem;font-weight:500;color:#9AA3AF;cursor:pointer;transition:all .2s;border:none;background:transparent}
+.tab:hover{color:#404449}
+.tab.a{background:rgba(91,140,255,0.08);color:#5B8CFF;font-weight:600}
+
+/* Main grid */
+.mg{display:grid;grid-template-columns:1fr 360px;gap:16px}
+
+/* Panel */
+.pnl{background:#fff;border-radius:20px;border:1px solid rgba(154,163,175,0.15);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.03)}
+.pnl-h{padding:16px 24px;border-bottom:1px solid rgba(154,163,175,0.1);display:flex;align-items:center;justify-content:space-between}
+.pnl-h-l{display:flex;align-items:center;gap:8px}
+.pnl-h-l .tt{font-size:.78rem;font-weight:600;color:#9AA3AF;text-transform:uppercase;letter-spacing:.04em}
+.pnl-h-l .dot{width:8px;height:8px;border-radius:50%}
+.pnl-h-r{display:flex;align-items:center;gap:10px}
+.pnl-b{padding:20px 24px}
+
+/* Tags */
+.tag{padding:2px 10px;border-radius:100px;font-size:.6rem;font-weight:600;text-transform:uppercase}
+.tag-g{background:rgba(46,195,121,0.08);color:#2EC379}
+.tag-y{background:rgba(255,184,0,0.08);color:#FFB800}
+.tag-r{background:rgba(255,0,4,0.08);color:#FF0004}
+.tag-b{background:rgba(91,140,255,0.08);color:#5B8CFF}
+.tag-p{background:rgba(242,105,217,0.08);color:#F269D9}
+
+/* Stats row */
+.stats-r{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.stat{text-align:center;padding:16px 8px;background:#FAFBFC;border-radius:14px;border:1px solid rgba(154,163,175,0.1)}
+.stat .v{font-size:1.5rem;font-weight:800;color:#404449;line-height:1.2;margin-bottom:2px}
+.stat .v.bl{color:#5B8CFF}
+.stat .v.gr{color:#2EC379}
+.stat .v.rd{color:#FF0004}
+.stat .v.yl{color:#FFB800}
+.stat .l{font-size:.7rem;color:#9AA3AF;font-weight:500}
+
+/* Process timeline in panel */
+.tl{display:flex;align-items:center;gap:0;padding:8px 0;overflow-x:auto}
+.tl-st{flex:1;min-width:80px;text-align:center;padding:4px 2px}
+.tl-st .c{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:.8rem;position:relative;background:#FAFBFC;border:2px solid rgba(154,163,175,0.15)}
+.tl-st .c.d{background:rgba(46,195,121,0.06);border-color:#2EC379}
+.tl-st .c.a{background:rgba(91,140,255,0.06);border-color:#5B8CFF;box-shadow:0 0 0 3px rgba(91,140,255,0.08)}
+.tl-st .c.e{background:rgba(255,0,4,0.06);border-color:#FF0004}
+.tl-st .c .check{position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#2EC379;color:#fff;font-size:.4rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+.tl-st .l{font-size:.62rem;color:#9AA3AF;line-height:1.2}
+.tl-st .l.a{color:#5B8CFF;font-weight:600}
+.tl-st .l.d{color:#2EC379}
+.tl-st .l .sub{font-size:.5rem;color:#B0B8C4;display:block}
+.tl-ar{width:24px;min-width:24px;height:1px;background:rgba(154,163,175,0.15);position:relative;margin-bottom:20px}
+.tl-ar::after{content:'\203A';position:absolute;right:-2px;top:-7px;font-size:.6rem;color:#B0B8C4}
+
+/* Alert */
+.alert{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:12px;font-size:.75rem;margin:8px 0}
+.alert-y{background:rgba(255,184,0,0.05);border:1px solid rgba(255,184,0,0.12);color:#B8860B}
+.alert-r{background:rgba(255,0,4,0.04);border:1px solid rgba(255,0,4,0.1);color:#CC0003}
+.alert .al-t{flex:1}
+.alert .al-act{padding:5px 12px;border-radius:8px;font-size:.65rem;font-weight:600;cursor:pointer;border:none;background:rgba(255,184,0,0.1);color:#B8860B;transition:all .15s}
+.alert .al-act:hover{background:rgba(255,184,0,0.18)}
+
+/* SLA checks */
+.sla-r{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.sla{padding:4px 10px;border-radius:8px;font-size:.65rem;display:flex;align-items:center;gap:4px;background:#FAFBFC;border:1px solid rgba(154,163,175,0.1)}
+.sla.ok{background:rgba(46,195,121,0.04);color:#2EC379;border-color:rgba(46,195,121,0.12)}
+.sla.warn{background:rgba(255,184,0,0.04);color:#B8860B;border-color:rgba(255,184,0,0.12)}
+.sla.fail{background:rgba(255,0,4,0.03);color:#CC0003;border-color:rgba(255,0,4,0.08)}
+
+/* Integrations inside */
+.int-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.int-item{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#FAFBFC;border-radius:10px;border:1px solid rgba(154,163,175,0.08);font-size:.68rem}
+.int-item .ii{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.4rem;min-width:22px;font-weight:700}
+.int-item .it{flex:1}
+.int-item .it .in{font-weight:600;color:#404449}
+.int-item .it .is{font-size:.55rem;color:#B0B8C4}
+.int-item .idot{width:6px;height:6px;border-radius:50%;min-width:6px}
+
+/* Process list right */
+.pr-list{display:flex;flex-direction:column;gap:8px}
+.pr-item{padding:12px 16px;background:#FAFBFC;border-radius:14px;border:1px solid rgba(154,163,175,0.08);cursor:pointer;transition:all .15s}
+.pr-item:hover{border-color:rgba(91,140,255,0.15)}
+.pr-item.a{border-color:#5B8CFF;background:rgba(91,140,255,0.03)}
+.pr-item .pr-t{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.pr-item .pr-n{font-size:.82rem;font-weight:600;color:#404449;display:flex;align-items:center;gap:6px}
+.pr-item .pr-n .pr-ic{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.45rem}
+.pr-item .pr-m{font-size:.68rem;color:#B0B8C4}
+.pr-item .pr-bar{margin-top:7px;height:4px;border-radius:3px;background:rgba(154,163,175,0.08);overflow:hidden}
+.pr-item .pr-bar .fill{height:100%;border-radius:3px;transition:width .5s}
+
+/* Analytics cards */
+.an-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:8px 0}
+.an-card{background:#FAFBFC;border-radius:14px;padding:14px 16px;border:1px solid rgba(154,163,175,0.08)}
+.an-card .ah{font-size:.65rem;font-weight:600;color:#B0B8C4;text-transform:uppercase;margin-bottom:6px}
+.an-card .av{font-size:1.4rem;font-weight:800;color:#404449}
+.an-card .av .dd{font-size:.7rem;font-weight:600;margin-left:6px}
+.an-card .av .dd.up{color:#2EC379}
+.an-card .av .dd.dn{color:#FF0004}
+.an-card .ab{height:4px;border-radius:2px;background:rgba(154,163,175,0.06);margin-top:6px;overflow:hidden}
+.an-card .ab .f{height:100%;border-radius:2px}
+.an-card .al{display:flex;justify-content:space-between;margin-top:4px;font-size:.55rem;color:#B0B8C4}
+
+/* Mini bar */
+.bar-ch{display:flex;align-items:flex-end;gap:4px;height:46px;padding:4px 0}
+.bar-ch .bar{flex:1;border-radius:2px 2px 0 0;min-height:3px;background:rgba(91,140,255,0.15)}
+.bar-ch .bar.h{background:#5B8CFF}
+.bar-ch .bar.l{background:rgba(255,0,4,0.15)}
+
+/* Optimization */
+.opt-list{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.opt-item{padding:10px 14px;background:rgba(46,195,121,0.03);border:1px solid rgba(46,195,121,0.08);border-radius:10px;font-size:.7rem;display:flex;align-items:center;gap:8px;color:#2EC379}
+.opt-item .ot{flex:1}
+.opt-item .ov{font-weight:700;color:#2EC379;font-size:.65rem}
+
+/* Activity */
+.act-l{display:flex;flex-direction:column;gap:5px;max-height:180px;overflow-y:auto}
+.act-i{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid rgba(154,163,175,0.04);font-size:.7rem}
+.act-i:last-child{border-bottom:none}
+.act-i .at{color:#B0B8C4;min-width:44px;font-size:.65rem}
+.act-i .ac{color:#9AA3AF}
+.act-i .ac b{color:#404449;font-weight:600}
+
+/* Section in right */
+.r-sec{margin-bottom:14px}
+.r-sec:last-child{margin-bottom:0}
+.r-sec-h{font-size:.68rem;font-weight:600;color:#9AA3AF;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+
+/* Metric */
+.mtr{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:.72rem;border-bottom:1px solid rgba(154,163,175,0.04)}
+.mtr:last-child{border-bottom:none}
+.mtr .ml{color:#9AA3AF}
+.mtr .mv{color:#404449;font-weight:600}
+.mtr .mv.gr{color:#2EC379}
+.mtr .mv.rd{color:#FF0004}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:10px;font-size:.72rem;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-p{background:#5B8CFF;color:#fff}
+.btn-p:hover{background:#4A7BE8}
+.btn-s{background:#FAFBFC;color:#9AA3AF;border:1px solid rgba(154,163,175,0.12)}
+.btn-s:hover{background:rgba(91,140,255,0.04);color:#5B8CFF;border-color:rgba(91,140,255,0.15)}
+.btn-sm{padding:5px 12px;font-size:.65rem}
+
+/* Badge integration */
+.badge-int{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:.58rem;font-weight:500}
+.bi-blue{background:rgba(91,140,255,0.06);color:#5B8CFF;border:1px solid rgba(91,140,255,0.08)}
+.bi-orange{background:rgba(255,184,0,0.06);color:#B8860B;border:1px solid rgba(255,184,0,0.08)}
+.bi-green{background:rgba(46,195,121,0.06);color:#2EC379;border:1px solid rgba(46,195,121,0.08)}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-l">
+      <span class="logo">О</span>
+      <span class="name">Оркестра</span>
+      <span class="badge">Control Tower</span>
+    </div>
+    <div class="hdr-r">
+      <span><span class="stat-dot"></span> 19 июня 2026, 11:10</span>
+      <span class="user"><span class="avatar">EA</span> Екатерина</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab a">📊 Мониторинг процессов</button>
+    <button class="tab">🔍 Аналитика</button>
+    <button class="tab">⚙️ Конструктор</button>
+    <button class="tab">📋 Отчёты</button>
+    <button class="tab">🚨 Эскалации</button>
+    <button class="tab">🔗 Интеграции</button>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="mg">
+
+    <!-- LEFT -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+      <!-- Stats -->
+      <div class="stats-r">
+        <div class="stat"><div class="v bl">24</div><div class="l">Активных процессов</div></div>
+        <div class="stat"><div class="v gr">16</div><div class="l">В норме SLA</div></div>
+        <div class="stat"><div class="v rd">5</div><div class="l">Просрочено SLA</div></div>
+        <div class="stat"><div class="v yl">3</div><div class="l">Требуют эскалации</div></div>
+      </div>
+
+      <!-- Active process detail -->
+      <div class="pnl">
+        <div class="pnl-h">
+          <div class="pnl-h-l">
+            <span class="dot" style="background:#5B8CFF"></span>
+            <span class="tt">Процесс: «Согласование сделки — kitBot продажи»</span>
+          </div>
+          <div class="pnl-h-r">
+            <span class="tag tag-y">⏳ В работе</span>
+            <button class="btn btn-sm btn-s">🔍 Подробнее</button>
+          </div>
+        </div>
+        <div class="pnl-b">
+          <!-- Timeline -->
+          <div class="tl">
+            <div class="tl-st">
+              <div class="c d"><span class="check">✓</span>📥</div>
+              <div class="l d">Получение вебхука<br><span class="sub">09:12:04</span></div>
+            </div>
+            <div class="tl-ar"></div>
+            <div class="tl-st">
+              <div class="c d"><span class="check">✓</span>🔄</div>
+              <div class="l d">Маршрутизация<br><span class="sub">kitBot продажи</span></div>
+            </div>
+            <div class="tl-ar"></div>
+            <div class="tl-st">
+              <div class="c a">✅</div>
+              <div class="l a">Проверка условий<br><span class="sub">Стадия сделки: Новая</span></div>
+            </div>
+            <div class="tl-ar"></div>
+            <div class="tl-st">
+              <div class="c">📨</div>
+              <div class="l">Уведомление<br><span class="sub">Менеджеру</span></div>
+            </div>
+            <div class="tl-ar"></div>
+            <div class="tl-st">
+              <div class="c">⏱️</div>
+              <div class="l">Ожидание ответа<br><span class="sub">SLA: 30 мин</span></div>
+            </div>
+            <div class="tl-ar"></div>
+            <div class="tl-st">
+              <div class="c">🚀</div>
+              <div class="l">Эскалация (если надо)<br><span class="sub">Попытка 1/3</span></div>
+            </div>
+          </div>
+
+          <!-- Escalation warning -->
+          <div class="alert alert-y">
+            <span>⏰</span>
+            <span class="al-t">Проверка условий длится <b>24 мин</b> (SLA: 30 мин). Ответственный: <b>Петров А.</b></span>
+            <button class="al-act">Эскалировать</button>
+          </div>
+
+          <!-- Step details -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px">
+            <div style="background:#FAFBFC;border-radius:14px;padding:14px 16px;border:1px solid rgba(154,163,175,0.06)">
+              <div style="font-size:.65rem;font-weight:600;color:#9AA3AF;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:5px">📋 Стандарты этапа</div>
+              <div class="sla-r">
+                <span class="sla ok">✓ Сделка назначена</span>
+                <span class="sla ok">✓ Бюджет > 0</span>
+                <span class="sla ok">✓ Контакт заполнен</span>
+                <span class="sla warn">⚠ Документы не прикреплены</span>
+              </div>
+            </div>
+            <div style="background:#FAFBFC;border-radius:14px;padding:14px 16px;border:1px solid rgba(154,163,175,0.06)">
+              <div style="font-size:.65rem;font-weight:600;color:#9AA3AF;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:5px">🔗 Системы на этом шаге</div>
+              <div class="int-grid">
+                <div class="int-item">
+                  <span class="ii" style="background:rgba(91,140,255,0.08);color:#5B8CFF">B24</span>
+                  <div class="it"><div class="in">Битрикс24</div><div class="is">Стадия сделки: Новая</div></div>
+                  <span class="idot" style="background:#2EC379"></span>
+                </div>
+                <div class="int-item">
+                  <span class="ii" style="background:rgba(46,195,121,0.08);color:#2EC379">1C</span>
+                  <div class="it"><div class="in">1С: CRM</div><div class="is">Бюджет: 450 000 ₽</div></div>
+                  <span class="idot" style="background:#2EC379"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Analytics -->
+      <div class="pnl">
+        <div class="pnl-h">
+          <div class="pnl-h-l">
+            <span class="dot" style="background:#5B8CFF"></span>
+            <span class="tt">Аналитика процессов</span>
+          </div>
+          <div class="pnl-h-r">
+            <button class="btn btn-sm btn-s">📅 За неделю</button>
+          </div>
+        </div>
+        <div class="pnl-b">
+          <div class="an-grid">
+            <div class="an-card">
+              <div class="ah">Среднее время выполнения</div>
+              <div class="av">4.2 <span class="dd dn">▼ 12%</span></div>
+              <div class="ab"><div class="f" style="width:68%;background:#FFB800"></div></div>
+              <div class="al"><span>Цель: 3.0 ч</span><span>Факт: 4.2 ч</span></div>
+            </div>
+            <div class="an-card">
+              <div class="ah">Соблюдение SLA</div>
+              <div class="av">76% <span class="dd up">▲ 5%</span></div>
+              <div class="ab"><div class="f" style="width:76%;background:#2EC379"></div></div>
+              <div class="al"><span>Цель: 90%</span><span>Факт: 76%</span></div>
+            </div>
+            <div class="an-card">
+              <div class="ah">Загрузка шагов (24ч)</div>
+              <div class="bar-ch">
+                <div class="bar h" style="height:32px"></div>
+                <div class="bar h" style="height:24px"></div>
+                <div class="bar h" style="height:40px"></div>
+                <div class="bar l" style="height:10px"></div>
+                <div class="bar h" style="height:28px"></div>
+                <div class="bar h" style="height:34px"></div>
+                <div class="bar l" style="height:6px"></div>
+                <div class="bar h" style="height:38px"></div>
+                <div class="bar" style="height:18px"></div>
+                <div class="bar h" style="height:30px"></div>
+              </div>
+            </div>
+            <div class="an-card">
+              <div class="ah">Эффективность оптимизаций</div>
+              <div style="font-size:1.1rem;font-weight:800;color:#404449">
+                <span style="color:#2EC379">▲ 18%</span> после авто-эскалаций
+              </div>
+              <div style="margin-top:4px;font-size:.64rem;color:#B0B8C4">Ускорено 24 процесса за месяц</div>
+            </div>
+          </div>
+
+          <!-- Suggestions -->
+          <div class="opt-list">
+            <div class="opt-item">
+              <span>🔄</span>
+              <span class="ot">Шаг «Проверка условий» занимает <b>62%</b> времени. Рекомендуем <b>параллельную проверку</b> условий.</span>
+              <span class="ov">−1.8 ч</span>
+            </div>
+            <div class="opt-item">
+              <span>🤖</span>
+              <span class="ot">5 однотипных сделок за день. <b>Автоматическое утверждение</b> для сделок до 100 000 ₽.</span>
+              <span class="ov">−3.2 ч/д</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity log -->
+      <div class="pnl">
+        <div class="pnl-h">
+          <div class="pnl-h-l">
+            <span class="dot" style="background:#B0B8C4"></span>
+            <span class="tt">Лента событий</span>
+          </div>
+          <div class="pnl-h-r">
+            <span class="badge-int bi-orange">⚡ Real-time</span>
+          </div>
+        </div>
+        <div class="pnl-b">
+          <div class="act-l">
+            <div class="act-i"><span class="at">11:42</span><span class="ac"><b>Сделка №2304</b> — шаг «Проверка условий» превысил SLA (24 мин). Эскалация → <b>Петрову А.</b></span></div>
+            <div class="act-i"><span class="at">11:30</span><span class="ac"><b>1С: CRM</b> — создана сделка «ООО ТехноПром» на сумму 450 000 ₽</span></div>
+            <div class="act-i"><span class="at">11:15</span><span class="ac"><b>Сделка №2298</b> — полный цикл пройден за <span style="color:#2EC379">1ч 48мин</span> (в норме)</span></div>
+            <div class="act-i"><span class="at">10:52</span><span class="ac"><b>Битрикс24</b> — задача «Проверить сделку» назначена Петрову А.</span></div>
+            <div class="act-i"><span class="at">10:38</span><span class="ac"><b>SLA Checker</b> — «Сделка №2295»: документы не прикреплены → <span style="color:#FF0004">нарушение</span></span></div>
+            <div class="act-i"><span class="at">10:12</span><span class="ac"><b>Сделка №2293</b> — авто-отклонена: бюджет превышает 1 000 000 ₽</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div style="display:flex;flex-direction:column;gap:12px">
+
+      <!-- Active processes -->
+      <div class="pnl">
+        <div class="pnl-h">
+          <div class="pnl-h-l">
+            <span class="dot" style="background:#5B8CFF"></span>
+            <span class="tt">Активные процессы (24)</span>
+          </div>
+          <div class="pnl-h-r">
+            <button class="btn btn-sm btn-s">📌</button>
+          </div>
+        </div>
+        <div class="pnl-b">
+          <div class="pr-list">
+            <div class="pr-item a">
+              <div class="pr-t">
+                <span class="pr-n"><span class="pr-ic" style="background:rgba(91,140,255,0.08);color:#5B8CFF">💼</span> kitBot продажи</span>
+                <span class="tag tag-y">24 мин</span>
+              </div>
+              <div class="pr-m">Сделка №2304 · Петров А. · Проверка</div>
+              <div class="pr-bar"><div class="fill" style="width:55%;background:#FFB800"></div></div>
+            </div>
+            <div class="pr-item">
+              <div class="pr-t">
+                <span class="pr-n"><span class="pr-ic" style="background:rgba(46,195,121,0.08);color:#2EC379">📊</span> kitBot аккаунтинг</span>
+                <span class="tag tag-g">12 мин</span>
+              </div>
+              <div class="pr-m">Сделка №2302 · Сидоров К. · Расчёт</div>
+              <div class="pr-bar"><div class="fill" style="width:35%;background:#2EC379"></div></div>
+            </div>
+            <div class="pr-item">
+              <div class="pr-t">
+                <span class="pr-n"><span class="pr-ic" style="background:rgba(255,0,4,0.08);color:#FF0004">🚨</span> RDetector продажи</span>
+                <span class="tag tag-r">3ч 12м</span>
+              </div>
+              <div class="pr-m">Сделка №2289 · Петрова М. · Ожидание</div>
+              <div class="pr-bar"><div class="fill" style="width:25%;background:#FF0004"></div></div>
+            </div>
+            <div class="pr-item">
+              <div class="pr-t">
+                <span class="pr-n"><span class="pr-ic" style="background:rgba(46,195,121,0.08);color:#2EC379">✓</span> Сделка №2298</span>
+                <span class="tag tag-g">1ч 48м</span>
+              </div>
+              <div class="pr-m">Козлов Д. · Завершён</div>
+              <div class="pr-bar"><div class="fill" style="width:100%;background:#2EC379"></div></div>
+            </div>
+            <div class="pr-item">
+              <div class="pr-t">
+                <span class="pr-n"><span class="pr-ic" style="background:rgba(255,184,0,0.08);color:#B8860B">⏳</span> Закупка №15</span>
+                <span class="tag tag-y">1ч 05м</span>
+              </div>
+              <div class="pr-m">Сервисный центр · Ожидание поставщика</div>
+              <div class="pr-bar"><div class="fill" style="width:45%;background:#FFB800"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Integrations -->
+      <div class="pnl">
+        <div class="pnl-h">
+          <div class="pnl-h-l">
+            <span class="dot" style="background:#5B8CFF"></span>
+            <span class="tt">Интеграции</span>
+          </div>
+          <div class="pnl-h-r">
+            <span class="badge-int bi-blue">12 активных</span>
+          </div>
+        </div>
+        <div class="pnl-b">
+          <div class="int-grid">
+            <div class="int-item">
+              <span class="ii" style="background:rgba(91,140,255,0.08);color:#5B8CFF">B24</span>
+              <div class="it"><div class="in">Битрикс24</div><div class="is">Сделки, задачи</div></div>
+              <span class="idot" style="background:#2EC379"></span>
+            </div>
+            <div class="int-item">
+              <span class="ii" style="background:rgba(46,195,121,0.08);color:#2EC379">1C</span>
+              <div class="it"><div class="in">1С: CRM</div><div class="is">Контрагенты, бюджет</div></div>
+              <span class="idot" style="background:#2EC379"></span>
+            </div>
+            <div class="int-item">
+              <span class="ii" style="background:rgba(255,0,4,0.08);color:#FF0004">SAP</span>
+              <div class="it"><div class="in">SAP S/4HANA</div><div class="is">Закупки</div></div>
+              <span class="idot" style="background:#FF0004"></span>
+            </div>
+            <div class="int-item">
+              <span class="ii" style="background:rgba(242,105,217,0.08);color:#F269D9">TG</span>
+              <div class="it"><div class="in">Telegram</div><div class="is">Уведомления</div></div>
+              <span class="idot" style="background:#2EC379"></span>
+            </div>
+            <div class="int-item">
+              <span class="ii" style="background:rgba(91,140,255,0.08);color:#5B8CFF">API</span>
+              <div class="it"><div class="in">REST API</div><div class="is">Webhook</div></div>
+              <span class="idot" style="background:#2EC379"></span>
+            </div>
+            <div class="int-item">
+              <span class="ii" style="background:rgba(255,184,0,0.08);color:#B8860B">PG</span>
+              <div class="it"><div class="in">PostgreSQL</div><div class="is">Хранилище</div></div>
+              <span class="idot" style="background:#2EC379"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Standards -->
+      <div class="pnl">
+        <div class="pnl-h">
+          <div class="pnl-h-l">
+            <span class="dot" style="background:#2EC379"></span>
+            <span class="tt">Стандарты шагов</span>
+          </div>
+        </div>
+        <div class="pnl-b">
+          <div class="mtr"><span class="ml">✓ Сделка назначена</span><span class="mv gr">18/24</span></div>
+          <div class="mtr"><span class="ml">✓ Бюджет заполнен</span><span class="mv gr">22/24</span></div>
+          <div class="mtr"><span class="ml">✓ Контакт прикреплён</span><span class="mv gr">16/24</span></div>
+          <div class="mtr"><span class="ml">⚠ Документы</span><span class="mv rd">9/24</span></div>
+          <div class="mtr"><span class="ml">✓ Коммерческое предложение</span><span class="mv gr">14/24</span></div>
+          <div class="mtr"><span class="ml">⚠ Счёт на оплату</span><span class="mv rd">7/24</span></div>
+          <div style="padding-top:10px;border-top:1px solid rgba(154,163,175,0.06);margin-top:6px">
+            <button class="btn btn-sm btn-p" style="width:100%;justify-content:center">📋 Сформировать предписание</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Escalations -->
+      <div class="pnl">
+        <div class="pnl-h">
+          <div class="pnl-h-l">
+            <span class="dot" style="background:#FF0004"></span>
+            <span class="tt">Эскалации (3)</span>
+          </div>
+        </div>
+        <div class="pnl-b">
+          <div class="alert alert-r" style="margin-bottom:6px">
+            <span>🚨</span>
+            <span class="al-t"><b>Сделка №2304</b> — просрочено 24 мин. Ответственный не назначен.</span>
+            <button class="al-act" style="background:rgba(255,0,4,0.08);color:#CC0003">Назначить</button>
+          </div>
+          <div class="alert alert-r" style="margin-bottom:6px">
+            <span>🚨</span>
+            <span class="al-t"><b>RDetector продажи</b> — 3ч 12м. Поднять Петровой М. выше?</span>
+            <button class="al-act" style="background:rgba(255,0,4,0.08);color:#CC0003">↑</button>
+          </div>
+          <div class="alert alert-y" style="margin-bottom:0">
+            <span>⚠️</span>
+            <span class="al-t"><b>Закупка №15</b> — 1ч 05м. Ожидание ответа поставщика.</span>
+            <button class="al-act">Напомнить</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="text-align:center;font-size:.65rem;color:#B0B8C4;padding:8px 0">
+    Оркестра — Control Tower · Демонстрационный прототип
+  </div>
+
+</div>
+
+</body>
+</html>

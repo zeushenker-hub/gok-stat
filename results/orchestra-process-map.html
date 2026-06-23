@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Оркестра — Карта процессов</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Roboto',sans-serif;background:#1A1A1A;color:#fff;padding:0;display:flex;flex-direction:column;align-items:center;-webkit-font-smoothing:antialiased}
+.app{width:1257px;max-width:100%;display:flex;flex-direction:column;gap:20px;padding:0 10px 30px}
+
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;width:100%;padding:20px 0;border-bottom:1px solid rgba(154,163,175,0.3)}
+.hdr-l{display:flex;align-items:center;gap:5px}
+.hdr-r{display:flex;align-items:center;gap:20px}
+.hdr-r .user{display:flex;align-items:center;gap:8px;font-size:14px;color:#9AA3AF}
+.hdr-r .avatar{width:32px;height:32px;border-radius:50%;background:rgba(91,140,255,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;color:#5B8CFF;font-weight:700}
+.ver-tag{font-size:11px;color:#A2A2A2;background:rgba(154,163,175,0.05);padding:4px 10px;border-radius:5px;border:1px solid rgba(154,163,175,0.1)}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;background:rgba(0,0,0,0.3);padding:4px;border-radius:8px;border:1px solid rgba(154,163,175,0.1);width:100%}
+.tab{padding:10px 20px;border-radius:6px;font-size:14px;font-weight:500;color:#9AA3AF;cursor:pointer;border:none;background:transparent;font-family:'Roboto',sans-serif}
+.tab:hover{color:#fff}
+.tab.on{background:rgba(91,140,255,0.1);color:#5B8CFF;font-weight:600}
+
+/* Panel */
+.pnl{background:rgba(154,163,175,0.05);backdrop-filter:blur(26px);border-radius:10px;overflow:hidden;width:100%}
+.pnl-h{padding:16px 24px;border-bottom:1px solid rgba(154,163,175,0.1);display:flex;align-items:center;justify-content:space-between}
+.pnl-h-l{display:flex;align-items:center;gap:8px}
+.pnl-h-l .tt{font-size:12px;font-weight:600;color:#9AA3AF;text-transform:uppercase;letter-spacing:.03em}
+.pnl-h-l .dot{width:6px;height:6px;border-radius:50%}
+.pnl-h-r{display:flex;align-items:center;gap:6px;font-size:13px;color:#9AA3AF}
+.pnl-b{padding:16px 20px}
+
+/* Graph container */
+.graph{position:relative;min-height:500px;padding:30px 10px;overflow-x:auto}
+
+/* Nodes */
+.node{position:absolute;display:flex;flex-direction:column;align-items:center;gap:6px;z-index:2}
+.node .n-box{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:8px;min-width:160px;cursor:pointer;transition:all .12s}
+.node .n-box:hover{transform:scale(1.03);box-shadow:0 0 20px rgba(91,140,255,0.15)}
+.node .n-ico{font-size:20px;min-width:24px}
+.node .n-info{flex:1}
+.node .n-name{font-size:13px;font-weight:600;color:#fff}
+.node .n-role{font-size:10px;color:#A2A2A2;margin-top:1px}
+.node .n-stats{font-size:10px;color:#9AA3AF;display:flex;gap:6px}
+.node .n-stats .n-gr{color:#2EC379}
+.node .n-stats .n-rd{color:#FF0004}
+.node .n-status{font-size:12px}
+
+/* Lines */
+.line{position:absolute;z-index:1;pointer-events:none}
+.line svg{overflow:visible}
+
+/* Legend */
+.legend{display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:#A2A2A2;padding:8px 0}
+.legend-item{display:flex;align-items:center;gap:6px}
+.legend-item .ld{width:12px;height:3px;border-radius:2px}
+
+/* Child list */
+.child-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.child-tag{display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:500}
+.child-tag.blue{background:rgba(91,140,255,0.06);color:#5B8CFF}
+.child-tag.green{background:rgba(46,195,121,0.06);color:#2EC379}
+.child-tag.orange{background:rgba(255,184,0,0.06);color:#FFB800}
+.child-tag.purple{background:rgba(242,105,217,0.06);color:#F269D9}
+.child-tag.red{background:rgba(255,0,4,0.06);color:#FF0004}
+
+/* Detail popup */
+.detail-panel{display:none;margin-top:14px;padding:16px 20px;background:rgba(91,140,255,0.03);border-radius:8px;border:1px solid rgba(91,140,255,0.06)}
+.detail-panel.show{display:block}
+.detail-panel .dp-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid rgba(154,163,175,0.04)}
+.detail-panel .dp-row:last-child{border-bottom:none}
+.detail-panel .dp-row .dp-l{color:#A2A2A2}
+.detail-panel .dp-row .dp-r{color:#fff;font-weight:600}
+
+/* Footer */
+.foot{text-align:center;font-size:13px;color:#A2A2A2;padding:16px 0;border-top:1px solid rgba(154,163,175,0.1)}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-l">
+      <svg width="180" height="32" viewBox="0 0 180 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="14" stroke="url(#logoGrad)" stroke-width="3" fill="none"/>
+        <path d="M10 16 C10 10 16 6 16 6 C16 6 22 10 22 16 C22 22 16 26 16 26 C16 26 10 22 10 16Z" stroke="url(#logoGrad)" stroke-width="2" fill="none"/>
+        <text x="30" y="22" font-family="Roboto,sans-serif" font-weight="700" font-size="20" fill="white" letter-spacing="4">ORCHESTRA</text>
+        <defs>
+          <linearGradient id="logoGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="white"/>
+            <stop offset="100%" stop-color="#0B3D91"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <div class="hdr-r">
+      <span class="ver-tag">Карта взаимосвязей</span>
+      <span class="user"><span class="avatar">ПА</span> Петров А.</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab" onclick="location.href='orchestra-dashboard-v11.html'">📋 Мои процессы</button>
+    <button class="tab on">🔗 Карта взаимосвязей</button>
+    <button class="tab">📊 Аналитика</button>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <span class="legend-item"><span class="ld" style="background:#5B8CFF"></span> Родительский процесс</span>
+    <span class="legend-item"><span class="ld" style="background:#2EC379"></span> Дочерний процесс (успешно)</span>
+    <span class="legend-item"><span class="ld" style="background:#FFB800"></span> Дочерний процесс (замедление)</span>
+    <span class="legend-item"><span class="ld" style="background:#FF0004"></span> Дочерний процесс (критично)</span>
+    <span class="legend-item" style="color:#5B8CFF">→ Направление запуска</span>
+  </div>
+
+  <!-- Graph panel -->
+  <div class="pnl">
+    <div class="pnl-h">
+      <div class="pnl-h-l">
+        <span class="dot" style="background:#5B8CFF"></span>
+        <span class="tt">🔗 Карта взаимосвязей процессов</span>
+      </div>
+      <div class="pnl-h-r">
+        <span style="font-size:12px;color:#5B8CFF">Кликните на процесс для деталей</span>
+      </div>
+    </div>
+    <div class="pnl-b">
+      <div class="graph" id="graphContainer">
+        <!-- SVG lines -->
+        <svg class="line" width="1200" height="520" style="position:absolute;top:0;left:0;z-index:1;pointer-events:none">
+          <!-- Root → kitBot продажи -->
+          <line x1="600" y1="35" x2="300" y2="120" stroke="#5B8CFF" stroke-width="2" stroke-dasharray="6,3" opacity="0.5"/>
+          <line x1="600" y1="35" x2="900" y2="120" stroke="#5B8CFF" stroke-width="2" stroke-dasharray="6,3" opacity="0.5"/>
+          <line x1="600" y1="35" x2="600" y2="120" stroke="#5B8CFF" stroke-width="2" stroke-dasharray="6,3" opacity="0.5"/>
+
+          <!-- kitBot продажи → дочерние -->
+          <line x1="225" y1="180" x2="100" y2="280" stroke="#2EC379" stroke-width="2" marker-end="url(#arrowGreen)"/>
+          <line x1="300" y1="180" x2="300" y2="280" stroke="#FFB800" stroke-width="2"/>
+          <line x1="375" y1="180" x2="500" y2="280" stroke="#FFB800" stroke-width="2"/>
+
+          <!-- kitBot аккаунтинг → дочерние -->
+          <line x1="525" y1="180" x2="700" y2="280" stroke="#2EC379" stroke-width="2"/>
+          <line x1="600" y1="180" x2="600" y2="280" stroke="#2EC379" stroke-width="2"/>
+
+          <!-- RDetector → дочерние -->
+          <line x1="825" y1="180" x2="800" y2="280" stroke="#FF0004" stroke-width="2"/>
+          <line x1="900" y1="180" x2="950" y2="280" stroke="#2EC379" stroke-width="2"/>
+
+          <!-- Согласование договоров → дочерние -->
+          <line x1="100" y1="370" x2="100" y2="440" stroke="#2EC379" stroke-width="2"/>
+          <line x1="300" y1="370" x2="300" y2="440" stroke="#FFB800" stroke-width="2"/>
+          <line x1="500" y1="370" x2="500" y2="440" stroke="#2EC379" stroke-width="2"/>
+          <line x1="700" y1="370" x2="700" y2="440" stroke="#2EC379" stroke-width="2"/>
+          <line x1="900" y1="370" x2="900" y2="440" stroke="#FFB800" stroke-width="2"/>
+
+          <defs>
+            <marker id="arrowGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2EC379"/>
+            </marker>
+          </defs>
+        </svg>
+
+        <!-- ROOT node -->
+        <div class="node" style="left:50%;top:10px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(91,140,255,0.1);border:1px solid rgba(91,140,255,0.2);cursor:default">
+            <span class="n-ico">⚡</span>
+            <div class="n-info">
+              <div class="n-name" style="text-align:center">Точка входа</div>
+              <div class="n-role" style="text-align:center">Вебхуки · API · Ручной запуск</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LEVEL 1: Родительские процессы -->
+        <!-- kitBot продажи -->
+        <div class="node" style="left:16%;top:95px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(91,140,255,0.06);border:1px solid rgba(91,140,255,0.15)" onclick="showDetail('kitBot продажи')">
+            <span class="n-ico">💼</span>
+            <div class="n-info">
+              <div class="n-name">kitBot продажи</div>
+              <div class="n-role">Менеджер по продажам</div>
+            </div>
+            <span class="n-status" style="color:#FFB800">⚠️</span>
+          </div>
+        </div>
+
+        <!-- kitBot аккаунтинг -->
+        <div class="node" style="left:50%;top:95px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(46,195,121,0.06);border:1px solid rgba(46,195,121,0.15)" onclick="showDetail('kitBot аккаунтинг')">
+            <span class="n-ico">📊</span>
+            <div class="n-info">
+              <div class="n-name">kitBot аккаунтинг</div>
+              <div class="n-role">Бухгалтер</div>
+            </div>
+            <span class="n-status" style="color:#2EC379">✓</span>
+          </div>
+        </div>
+
+        <!-- RDetector продажи -->
+        <div class="node" style="left:84%;top:95px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(255,0,4,0.06);border:1px solid rgba(255,0,4,0.15)" onclick="showDetail('RDetector продажи')">
+            <span class="n-ico">📞</span>
+            <div class="n-info">
+              <div class="n-name">RDetector продажи</div>
+              <div class="n-role">Менеджер по продажам</div>
+            </div>
+            <span class="n-status" style="color:#FF0004">🔴</span>
+          </div>
+        </div>
+
+        <!-- LEVEL 2: Дочерние процессы (1-й уровень) -->
+        <!-- Выставление счёта (дочерний kitBot продажи) -->
+        <div class="node" style="left:10%;top:255px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(46,195,121,0.04);border:1px solid rgba(46,195,121,0.1);border-left:3px solid #2EC379" onclick="showDetail('Выставление счёта')">
+            <span class="n-ico">📄</span>
+            <div class="n-info">
+              <div class="n-name" style="font-size:12px">Выставление счёта</div>
+              <div class="n-role" style="font-size:9px">Бухгалтер</div>
+              <div class="n-stats"><span>1 240</span><span class="n-gr">1 110</span></div>
+            </div>
+            <span class="n-status" style="color:#2EC379;font-size:10px">✓</span>
+          </div>
+        </div>
+
+        <!-- Активация (дочерний kitBot продажи) -->
+        <div class="node" style="left:26%;top:255px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(255,184,0,0.04);border:1px solid rgba(255,184,0,0.1);border-left:3px solid #FFB800" onclick="showDetail('Активация')">
+            <span class="n-ico">✅</span>
+            <div class="n-info">
+              <div class="n-name" style="font-size:12px">Активация</div>
+              <div class="n-role" style="font-size:9px">Менеджер</div>
+              <div class="n-stats"><span>980</span><span class="n-gr">720</span><span class="n-rd">45</span></div>
+            </div>
+            <span class="n-status" style="color:#FFB800;font-size:10px">⚠️</span>
+          </div>
+        </div>
+
+        <!-- КП (дочерний kitBot продажи) -->
+        <div class="node" style="left:40%;top:255px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(255,184,0,0.04);border:1px solid rgba(255,184,0,0.1);border-left:3px solid #FFB800" onclick="showDetail('Коммерческое предложение')">
+            <span class="n-ico">📋</span>
+            <div class="n-info">
+              <div class="n-name" style="font-size:12px">Ком. предложение</div>
+              <div class="n-role" style="font-size:9px">Менеджер</div>
+              <div class="n-stats"><span>2 180</span><span class="n-gr">1 890</span></div>
+            </div>
+            <span class="n-status" style="color:#FFB800;font-size:10px">⚠️</span>
+          </div>
+        </div>
+
+        <!-- Формирование акта (дочерний kitBot аккаунтинг) -->
+        <div class="node" style="left:56%;top:255px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(46,195,121,0.04);border:1px solid rgba(46,195,121,0.1);border-left:3px solid #2EC379" onclick="showDetail('Формирование акта')">
+            <span class="n-ico">📄</span>
+            <div class="n-info">
+              <div class="n-name" style="font-size:12px">Формирование акта</div>
+              <div class="n-role" style="font-size:9px">Бухгалтер</div>
+              <div class="n-stats"><span>4 200</span><span class="n-gr">4 080</span></div>
+            </div>
+            <span class="n-status" style="color:#2EC379;font-size:10px">✓</span>
+          </div>
+        </div>
+
+        <!-- Закрытие периода (дочерний kitBot аккаунтинг) -->
+        <div class="node" style="left:68%;top:255px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(46,195,121,0.04);border:1px solid rgba(46,195,121,0.1);border-left:3px solid #2EC379" onclick="showDetail('Закрытие периода')">
+            <span class="n-ico">📊</span>
+            <div class="n-info">
+              <div class="n-name" style="font-size:12px">Закрытие периода</div>
+              <div class="n-role" style="font-size:9px">Бухгалтер</div>
+              <div class="n-stats"><span>890</span><span class="n-gr">840</span></div>
+            </div>
+            <span class="n-status" style="color:#2EC379;font-size:10px">✓</span>
+          </div>
+        </div>
+
+        <!-- Обработка лида (дочерний RDetector) -->
+        <div class="node" style="left:78%;top:255px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(255,0,4,0.04);border:1px solid rgba(255,0,4,0.1);border-left:3px solid #FF0004" onclick="showDetail('Обработка лида')">
+            <span class="n-ico">🎯</span>
+            <div class="n-info">
+              <div class="n-name" style="font-size:12px">Обработка лида</div>
+              <div class="n-role" style="font-size:9px">Менеджер</div>
+              <div class="n-stats"><span>2 015</span><span class="n-gr">1 203</span><span class="n-rd">300</span></div>
+            </div>
+            <span class="n-status" style="color:#FF0004;font-size:10px">🔴</span>
+          </div>
+        </div>
+
+        <!-- Квалификация (дочерний RDetector) -->
+        <div class="node" style="left:90%;top:255px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(46,195,121,0.04);border:1px solid rgba(46,195,121,0.1);border-left:3px solid #2EC379" onclick="showDetail('Квалификация')">
+            <span class="n-ico">🔍</span>
+            <div class="n-info">
+              <div class="n-name" style="font-size:12px">Квалификация</div>
+              <div class="n-role" style="font-size:9px">Менеджер</div>
+              <div class="n-stats"><span>1 800</span><span class="n-gr">1 650</span></div>
+            </div>
+            <span class="n-status" style="color:#2EC379;font-size:10px">✓</span>
+          </div>
+        </div>
+
+        <!-- LEVEL 3: Третичные процессы -->
+        <div class="node" style="left:10%;top:415px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(46,195,121,0.03);border:1px solid rgba(46,195,121,0.06);border-left:3px solid #2EC379;padding:6px 12px;min-width:120px">
+            <span class="n-ico" style="font-size:14px">📬</span>
+            <div class="n-info">
+              <div class="n-name" style="font-size:11px">Отправка клиенту</div>
+              <div class="n-stats" style="font-size:9px"><span class="n-gr">1 110</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="node" style="left:26%;top:415px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(255,184,0,0.03);border:1px solid rgba(255,184,0,0.06);border-left:3px solid #FFB800;padding:6px 12px;min-width:120px">
+            <span class="n-ico" style="font-size:14px">📞</span>
+            <div class="n-info">
+              <div class="n-name" style="font-size:11px">Подтверждение</div>
+              <div class="n-stats" style="font-size:9px"><span class="n-rd">45</span> просрочек</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="node" style="left:40%;top:415px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(46,195,121,0.03);border:1px solid rgba(46,195,121,0.06);border-left:3px solid #2EC379;padding:6px 12px;min-width:120px">
+            <span class="n-ico" style="font-size:14px">✉️</span>
+            <div class="n-info">
+              <div class="n-name" style="font-size:11px">Отправка КП</div>
+              <div class="n-stats" style="font-size:9px"><span class="n-gr">1 890</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="node" style="left:56%;top:415px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(46,195,121,0.03);border:1px solid rgba(46,195,121,0.06);border-left:3px solid #2EC379;padding:6px 12px;min-width:120px">
+            <span class="n-ico" style="font-size:14px">📋</span>
+            <div class="n-info">
+              <div class="n-name" style="font-size:11px">Подписание акта</div>
+              <div class="n-stats" style="font-size:9px"><span class="n-gr">4 080</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="node" style="left:68%;top:415px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(46,195,121,0.03);border:1px solid rgba(46,195,121,0.06);border-left:3px solid #2EC379;padding:6px 12px;min-width:120px">
+            <span class="n-ico" style="font-size:14px">✅</span>
+            <div class="n-info">
+              <div class="n-name" style="font-size:11px">Финализация</div>
+              <div class="n-stats" style="font-size:9px"><span class="n-gr">840</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="node" style="left://80%;top:415px;transform:translateX(-50%);display:none"></div>
+
+        <div class="node" style="left:90%;top:415px;transform:translateX(-50%)">
+          <div class="n-box" style="background:rgba(255,184,0,0.03);border:1px solid rgba(255,184,0,0.06);border-left:3px solid #FFB800;padding:6px 12px;min-width:120px">
+            <span class="n-ico" style="font-size:14px">📞</span>
+            <div class="n-info">
+              <div class="n-name" style="font-size:11px">Передача в продажи</div>
+              <div class="n-stats" style="font-size:9px"><span class="n-rd">120</span> просрочек</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Detail panel -->
+      <div class="detail-panel" id="detailPanel">
+        <div id="detailContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom summary -->
+  <div class="pnl">
+    <div class="pnl-h">
+      <div class="pnl-h-l">
+        <span class="dot" style="background:#5B8CFF"></span>
+        <span class="tt">Сводка по иерархии</span>
+      </div>
+    </div>
+    <div class="pnl-b">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div style="text-align:center;padding:12px;background:rgba(154,163,175,0.03);border-radius:8px">
+          <div style="font-size:24px;font-weight:700;color:#5B8CFF">3</div>
+          <div style="font-size:11px;color:#A2A2A2;margin-top:2px">Родительских процессов</div>
+        </div>
+        <div style="text-align:center;padding:12px;background:rgba(154,163,175,0.03);border-radius:8px">
+          <div style="font-size:24px;font-weight:700;color:#2EC379">7</div>
+          <div style="font-size:11px;color:#A2A2A2;margin-top:2px">Дочерних процессов</div>
+        </div>
+        <div style="text-align:center;padding:12px;background:rgba(154,163,175,0.03);border-radius:8px">
+          <div style="font-size:24px;font-weight:700;color:#FFB800">4</div>
+          <div style="font-size:11px;color:#A2A2A2;margin-top:2px">Уровня вложенности</div>
+        </div>
+        <div style="text-align:center;padding:12px;background:rgba(154,163,175,0.03);border-radius:8px">
+          <div style="font-size:24px;font-weight:700;color:#fff">12 847</div>
+          <div style="font-size:11px;color:#A2A2A2;margin-top:2px">Всего запусков (цепи)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">Оркестра — Карта взаимосвязей процессов</div>
+</div>
+
+<script>
+var processData = {
+  'kitBot продажи': {
+    role: 'Менеджер по продажам',
+    runs: '3 240',
+    completed: '2 180',
+    overdue: '217',
+    children: 'Выставление счёта, Активация, Коммерческое предложение',
+    status: '⚠️ Замедление',
+    statusColor: '#FFB800'
+  },
+  'kitBot аккаунтинг': {
+    role: 'Бухгалтер',
+    runs: '5 892',
+    completed: '5 124',
+    overdue: '120',
+    children: 'Формирование акта, Закрытие периода',
+    status: '✓ В норме',
+    statusColor: '#2EC379'
+  },
+  'RDetector продажи': {
+    role: 'Менеджер по продажам',
+    runs: '2 015',
+    completed: '1 203',
+    overdue: '300',
+    children: 'Обработка лида, Квалификация',
+    status: '🔴 Критично',
+    statusColor: '#FF0004'
+  },
+  'Выставление счёта': {
+    role: 'Бухгалтер',
+    runs: '1 240',
+    completed: '1 110',
+    overdue: '25',
+    parent: 'kitBot продажи',
+    children: 'Отправка клиенту',
+    status: '✓ В норме',
+    statusColor: '#2EC379'
+  },
+  'Активация': {
+    role: 'Менеджер',
+    runs: '980',
+    completed: '720',
+    overdue: '45',
+    parent: 'kitBot продажи',
+    children: 'Подтверждение',
+    status: '⚠️ Замедление',
+    statusColor: '#FFB800'
+  },
+  'Коммерческое предложение': {
+    role: 'Менеджер',
+    runs: '2 180',
+    completed: '1 890',
+    overdue: '120',
+    parent: 'kitBot продажи',
+    children: 'Отправка КП',
+    status: '⚠️ Замедление',
+    statusColor: '#FFB800'
+  },
+  'Формирование акта': {
+    role: 'Бухгалтер',
+    runs: '4 200',
+    completed: '4 080',
+    overdue: '40',
+    parent: 'kitBot аккаунтинг',
+    children: 'Подписание акта',
+    status: '✓ В норме',
+    statusColor: '#2EC379'
+  },
+  'Закрытие периода': {
+    role: 'Бухгалтер',
+    runs: '890',
+    completed: '840',
+    overdue: '12',
+    parent: 'kitBot аккаунтинг',
+    children: 'Финализация',
+    status: '✓ В норме',
+    statusColor: '#2EC379'
+  },
+  'Обработка лида': {
+    role: 'Менеджер',
+    runs: '2 015',
+    completed: '1 203',
+    overdue: '300',
+    parent: 'RDetector продажи',
+    children: '—',
+    status: '🔴 Критично',
+    statusColor: '#FF0004'
+  },
+  'Квалификация': {
+    role: 'Менеджер',
+    runs: '1 800',
+    completed: '1 650',
+    overdue: '80',
+    parent: 'RDetector продажи',
+    children: 'Передача в продажи',
+    status: '⚠️ Замедление',
+    statusColor: '#FFB800'
+  }
+};
+
+function showDetail(name) {
+  var data = processData[name];
+  if (!data) return;
+
+  var panel = document.getElementById('detailPanel');
+  var content = document.getElementById('detailContent');
+
+  var html = '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
+  html += '<span style="font-size:20px;font-weight:700;color:#fff">' + name + '</span>';
+  html += '<span style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:' + data.statusColor.replace('#', 'rgba(').replace('FFB800', '255,184,0').replace('2EC379', '46,195,121').replace('FF0004', '255,0,4') + ',0.1);color:' + data.statusColor + '">' + data.status + '</span>';
+  html += '</div>';
+
+  html += '<div class="dp-row"><span class="dp-l">Целевая роль</span><span class="dp-r">' + data.role + '</span></div>';
+  html += '<div class="dp-row"><span class="dp-l">Запущено</span><span class="dp-r">' + data.runs + '</span></div>';
+  html += '<div class="dp-row"><span class="dp-l">Завершено</span><span class="dp-r" style="color:#2EC379">' + data.completed + '</span></div>';
+  html += '<div class="dp-row"><span class="dp-l">Просрочки</span><span class="dp-r" style="color:#FF0004">' + data.overdue + '</span></div>';
+
+  if (data.parent) {
+    html += '<div class="dp-row"><span class="dp-l">Родительский процесс</span><span class="dp-r" style="color:#5B8CFF">' + data.parent + '</span></div>';
+  }
+  html += '<div class="dp-row"><span class="dp-l">Запускает процессы</span><span class="dp-r">' + data.children + '</span></div>';
+
+  content.innerHTML = html;
+  panel.classList.add('show');
+}
+</script>
+
+</body>
+</html>

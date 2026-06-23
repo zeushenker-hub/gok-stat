@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Движение сотрудников — Корпоративный портал</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #fff;
+      color: #0D0B68;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 10px;
+      gap: 30px;
+      width: 1512px;
+    }
+    .header { display: flex; flex-direction: row; align-items: center; padding: 0; gap: 40px; width: 1314px; height: 59px; }
+    .logo-row { display: flex; flex-direction: row; align-items: center; padding: 0; gap: 2px; width: 165px; height: 34px; }
+    .logo-shape1 { width: 61.5px; height: 34px; background: #0D0B68; border-radius: 6px 0 0 6px; }
+    .logo-shape2 { width: 65px; height: 34px; background: #7D71FF; border-radius: 0 6px 6px 0; }
+    .search-bar { display: flex; flex-direction: row; align-items: center; padding: 20px 15px; gap: 5px; width: 626px; height: 59px; background: rgba(130,135,165,0.1); border-radius: 10px; }
+    .search-bar span { font-weight: 400; font-size: 16px; line-height: 19px; color: #8287A5; }
+    .user-block { display: flex; flex-direction: row; align-items: center; padding: 0; gap: 5px; width: 210px; height: 56px; }
+    .user-avatar { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+    .user-avatar .initials { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; font-size: 20px; }
+    .user-info { display: flex; flex-direction: column; justify-content: center; gap: 5px; }
+    .user-name { font-weight: 500; font-size: 16px; line-height: 19px; color: #0D0B68; }
+    .main-layout { display: flex; flex-direction: row; align-items: flex-start; padding: 0; gap: 40px; width: 1404px; }
+    .sidebar { display: flex; flex-direction: column; align-items: flex-start; padding: 0; gap: 15px; width: 240px; }
+    .nav-item { display: flex; flex-direction: row; align-items: center; padding: 0 20px; gap: 10px; width: 240px; height: 49px; border-radius: 10px; cursor: pointer; font-weight: 500; font-size: 16px; line-height: 19px; color: #0D0B68; text-decoration: none; }
+    .nav-item.active { background: #7D72FF; color: #fff; }
+    .nav-item.active svg path { fill: #fff; stroke: #fff; }
+    .nav-item svg { flex-shrink: 0; }
+    .content { display: flex; flex-direction: column; gap: 30px; width: 750px; flex-shrink: 0; }
+    .page-header-group { display: flex; flex-direction: column; gap: 8px; }
+    .page-title { font-weight: 700; font-size: 28px; line-height: 34px; color: #0D0B68; }
+    .page-subtitle { font-weight: 400; font-size: 14px; line-height: 17px; color: #8287A5; }
+    .tabs-row { display: flex; flex-direction: row; gap: 15px; }
+    .tab-btn { padding: 10px 0; font-weight: 400; font-size: 16px; line-height: 19px; color: #8287A5; cursor: pointer; border: none; background: none; }
+    .tab-btn.active { font-weight: 600; color: #7D72FF; border-bottom: 4px solid #7D72FF; padding: 10px 0; }
+    .emp-list { display: flex; flex-direction: column; gap: 15px; }
+    .emp-card { display: flex; flex-direction: row; align-items: center; padding: 20px; gap: 20px; background: #FFFFFF; border: 2px solid rgba(130,135,165,0.1); border-radius: 20px; transition: box-shadow 0.2s; }
+    .emp-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+    .emp-avatar { width: 72px; height: 72px; border-radius: 50%; flex-shrink: 0; overflow: hidden; }
+    .emp-avatar .initials { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 26px; }
+    .emp-info { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .emp-name { font-weight: 600; font-size: 18px; line-height: 22px; color: #0D0B68; }
+    .emp-role { font-weight: 400; font-size: 14px; line-height: 17px; color: #8287A5; }
+    .emp-dept { font-weight: 400; font-size: 12px; line-height: 15px; color: #9CA3AF; }
+    .emp-date { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; font-size: 13px; line-height: 16px; color: #7D72FF; margin-top: 4px; }
+    .emp-message {
+      margin-top: 6px; padding: 8px 14px;
+      border-radius: 12px; font-weight: 400; font-size: 13px; line-height: 18px;
+      width: fit-content; max-width: 100%;
+      position: relative;
+    }
+    .emp-message::before {
+      content: ''; position: absolute; top: -6px; left: 16px;
+      width: 12px; height: 12px; transform: rotate(45deg);
+    }
+    .msg-welcome { background: #ECFDF5; color: #065F46; }
+    .msg-welcome::before { background: #ECFDF5; }
+    .msg-thanks { background: #EFF0FF; color: #5B52CC; }
+    .msg-thanks::before { background: #EFF0FF; }
+    .emp-tag { display: inline-flex; align-items: center; gap: 4px; padding: 6px 14px; border-radius: 100px; font-weight: 600; font-size: 12px; line-height: 15px; white-space: nowrap; flex-shrink: 0; }
+    .tag-newcomer { background: #D1FAE5; color: #065F46; }
+    .tag-departure { background: #EFF0FF; color: #7D72FF; }
+    .divider { width: 100%; height: 2px; background: rgba(130,135,165,0.1); }
+    .section-label { font-weight: 500; font-size: 16px; line-height: 19px; color: #8287A5; display: flex; align-items: center; gap: 8px; }
+    .section-label svg { width: 20px; height: 20px; }
+    .farewell-block { margin-top: -10px; padding: 16px 20px; background: linear-gradient(135deg, #EFF0FF 0%, #F8F9FF 100%); border-radius: 16px; border: 2px solid rgba(125,114,255,0.15); display: flex; align-items: center; gap: 12px; font-weight: 500; font-size: 14px; line-height: 17px; color: #7D72FF; }
+    .empty-state { text-align: center; padding: 40px 20px; color: #9CA3AF; background: rgba(130,135,165,0.05); border-radius: 20px; }
+    .empty-state h3 { font-size: 18px; margin-bottom: 4px; color: #6B7280; }
+    .empty-state p { font-size: 14px; }
+    .right-sidebar { display: flex; flex-direction: column; gap: 30px; width: 250px; }
+    .sidebar-card { display: flex; flex-direction: column; padding: 15px; gap: 15px; width: 100%; background: rgba(130,135,165,0.1); border-radius: 10px; }
+    .sidebar-card-title { display: flex; flex-direction: row; align-items: center; gap: 5px; font-weight: 500; font-size: 16px; line-height: 19px; color: #8287A5; }
+    .sidebar-card-title svg { width: 24px; height: 24px; }
+    .event-item { display: flex; flex-direction: row; align-items: center; padding: 10px; gap: 5px; background: rgba(130,135,165,0.1); border-radius: 5px; width: 100%; }
+    .event-info { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+    .event-name { font-weight: 400; font-size: 14px; line-height: 17px; color: #0D0B68; }
+    .event-date { font-weight: 400; font-size: 12px; line-height: 15px; color: #8287A5; }
+  </style>
+</head>
+<body>
+<div class="header">
+  <div class="logo-row"><div class="logo-shape1"></div><div class="logo-shape2"></div></div>
+  <div class="search-bar"><span>AI-Поиск</span></div>
+  <div class="user-block"><div class="user-avatar"><div class="initials" style="background:linear-gradient(135deg,#7D72FF,#0D0B68);">ИА</div></div><div class="user-info"><div class="user-name">Иванов Александр</div></div></div>
+</div>
+<div class="main-layout">
+  <div class="sidebar">
+    <a class="nav-item" href="#"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" fill="#fff" stroke="#0D0B68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 22V12H15V22" fill="#fff" stroke="#0D0B68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Главная</a>
+    <a class="nav-item" href="#"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="2" fill="#fff" stroke="#0D0B68" stroke-width="2"/><path d="M3 10H21" stroke="#0D0B68" stroke-width="2"/><path d="M16 2V6" stroke="#0D0B68" stroke-width="2" stroke-linecap="round"/><path d="M8 2V6" stroke="#0D0B68" stroke-width="2" stroke-linecap="round"/></svg>Календарь</a>
+    <a class="nav-item active" href="#"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>Команда</a>
+    <a class="nav-item" href="#"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21" stroke="#0D0B68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="#0D0B68" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Орг. структура</a>
+  </div>
+  <div class="content">
+    <div class="page-header-group">
+      <div class="page-title">🚆 Движение сотрудников</div>
+      <div class="page-subtitle">Автоматическая публикация: новички — каждые 2 недели, провожаем — за 3 дня</div>
+    </div>
+    <div class="tabs-row">
+      <button class="tab-btn active" data-tab="newcomers">🚃 Попутчики</button>
+      <button class="tab-btn" data-tab="departures">🚉 Конечная</button>
+      <button class="tab-btn" data-tab="all">🗺 Вся хроника</button>
+    </div>
+    <div class="tab-content" id="tab-newcomers">
+      <div class="section-label"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#10B981" stroke="#10B981" stroke-width="1"/></svg>Новые попутчики</div>
+      <div class="farewell-block"><span>💛</span><span>Спасибо, что вы с нами — первые 5 дней адаптации под присмотром наставника</span></div>
+      <div class="emp-list" id="newcomers-list"></div>
+    </div>
+    <div class="tab-content" id="tab-departures" style="display:none;">
+      <div class="section-label"><svg viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#7D72FF" stroke="#7D72FF" stroke-width="1"/></svg>Конечная остановка</div>
+      <div class="emp-list" id="departures-list"></div>
+    </div>
+    <div class="tab-content" id="tab-all" style="display:none;">
+      <div class="divider"></div>
+      <div class="section-label"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#7D72FF" stroke-width="2"/><path d="M12 6V12L16 16" stroke="#7D72FF" stroke-width="2" stroke-linecap="round"/></svg>Журнал рейсов</div>
+      <div class="emp-list" id="all-list"></div>
+    </div>
+  </div>
+  <div class="right-sidebar">
+    <div class="sidebar-card">
+      <div class="sidebar-card-title"><svg viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="20" height="14" rx="2" stroke="#8287A5" stroke-width="2"/><path d="M2 10H22" stroke="#8287A5" stroke-width="2"/><path d="M8 2V6" stroke="#8287A5" stroke-width="2" stroke-linecap="round"/><path d="M16 2V6" stroke="#8287A5" stroke-width="2" stroke-linecap="round"/></svg>Ближайшие рейсы</div>
+      <div id="upcoming-events"></div>
+    </div>
+  </div>
+</div>
+<script>
+var NOW=new Date(2026,5,23);
+var TWO_WEEKS_AGO=new Date(NOW);TWO_WEEKS_AGO.setDate(NOW.getDate()-14);
+function parse(s){var p=s.split('.');return new Date(+p[2],+p[1]-1,+p[0]);}
+function daysBetween(a,b){return Math.round((b-a)/86400000);}
+var employees=[
+{id:1, name:'Алина Крылова',    role:'Специалист поддержки L1', dept:'Поддержка',    start:'10.06.2026', end:null, msg:'Привет, команда! Очень рада быть частью такого крутого коллектива. Буду стараться! ✨'},
+{id:2, name:'Максим Белов',     role:'Java-разработчик',       dept:'IT-департамент', start:'15.06.2026', end:null, msg:'Всем привет! Я Максим, наконец-то присоединился к разработке. Жду интересных задач 🚀'},
+{id:3, name:'Дарья Соловьёва',  role:'HR-менеджер',           dept:'HR-департамент', start:'16.06.2026', end:null, msg:'Рада познакомиться! Буду заниматься подбором и развитием команды. Пишите, знакомимся 🌟'},
+{id:4, name:'Иван Токарев',     role:'Системный аналитик',     dept:'IT-департамент', start:'18.06.2026', end:null, msg:'Друзья, всем привет! Разбираюсь в процессах и готов помогать с требованиями. На связи! 💪'},
+{id:5, name:'Полина Григорьева',role:'Дизайнер UX/UI',        dept:'Маркетинг',     start:'20.06.2026', end:null, msg:'Привет! Очень вдохновлена продуктом и командой. Уже набросала первые идеи 🎨'},
+{id:6, name:'Артём Фёдоров',    role:'Оператор ПС',           dept:'Support L1',     start:'09.06.2026', end:null, msg:'Коллеги, всем привет! Помогаю клиентам на первой линии. Обращайтесь, подскажу! ✨'},
+{id:7, name:'Светлана Козлова', role:'Старший оператор',       dept:'Support L2',     start:null, end:'25.06.2026', msg:'Спасибо команде за эти годы! Вы научили меня всему, что я умею. Очень буду скучать 💜'},
+{id:8, name:'Олег Павлов',      role:'Team Lead поддержки',    dept:'Support L3',     start:null, end:'24.06.2026', msg:'Было честью работать с такими профессионалами. Уверен, поддержка в надёжных руках! 🤝'},
+{id:9, name:'Наталья Романова', role:'Контент-менеджер',       dept:'Коммуникации',   start:null, end:'30.06.2026', msg:'Ребята, спасибо за тёплую атмосферу! Наши посты и рассылки остаются с вами. Люблю вас 💛'},
+{id:10,name:'Денис Кузнецов',   role:'Разработчик PHP',        dept:'IT-департамент', start:null, end:'23.06.2026', msg:'Код остаётся, а я уезжаю покорять новые вершины. Буду вспоминать наши ревью с теплотой! 🚀'},
+{id:11,name:'Виктория Орлова',  role:'QA-инженер',             dept:'IT-департамент', start:null, end:'26.06.2026', msg:'Всем багам назло! Спасибо за крутой опыт и вайб. Держите качество, я буду следить 🌟'},
+{id:12,name:'Григорий Мишин',   role:'DevOps-инженер',         dept:'IT-департамент', start:null, end:'28.06.2026', msg:'Инфраструктура в порядке, мониторинг настроен, CI/CD летает. Всё оставляю в хорошем состоянии! 🛠'},
+];
+
+function getNewcomers(){return employees.filter(function(e){return e.start;}).filter(function(e){var d=parse(e.start);return d>=TWO_WEEKS_AGO&&d<=NOW;}).sort(function(a,b){return parse(b.start)-parse(a.start);});}
+function getDepartures(){return employees.filter(function(e){return e.end;}).filter(function(e){var endDate=parse(e.end);var diff=daysBetween(NOW,endDate);if(diff<0)return false;if(diff<=2)return true;if(diff===3)return true;return false;}).sort(function(a,b){return daysBetween(NOW,parse(a.end))-daysBetween(NOW,parse(b.end));});}
+var colors=['#7D72FF','#F59E0B','#10B981','#EF4444','#3B82F6','#8B5CF6','#EC4899','#14B8A6'];
+function inits(n){return n.split(' ').map(function(w){return w[0];}).join('').slice(0,2);}
+
+function renderNewcomers(){var list=document.getElementById('newcomers-list');var items=getNewcomers();if(!items.length){list.innerHTML='<div class="empty-state"><h3>Пока без новичков</h3><p>Как только кто-то присоединится — сразу появится здесь</p></div>';return;}list.innerHTML=items.map(function(e){var days=daysBetween(parse(e.start),NOW);var c=colors[e.id%colors.length];return '<div class="emp-card"><div class="emp-avatar"><div class="initials" style="background:'+c+';">'+inits(e.name)+'</div></div><div class="emp-info"><div class="emp-name">'+e.name+'</div><div class="emp-role">'+e.role+'</div><div class="emp-dept">🏢 '+e.dept+'</div><div class="emp-date">📅 Сел на рейс '+e.start+' · '+days+' дн. в пути</div><div class="emp-message msg-welcome">'+e.msg+'</div></div><div class="emp-tag tag-newcomer">🎫 Посадка</div></div>';}).join('');}
+
+function renderDepartures(){var list=document.getElementById('departures-list');var items=getDepartures();if(!items.length){list.innerHTML='<div class="empty-state"><h3>Нет предстоящих</h3><p>Ближайшие изменения появятся за 3 дня</p></div>';return;}list.innerHTML=items.map(function(e){var c=colors[e.id%colors.length];var dl=daysBetween(NOW,parse(e.end))<=0?'Последний день — Сегодня':'Последний день — '+e.end;return '<div class="emp-card"><div class="emp-avatar"><div class="initials" style="background:'+c+';">'+inits(e.name)+'</div></div><div class="emp-info"><div class="emp-name">'+e.name+'</div><div class="emp-role">'+e.role+'</div><div class="emp-dept">🏢 '+e.dept+'</div><div class="emp-date">📅 '+dl+'</div><div class="emp-message msg-thanks">'+e.msg+'</div></div><div class="emp-tag tag-departure">🚩 Сход</div></div>';}).join('');}
+
+function renderAll(){var list=document.getElementById('all-list');var nc=getNewcomers().map(function(e){e.evt='newcomer';return e;});var dp=getDepartures().map(function(e){e.evt='departure';return e;});var all=nc.concat(dp).sort(function(a,b){var da=a.evt==='newcomer'?parse(a.start):parse(a.end);var db=b.evt==='newcomer'?parse(b.start):parse(b.end);return db-da;});if(!all.length){list.innerHTML='<div class="empty-state"><h3>Нет событий</h3></div>';return;}list.innerHTML=all.map(function(e){var isN=e.evt==='newcomer';var c=colors[e.id%colors.length];return '<div class="emp-card"><div class="emp-avatar"><div class="initials" style="background:'+c+';">'+inits(e.name)+'</div></div><div class="emp-info"><div class="emp-name">'+e.name+'</div><div class="emp-role">'+e.role+'</div><div class="emp-dept">🏢 '+e.dept+'</div><div class="emp-date">📅 '+(isN?'Сел на рейс '+e.start:(daysBetween(NOW,parse(e.end))<=0?'Последний день — Сегодня':'Последний день — '+e.end))+'</div><div class="emp-message '+(isN?'msg-welcome':'msg-thanks')+'">'+e.msg+'</div></div><div class="emp-tag '+(isN?'tag-newcomer':'tag-departure')+'">'+(isN?'🎫 Посадка':'🚩 Сход')+'</div></div>';}).join('');}
+
+function renderEvents(){var c=document.getElementById('upcoming-events');var dp=getDepartures().slice(0,3);var nc=getNewcomers().slice(0,2);var h='';dp.forEach(function(e){h+='<div class="event-item"><div class="event-info"><div class="event-name">🚩 '+e.name+' — сходит</div><div class="event-date">'+e.end+'</div></div></div>';});nc.forEach(function(e){h+='<div class="event-item"><div class="event-info"><div class="event-name">🎫 '+e.name+' — посадка</div><div class="event-date">'+e.start+'</div></div></div>';});if(!h)h='<div style="padding:10px;color:#9CA3AF;font-size:13px;">Нет ближайших рейсов</div>';c.innerHTML=h;}
+document.querySelectorAll('.tab-btn').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});this.classList.add('active');document.querySelectorAll('.tab-content').forEach(function(tc){tc.style.display='none';});document.getElementById('tab-'+this.dataset.tab).style.display='block';});});
+renderNewcomers();renderDepartures();renderAll();renderEvents();
+</script>
+</body>
+</html>

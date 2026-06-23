@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Оркестра — Мониторинг процессов v15</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Roboto',sans-serif;background:#1A1A1A;color:#fff;padding:0;display:flex;flex-direction:column;align-items:center;-webkit-font-smoothing:antialiased}
+
+.app{width:1257px;max-width:100%;display:flex;flex-direction:column;gap:20px;padding:0 10px}
+
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;width:100%;padding:20px 0;border-bottom:1px solid rgba(154,163,175,0.3);background:transparent}
+.hdr-l{display:flex;align-items:center;gap:5px}
+.hdr-r{display:flex;align-items:center;gap:20px}
+.hdr-r .user{display:flex;align-items:center;gap:8px;font-size:14px;color:#9AA3AF}
+.hdr-r .avatar{width:32px;height:32px;border-radius:50%;background:rgba(91,140,255,0.1);display:flex;align-items:center;justify-content:center;font-size:12px;color:#5B8CFF;font-weight:700}
+.ver-tag{font-size:11px;color:#A2A2A2;background:rgba(154,163,175,0.05);padding:4px 10px;border-radius:5px;border:1px solid rgba(154,163,175,0.1)}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;background:rgba(0,0,0,0.3);padding:4px;border-radius:8px;border:1px solid rgba(154,163,175,0.1);width:100%}
+.tab{padding:10px 20px;border-radius:6px;font-size:14px;font-weight:500;color:#9AA3AF;cursor:pointer;border:none;background:transparent;font-family:'Roboto',sans-serif}
+.tab:hover{color:#fff}
+.tab.on{background:rgba(91,140,255,0.1);color:#5B8CFF;font-weight:600}
+
+/* Stats */
+
+/* Filter bar */
+.fbar{display:flex;align-items:center;gap:10px;padding:16px 20px;background:rgba(154,163,175,0.05);backdrop-filter:blur(26px);border-radius:10px;flex-wrap:wrap;width:100%}
+.fbar .fsrch{position:relative;flex:1;min-width:200px}
+.fbar .fsrch input{width:100%;padding:10px 14px 10px 36px;border:1px solid rgba(154,163,175,0.15);border-radius:5px;font-size:14px;font-family:'Roboto',sans-serif;color:#fff;background:rgba(154,163,175,0.05);outline:none}
+.fbar .fsrch input:focus{border-color:#5B8CFF}
+.fbar .fsrch input::placeholder{color:#A2A2A2}
+.fbar .fsrch .fico{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:#A2A2A2}
+.fchip{display:inline-flex;align-items:center;gap:4px;padding:8px 16px;border-radius:5px;font-size:14px;font-weight:400;cursor:pointer;border:1px solid rgba(154,163,175,0.15);background:rgba(154,163,175,0.05);color:#9AA3AF;transition:all .12s;font-family:'Roboto',sans-serif}
+.fchip:hover{border-color:#5B8CFF;color:#fff}
+.fchip.on{background:rgba(91,140,255,0.1);border-color:#5B8CFF;color:#5B8CFF}
+.fchip .fcnt{padding:0 6px;border-radius:3px;font-size:11px;background:rgba(154,163,175,0.1);color:#A2A2A2}
+.fchip.on .fcnt{background:rgba(91,140,255,0.15);color:#5B8CFF}
+.fchip.gr{color:#2EC379;border-color:rgba(46,195,121,0.2)}
+.fchip.gr.on{background:rgba(46,195,121,0.08)}
+.fchip.rd{color:#FF0004;border-color:rgba(255,0,4,0.15)}
+.fchip.rd.on{background:rgba(255,0,4,0.06)}
+.fsel{padding:8px 12px;border-radius:5px;border:1px solid rgba(154,163,175,0.15);font-size:14px;font-family:'Roboto',sans-serif;color:#fff;background:rgba(154,163,175,0.05);outline:none;cursor:pointer}
+.fsel option{background:#1A1A1A;color:#fff}
+.fdates{display:flex;align-items:center;gap:4px}
+.fdates input{padding:6px 10px;border:1px solid rgba(154,163,175,0.15);border-radius:5px;font-size:13px;font-family:'Roboto',sans-serif;color:#fff;background:rgba(154,163,175,0.05);outline:none;width:100px;cursor:pointer}
+.fdates input:focus{border-color:#5B8CFF}
+.fdates .dsep{font-size:13px;color:#9AA3AF}
+.fper{display:flex;gap:3px;flex-wrap:wrap}
+.fper .pchip{padding:6px 12px;border-radius:5px;font-size:13px;font-weight:400;cursor:pointer;border:1px solid rgba(154,163,175,0.1);background:rgba(154,163,175,0.05);color:#9AA3AF;transition:all .1s;font-family:'Roboto',sans-serif}
+.fper .pchip:hover{border-color:#5B8CFF;color:#fff}
+.fper .pchip.on{background:rgba(91,140,255,0.08);border-color:#5B8CFF;color:#5B8CFF}
+.frst{display:inline-flex;align-items:center;gap:4px;padding:8px 16px;border-radius:5px;font-size:13px;font-weight:400;cursor:pointer;border:none;background:#1F4ED8;color:#fff;font-family:'Roboto',sans-serif;transition:background .12s}
+.frst:hover{background:#3366FF}
+
+/* Panel */
+.pnl{background:rgba(154,163,175,0.05);backdrop-filter:blur(26px);border-radius:10px;overflow:hidden;width:100%}
+.pnl-h{padding:16px 24px;border-bottom:1px solid rgba(154,163,175,0.1);display:flex;align-items:center;justify-content:space-between}
+.pnl-h-l{display:flex;align-items:center;gap:8px}
+.pnl-h-l .tt{font-size:12px;font-weight:600;color:#9AA3AF;text-transform:uppercase;letter-spacing:.03em}
+.pnl-h-l .dot{width:6px;height:6px;border-radius:50%}
+.pnl-h-r{display:flex;align-items:center;gap:6px;font-size:13px;color:#9AA3AF}
+.pnl-b{padding:16px 20px}
+
+/* Process cards */
+.pr-list{display:flex;flex-direction:column;gap:8px}
+.prc{background:rgba(154,163,175,0.03);border-radius:10px;border:1px solid rgba(154,163,175,0.08);overflow:hidden;transition:all .12s;cursor:pointer}
+.prc:hover{border-color:rgba(91,140,255,0.2);background:rgba(91,140,255,0.02)}
+.prc.on{border-color:rgba(91,140,255,0.3);background:rgba(91,140,255,0.03)}
+.prc.hide{display:none}
+.prc-h{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.prc-h .pl{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.prc-h .pi{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;min-width:36px}
+.prc-h .pname{font-size:16px;font-weight:600;color:#fff}
+.prc-h .pmeta{font-size:13px;color:#A2A2A2;margin-top:2px}
+.prc-h .pr{display:flex;gap:12px;align-items:center;flex-shrink:0}
+.prc-h .pr .prc-v{text-align:center}
+.prc-h .pr .prc-v .prn{font-size:15px;font-weight:700}
+.prc-h .pr .prc-v .prl{font-size:10px;color:#A2A2A2;text-transform:uppercase;margin-top:1px}
+.prc-h .pr .prc-v .prn.blue{color:#5B8CFF}
+.prc-h .pr .prc-v .prn.green{color:#2EC379}
+.prc-h .pr .prc-v .prn.red{color:#FF0004}
+.prc-h .pr .prc-v .prn.orange{color:#FFB800}
+.ptag{padding:4px 12px;border-radius:5px;font-size:12px;font-weight:600}
+.ptag.green{background:rgba(46,195,121,0.08);color:#2EC379}
+.ptag.orange{background:rgba(255,184,0,0.08);color:#FFB800}
+.ptag.red{background:rgba(255,0,4,0.08);color:#FF0004}
+
+/* Body */
+.prb{display:none;padding:0 20px 16px}
+.prb.show{display:block}
+
+/* Phases */
+.phs{display:flex;gap:8px;overflow-x:auto;padding:8px 0}
+.ph{flex:1;min-width:130px;padding:12px 14px;border-radius:8px;background:rgba(154,163,175,0.03);border:1px solid rgba(154,163,175,0.06);text-align:center;cursor:pointer}
+.ph:hover{border-color:rgba(91,140,255,0.15)}
+.ph.on{background:rgba(91,140,255,0.03);border-color:#5B8CFF}
+.ph .phn{font-size:14px;font-weight:600;color:#fff;margin-bottom:2px}
+.ph .phs2{font-size:12px;color:#A2A2A2}
+.ph .phb{height:4px;border-radius:2px;background:rgba(154,163,175,0.06);margin-top:6px;overflow:hidden}
+.ph .phb .f{height:100%;border-radius:2px}
+.ph .phb .f.gr{background:#2EC379}
+.ph .phb .f.yl{background:#FFB800}
+.ph .phb .f.rd{background:#FF0004}
+
+/* Stages */
+.stg{margin-top:10px}
+.stg .stgh{font-size:12px;font-weight:600;color:#9AA3AF;text-transform:uppercase;margin-bottom:8px;letter-spacing:.03em}
+.sgr{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(154,163,175,0.04);cursor:pointer}
+.sgr:last-child{border-bottom:none}
+.sgr:hover{background:rgba(154,163,175,0.02);margin:0 -8px;padding:8px 8px;border-radius:6px}
+.sgr .sgind{width:3px;height:22px;border-radius:2px;min-width:3px}
+.sgr .sgind.gr{background:#2EC379}
+.sgr .sgind.yl{background:#FFB800}
+.sgr .sgind.rd{background:#FF0004}
+.sgr .sgn{flex:1;font-size:14px;font-weight:500;color:#fff}
+.sgr .sgn .sgs{font-weight:400;color:#A2A2A2;font-size:12px;display:block}
+.sgr .sgb{width:60px;height:5px;border-radius:3px;background:rgba(154,163,175,0.04);overflow:hidden}
+.sgr .sgb .f{height:100%;border-radius:3px}
+.sgr .sgc{font-size:14px;font-weight:600;min-width:36px;text-align:right}
+.sgr .sgc.green{color:#2EC379}
+.sgr .sgc.orange{color:#FFB800}
+.sgr .sgc.red{color:#FF0004}
+
+/* Steps */
+.steps{display:none;padding:6px 0 6px 18px;margin-left:4px;border-left:1px solid rgba(154,163,175,0.06)}
+.steps.show{display:block}
+.step{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;font-size:14px;border-radius:4px;margin:2px 0}
+.step:hover{background:rgba(154,163,175,0.02)}
+.step .sd{width:6px;height:6px;border-radius:50%;margin-top:5px;min-width:6px}
+.step .sd.green{background:#2EC379}
+.step .sd.orange{background:#FFB800}
+.step .sd.red{background:#FF0004}
+.step .sd.blue{background:#5B8CFF}
+.step .si{flex:1}
+.step .si .sn{font-weight:500;font-size:14px;color:#fff}
+.step .si .sn .sint{display:inline-block;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;margin-left:6px;vertical-align:middle}
+.step .si .sn .sint.bi{background:rgba(91,140,255,0.1);color:#5B8CFF}
+.step .si .sn .sint.tg{background:rgba(242,105,217,0.1);color:#F269D9}
+.step .si .sn .sint.c1{background:rgba(46,195,121,0.1);color:#2EC379}
+.step .sm{font-size:11px;color:#A2A2A2;margin-top:2px}
+.step .ss{text-align:right;min-width:32px}
+.step .ss .ssv{font-weight:600;font-size:13px}
+.step .ss .ssv.green{color:#2EC379}
+.step .ss .ssv.orange{color:#FFB800}
+.step .ss .ssv.red{color:#FF0004}
+.step .ss .ssl{font-size:10px;color:#A2A2A2;display:block}
+
+/* Escalation */
+.esc{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:8px;font-size:14px;margin:8px 0}
+.esc.yl{background:rgba(255,184,0,0.04);border:1px solid rgba(255,184,0,0.1);color:#FFB800}
+.esc.rd{background:rgba(255,0,4,0.03);border:1px solid rgba(255,0,4,0.08);color:#FF0004}
+.esc .et{flex:1}
+.esc .ebtn{padding:6px 12px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:rgba(255,184,0,0.1);color:#FFB800;font-family:'Roboto',sans-serif}
+.esc .ebtn:hover{background:rgba(255,184,0,0.15)}
+
+/* No results */
+.nr{display:none;align-items:center;justify-content:center;padding:60px;font-size:16px;color:#A2A2A2}
+.nr.show{display:flex}
+
+/* Right sections */
+.mg{display:grid;grid-template-columns:1fr 320px;gap:20px}
+.rsec{margin-bottom:14px}
+.rsec:last-child{margin-bottom:0}
+.rsec-h{font-size:12px;font-weight:600;color:#9AA3AF;text-transform:uppercase;margin-bottom:8px;letter-spacing:.03em}
+
+/* Metric */
+.mtr{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:14px;border-bottom:1px solid rgba(154,163,175,0.04)}
+.mtr:last-child{border-bottom:none}
+.mtr .ml{color:#A2A2A2}
+.mtr .mv{color:#fff;font-weight:600}
+.mtr .mv.green{color:#2EC379}
+.mtr .mv.red{color:#FF0004}
+
+/* Integrations */
+.intg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.inti{display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(154,163,175,0.03);border-radius:6px;border:1px solid rgba(154,163,175,0.06);font-size:13px}
+.inti .ii{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;min-width:22px;font-weight:700}
+.inti .it{flex:1}
+.inti .it .in{font-weight:600;color:#fff;font-size:13px}
+.inti .it .is{font-size:10px;color:#A2A2A2}
+.inti .id{width:5px;height:5px;border-radius:50%;min-width:5px}
+.inti .id.green{background:#2EC379}
+.inti .id.red{background:#FF0004}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:5px;font-size:13px;font-weight:400;cursor:pointer;border:none;transition:all .12s;font-family:'Roboto',sans-serif}
+.btn-p{background:#1F4ED8;color:#fff}
+.btn-p:hover{background:#3366FF}
+.btn-s{background:rgba(154,163,175,0.05);color:#9AA3AF;border:1px solid rgba(154,163,175,0.1)}
+.btn-s:hover{color:#5B8CFF;border-color:rgba(91,140,255,0.15)}
+.btn-sm{padding:4px 10px;font-size:12px}
+
+/* Footer */
+.foot{text-align:center;font-size:13px;color:#A2A2A2;padding:16px 0;border-top:1px solid rgba(154,163,175,0.1)}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-l">
+      <svg width="180" height="32" viewBox="0 0 180 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="14" stroke="url(#logoGrad)" stroke-width="3" fill="none"/>
+        <path d="M10 16 C10 10 16 6 16 6 C16 6 22 10 22 16 C22 22 16 26 16 26 C16 26 10 22 10 16Z" stroke="url(#logoGrad)" stroke-width="2" fill="none"/>
+        <text x="30" y="22" font-family="Roboto,sans-serif" font-weight="700" font-size="20" fill="white" letter-spacing="4">ORCHESTRA</text>
+        <defs>
+          <linearGradient id="logoGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="white"/>
+            <stop offset="100%" stop-color="#0B3D91"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <div class="hdr-r">
+      <span class="ver-tag">v15 — новые статусы</span>
+      <span class="user"><span class="avatar">ПА</span> Петров А.</span>
+    </div>
+  </div>
+
+  </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab on" onclick="switchTab('procs',this)">📋 Мои процессы</button>
+    <button class="tab" onclick="switchTab('risk',this)">🔴 Зона риска</button>
+    <button class="tab" onclick="switchTab('esc',this)">🚨 Эскалации</button>
+    <button class="tab" onclick="switchTab('stats',this)">📊 Статистика</button>
+  </div>
+
+  <!-- Tab content: Мои процессы (default visible) -->
+  <div id="tab-procs" class="tab-content" style="display:block">
+    <div class="mg" style="grid-template-columns:1fr 360px">
+      <div style="display:flex;flex-direction:column;gap:12px">
+
+        <!-- Filter bar for list -->
+        <div class="fbar" style="padding:10px 16px">
+          <div class="fsrch" style="flex:1;min-width:150px">
+            <span class="fico">🔍</span>
+            <input id="procSearch" type="text" placeholder="Поиск по процессам..." style="padding:8px 10px 8px 32px;font-size:13px" oninput="filterTable()">
+          </div>
+          <select class="fsel" id="roleFilter" onchange="filterTable()" style="padding:6px 10px;font-size:12px">
+            <option value="">Все роли</option>
+            <option value="Менеджер по продажам">Менеджер по продажам</option>
+            <option value="Бухгалтер">Бухгалтер</option>
+            <option value="Юрист">Юрист</option>
+          </select>
+          <span class="fchip on">Все <span class="fcnt">3</span></span>
+        </div>
+
+        
+
+        <!-- Process list -->
+        <div style="background:rgba(154,163,175,0.03);border-radius:8px;border:1px solid rgba(154,163,175,0.06);overflow:hidden">
+          <!-- Header row -->
+          <div style="display:grid;grid-template-columns:28px 2fr 1.2fr 1.2fr 1fr 1fr 1fr 70px;gap:8px;padding:10px 14px;font-size:11px;color:#9AA3AF;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid rgba(154,163,175,0.04)">
+            <span></span>
+            <span>Процесс</span>
+            <span style="text-align:left">Целевая роль</span>
+            <span style="text-align:left;font-size:10px">Артефакты</span>
+            <span style="text-align:right">Запущено</span>
+            <span style="text-align:right">Завершено</span>
+            <span style="text-align:right">Просрочки</span>
+            <span style="text-align:right">SLA</span>
+          </div>
+
+          <!-- Row 1: kitBot продажи -->
+          <div data-role="Менеджер по продажам" data-status="warn" class="proc-row" style="display:grid;grid-template-columns:28px 2fr 1.2fr 1.2fr 1fr 1fr 1fr 70px;gap:8px;padding:10px 14px;font-size:14px;border-bottom:1px solid rgba(154,163,175,0.03);cursor:pointer;align-items:center" onclick="togDetail(this)" data-detail="detail1">
+            <span style="font-size:18px">💼</span>
+            <span style="color:#fff;font-weight:500">kitBot продажи</span>
+            <span style="color:#9AA3AF;font-size:13px">Менеджер по продажам</span>
+            <span style="font-size:11px;color:#A2A2A2">📄 Счёт (890)<br>📋 Договор (720)</span>
+            <span style="text-align:right;font-weight:600">3 240</span>
+            <span style="text-align:right;font-weight:600;color:#2EC379">2 180</span>
+            <span id="ov-btn-1" style="text-align:right;font-weight:600;color:#FF0004;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(255,0,4,0.3)">217</span>
+            <span style="text-align:right;font-size:13px;color:#FF0004;font-weight:600">6.7%</span>
+          </div>
+          <div id="detail1" style="display:none;padding:12px 14px 14px;background:rgba(91,140,255,0.02);border-bottom:1px solid rgba(154,163,175,0.03)">
+            <div style="font-size:12px;color:#9AA3AF;margin-bottom:6px">22 шага · 4 фазы · артефакты: Счёт, Договор</div>
+            <div class="phs" style="padding:0">
+              <div class="ph on" style="min-width:0;padding:8px 10px"><div class="phn" style="font-size:12px">⏺Входящий</div><div class="phs2" style="font-size:10px">100%</div><div class="phb"><div class="f gr" style="width:100%"></div></div></div>
+              <div class="ph" style="min-width:0;padding:8px 10px"><div class="phn" style="font-size:12px">📋Квалификация</div><div class="phs2" style="font-size:10px">74%</div><div class="phb"><div class="f yl" style="width:74%"></div></div></div>
+              <div class="ph" style="min-width:0;padding:8px 10px"><div class="phn" style="font-size:12px">📄КП</div><div class="phs2" style="font-size:10px">48%</div><div class="phb"><div class="f yl" style="width:48%"></div></div></div>
+              <div class="ph" style="min-width:0;padding:8px 10px"><div class="phn" style="font-size:12px">✅Закрытие</div><div class="phs2" style="font-size:10px">22%</div><div class="phb"><div class="f rd" style="width:22%"></div></div></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:6px">
+              <span style="padding:3px 8px;border-radius:4px;font-size:11px;background:rgba(91,140,255,0.06);color:#5B8CFF">Битрикс24</span>
+              <span style="padding:3px 8px;border-radius:4px;font-size:11px;background:rgba(46,195,121,0.06);color:#2EC379">1С: CRM</span>
+              <span style="padding:3px 8px;border-radius:4px;font-size:11px;background:rgba(242,105,217,0.06);color:#F269D9">Telegram</span>
+            </div>
+          </div>
+
+          <!-- Row 2: kitBot аккаунтинг -->
+          <div data-role="Бухгалтер" data-status="ok" class="proc-row" style="display:grid;grid-template-columns:28px 2fr 1.2fr 1.2fr 1fr 1fr 1fr 70px;gap:8px;padding:10px 14px;font-size:14px;border-bottom:1px solid rgba(154,163,175,0.03);cursor:pointer;align-items:center" onclick="togDetail(this)" data-detail="detail2">
+            <span style="font-size:18px">📊</span>
+            <span style="color:#fff;font-weight:500">kitBot аккаунтинг</span>
+            <span style="color:#9AA3AF;font-size:13px">Бухгалтер</span>
+            <span style="font-size:11px;color:#A2A2A2">📄 Акт (4 200)<br>📊 Проводка (3 800)</span>
+            <span style="text-align:right;font-weight:600">5 892</span>
+            <span style="text-align:right;font-weight:600;color:#2EC379">5 124</span>
+            <span id="ov-btn-2" style="text-align:right;font-weight:600;color:#9AA3AF;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(154,163,175,0.3)">120</span>
+            <span style="text-align:right;font-size:13px;color:#9AA3AF;font-weight:600">2.0%</span>
+          </div>
+          <div id="detail2" style="display:none;padding:12px 14px 14px;background:rgba(91,140,255,0.02);border-bottom:1px solid rgba(154,163,175,0.03)">
+            <div style="font-size:12px;color:#9AA3AF;margin-bottom:6px">16 шагов · 3 фазы · артефакты: Акт, Проводка · 5.2% просрочек</div>
+            <div style="display:flex;gap:10px">
+              <span style="padding:3px 8px;border-radius:4px;font-size:11px;background:rgba(46,195,121,0.06);color:#2EC379">1С: CRM</span>
+              <span style="padding:3px 8px;border-radius:4px;font-size:11px;background:rgba(242,105,217,0.06);color:#F269D9">Telegram</span>
+              <span style="padding:3px 8px;border-radius:4px;font-size:11px;background:rgba(91,140,255,0.06);color:#5B8CFF">API</span>
+            </div>
+          </div>
+
+          <!-- Row 3: Согласование договоров -->
+          <div data-role="Юрист" data-status="warn" class="proc-row" style="display:grid;grid-template-columns:28px 2fr 1.2fr 1.2fr 1fr 1fr 1fr 70px;gap:8px;padding:10px 14px;font-size:14px;border-bottom:none;cursor:pointer;align-items:center" onclick="togDetail(this)" data-detail="detail3">
+            <span style="font-size:18px">📝</span>
+            <span style="color:#fff;font-weight:500">Согласование договоров</span>
+            <span style="color:#9AA3AF;font-size:13px">Юрист</span>
+            <span style="font-size:11px;color:#A2A2A2">📋 Договор (890)<br>📎 Доп. соглашение (210)</span>
+            <span style="text-align:right;font-weight:600">1 200</span>
+            <span style="text-align:right;font-weight:600;color:#2EC379">890</span>
+            <span id="ov-btn-3" style="text-align:right;font-weight:600;color:#FF0004;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(255,0,4,0.3)">70</span>
+            <span style="text-align:right;font-size:13px;color:#FF0004;font-weight:600">5.8%</span>
+          </div>
+          <div id="detail3" style="display:none;padding:12px 14px 14px;background:rgba(91,140,255,0.02);border-bottom:1px solid rgba(154,163,175,0.03)">
+            <div style="font-size:12px;color:#9AA3AF;margin-bottom:6px">24 шага · 4 фазы · артефакты: Договор, Доп. соглашение · 5.8% просрочек</div>
+            <div style="display:flex;gap:10px">
+              <span style="padding:3px 8px;border-radius:4px;font-size:11px;background:rgba(91,140,255,0.06);color:#5B8CFF">Битрикс24</span>
+              <span style="padding:3px 8px;border-radius:4px;font-size:11px;background:rgba(46,195,121,0.06);color:#2EC379">1С: CRM</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overdue detail panel (inside left column) -->
+        <!-- Overdue panel: kitBot продажи -->
+        <div id="overduePanel1" style="display:none;margin-top:8px;padding:14px 16px;background:rgba(255,0,4,0.03);border-radius:8px;border:1px solid rgba(255,0,4,0.08)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:15px;font-weight:600;color:#fff">Просрочившие SLA · kitBot продажи</span>
+            <span style="font-size:12px;color:#FF0004">5 сотрудников</span>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:6px 0;font-size:11px;color:#9AA3AF;text-transform:uppercase;border-bottom:1px solid rgba(255,0,4,0.04)">
+            <span>Сотрудник</span><span>Роль</span><span>На каком шаге</span><span style="text-align:right">Время</span><span style="text-align:right">Дата</span>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:7px 0;font-size:13px;align-items:center;border-bottom:1px solid rgba(255,0,4,0.02)">
+            <span style="color:#fff">Иванов Иван Петрович</span><span style="color:#A2A2A2;font-size:12px">Менеджер по продажам</span><span style="color:#FF0004;font-size:12px">Проверка счета в 1С</span><span style="text-align:right;color:#FF0004;font-weight:600">2ч 14м</span><span style="text-align:right;color:#A2A2A2;font-size:12px">19.06</span>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:7px 0;font-size:13px;align-items:center;border-bottom:1px solid rgba(255,0,4,0.02)">
+            <span style="color:#fff">Петров Алексей Сергеевич</span><span style="color:#A2A2A2;font-size:12px">Менеджер по продажам</span><span style="color:#FF0004;font-size:12px">Прикрепление документов</span><span style="text-align:right;color:#FF0004;font-weight:600">1ч 48м</span><span style="text-align:right;color:#A2A2A2;font-size:12px">19.06</span>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:7px 0;font-size:13px;align-items:center;border-bottom:1px solid rgba(255,0,4,0.02)">
+            <span style="color:#fff">Сидоров Дмитрий Николаевич</span><span style="color:#A2A2A2;font-size:12px">Менеджер по продажам</span><span style="color:#FF0004;font-size:12px">Проверка счета в 1С</span><span style="text-align:right;color:#FF0004;font-weight:600">3ч 05м</span><span style="text-align:right;color:#A2A2A2;font-size:12px">18.06</span>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:7px 0;font-size:13px;align-items:center;border-bottom:1px solid rgba(255,0,4,0.02)">
+            <span style="color:#fff">Кузнецов Андрей Владимирович</span><span style="color:#A2A2A2;font-size:12px">Старший менеджер</span><span style="color:#FF0004;font-size:12px">Согласование КП</span><span style="text-align:right;color:#FF0004;font-weight:600">2ч 30м</span><span style="text-align:right;color:#A2A2A2;font-size:12px">18.06</span>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:7px 0;font-size:13px;align-items:center">
+            <span style="color:#fff">Соколова Мария Игоревна</span><span style="color:#A2A2A2;font-size:12px">Менеджер по продажам</span><span style="color:#FF0004;font-size:12px">Выставление счета</span><span style="text-align:right;color:#FF0004;font-weight:600">1ч 12м</span><span style="text-align:right;color:#A2A2A2;font-size:12px">18.06</span>
+          </div>
+        </div>
+
+        <!-- Overdue panel: kitBot аккаунтинг -->
+        <div id="overduePanel2" style="display:none;margin-top:8px;padding:14px 16px;background:rgba(255,184,0,0.03);border-radius:8px;border:1px solid rgba(255,184,0,0.08)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:15px;font-weight:600;color:#fff">Просрочившие SLA · kitBot аккаунтинг</span>
+            <span style="font-size:12px;color:#FFB800">3 сотрудников</span>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:6px 0;font-size:11px;color:#9AA3AF;text-transform:uppercase;border-bottom:1px solid rgba(255,184,0,0.04)">
+            <span>Сотрудник</span><span>Роль</span><span>На каком шаге</span><span style="text-align:right">Время</span><span style="text-align:right">Дата</span>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:7px 0;font-size:13px;align-items:center;border-bottom:1px solid rgba(255,184,0,0.02)">
+            <span style="color:#fff">Белова Анна Викторовна</span><span style="color:#A2A2A2;font-size:12px">Бухгалтер</span><span style="color:#FFB800;font-size:12px">Формирование акта</span><span style="text-align:right;color:#FFB800;font-weight:600">1ч 30м</span><span style="text-align:right;color:#A2A2A2;font-size:12px">19.06</span>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:7px 0;font-size:13px;align-items:center;border-bottom:1px solid rgba(255,184,0,0.02)">
+            <span style="color:#fff">Морозов Илья Олегович</span><span style="color:#A2A2A2;font-size:12px">Бухгалтер</span><span style="color:#FFB800;font-size:12px">Закрытие периода</span><span style="text-align:right;color:#FFB800;font-weight:600">2ч 10м</span><span style="text-align:right;color:#A2A2A2;font-size:12px">18.06</span>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:7px 0;font-size:13px;align-items:center">
+            <span style="color:#fff">Волкова Татьяна Сергеевна</span><span style="color:#A2A2A2;font-size:12px">Бухгалтер</span><span style="color:#FFB800;font-size:12px">Выгрузка в 1С</span><span style="text-align:right;color:#FFB800;font-weight:600">45м</span><span style="text-align:right;color:#A2A2A2;font-size:12px">18.06</span>
+          </div>
+        </div>
+
+        <!-- Overdue panel: Согласование договоров -->
+        <div id="overduePanel3" style="display:none;margin-top:8px;padding:14px 16px;background:rgba(255,0,4,0.03);border-radius:8px;border:1px solid rgba(255,0,4,0.08)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <span style="font-size:15px;font-weight:600;color:#fff">Просрочившие SLA · Согласование договоров</span>
+            <span style="font-size:12px;color:#FF0004">2 сотрудников</span>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:6px 0;font-size:11px;color:#9AA3AF;text-transform:uppercase;border-bottom:1px solid rgba(255,0,4,0.04)">
+            <span>Сотрудник</span><span>Роль</span><span>На каком шаге</span><span style="text-align:right">Время</span><span style="text-align:right">Дата</span>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:7px 0;font-size:13px;align-items:center;border-bottom:1px solid rgba(255,0,4,0.02)">
+            <span style="color:#fff">Григорьев Павел Андреевич</span><span style="color:#A2A2A2;font-size:12px">Юрист</span><span style="color:#FF0004;font-size:12px">Юридическая проверка</span><span style="text-align:right;color:#FF0004;font-weight:600">3ч 12м</span><span style="text-align:right;color:#A2A2A2;font-size:12px">19.06</span>
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:7px 0;font-size:13px;align-items:center">
+            <span style="color:#fff">Дмитриев Артём Валерьевич</span><span style="color:#A2A2A2;font-size:12px">Юрист</span><span style="color:#FF0004;font-size:12px">Согласование условий</span><span style="text-align:right;color:#FF0004;font-weight:600">2ч 40м</span><span style="text-align:right;color:#A2A2A2;font-size:12px">18.06</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right panel -->
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="pnl">
+          <div class="pnl-h">
+            <div class="pnl-h-l">
+              <span class="dot" style="background:#5B8CFF"></span>
+              <span class="tt">Мои показатели</span>
+            </div>
+          </div>
+          <div class="pnl-b">
+            <div class="mtr"><span class="ml">📋 Моих процессов</span><span class="mv">12</span></div>
+            <div class="mtr"><span class="ml">✅ Завершено сегодня</span><span class="mv green">8</span></div>
+            <div class="mtr"><span class="ml">🔄 В работе</span><span class="mv">3</span></div>
+            <div class="mtr"><span class="ml">⏰ Просрочено SLA</span><span class="mv red">1</span></div>
+            <div class="mtr"><span class="ml">🚨 Эскалаций на меня</span><span class="mv" style="color:#F269D9">2</span></div>
+          </div>
+        </div>
+
+        <div class="pnl">
+          <div class="pnl-h">
+            <div class="pnl-h-l">
+              <span class="dot" style="background:#5B8CFF"></span>
+              <span class="tt">Артефакты и метрики компании</span>
+            </div>
+            <div class="pnl-h-r"><span style="font-size:11px;color:#5B8CFF">За сегодня</span></div>
+          </div>
+          <div class="pnl-b">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+              <div style="background:rgba(91,140,255,0.03);border-radius:6px;padding:8px;text-align:center;border:1px solid rgba(91,140,255,0.06)">
+                <div style="font-size:18px;font-weight:700;color:#fff">1 610</div>
+                <div style="font-size:10px;color:#A2A2A2;margin-top:1px">📄 Счетов</div>
+              </div>
+              <div style="background:rgba(46,195,121,0.03);border-radius:6px;padding:8px;text-align:center;border:1px solid rgba(46,195,121,0.06)">
+                <div style="font-size:18px;font-weight:700;color:#fff">1 610</div>
+                <div style="font-size:10px;color:#A2A2A2;margin-top:1px">📋 Договоров</div>
+              </div>
+              <div style="background:rgba(46,195,121,0.03);border-radius:6px;padding:8px;text-align:center;border:1px solid rgba(46,195,121,0.06)">
+                <div style="font-size:18px;font-weight:700;color:#fff">4 200</div>
+                <div style="font-size:10px;color:#A2A2A2;margin-top:1px">📄 Актов</div>
+              </div>
+              <div style="background:rgba(255,184,0,0.03);border-radius:6px;padding:8px;text-align:center;border:1px solid rgba(255,184,0,0.06)">
+                <div style="font-size:18px;font-weight:700;color:#fff">3 800</div>
+                <div style="font-size:10px;color:#A2A2A2;margin-top:1px">📊 Проводок</div>
+              </div>
+            </div>
+            <div style="border-top:1px solid rgba(154,163,175,0.04);padding-top:8px">
+              <div style="font-size:11px;font-weight:600;color:#9AA3AF;text-transform:uppercase;margin-bottom:4px">Влияние на метрики</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                <div style="padding:6px 8px;background:rgba(46,195,121,0.03);border-radius:6px;font-size:12px">
+                  <span style="color:#A2A2A2">Выручка по счёту</span>
+                  <div style="font-weight:700;color:#fff">+4.2 млн ₽</div>
+                  <div style="font-size:10px;color:#A2A2A2">из них 320 тыс. просрочено</div>
+                </div>
+                <div style="padding:6px 8px;background:rgba(255,184,0,0.03);border-radius:6px;font-size:12px">
+                  <span style="color:#A2A2A2">Закрытых актов</span>
+                  <div style="font-weight:700;color:#fff">92%</div>
+                  <div style="font-size:10px;color:#A2A2A2">8% актов не подписаны</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+          <div class="pnl-b">
+            <div class="mtr"><span class="ml">📋 Моих процессов</span><span class="mv">12</span></div>
+            <div class="mtr"><span class="ml">✅ Завершено сегодня</span><span class="mv green">8</span></div>
+            <div class="mtr"><span class="ml">🔄 В работе</span><span class="mv">3</span></div>
+            <div class="mtr"><span class="ml">⏰ Просрочено SLA</span><span class="mv red">1</span></div>
+            <div class="mtr"><span class="ml">🚨 Эскалаций на меня</span><span class="mv" style="color:#F269D9">2</span></div>
+          </div>
+        </div>
+
+        <div class="pnl">
+          <div class="pnl-h">
+            <div class="pnl-h-l">
+              <span class="dot" style="background:#5B8CFF"></span>
+              <span class="tt">Интеграции</span>
+            </div>
+          </div>
+          <div class="pnl-b">
+            <div class="intg">
+              <div class="inti"><span class="ii" style="background:rgba(91,140,255,0.08);color:#5B8CFF">B24</span><div class="it"><div class="in">Битрикс24</div><div class="is">8 312 опер.</div></div><span class="id green"></span></div>
+              <div class="inti"><span class="ii" style="background:rgba(46,195,121,0.08);color:#2EC379">1C</span><div class="it"><div class="in">1С: CRM</div><div class="is">6 213 опер.</div></div><span class="id green"></span></div>
+              <div class="inti"><span class="ii" style="background:rgba(242,105,217,0.08);color:#F269D9">TG</span><div class="it"><div class="in">Telegram</div><div class="is">1 204</div></div><span class="id green"></span></div>
+              <div class="inti"><span class="ii" style="background:rgba(255,0,4,0.08);color:#FF0004">SAP</span><div class="it"><div class="in">SAP S/4HANA</div><div class="is">892</div></div><span class="id red"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Зона риска -->
+  <div id="tab-risk" class="tab-content" style="display:none">
+    <div class="pnl" style="border:1px solid rgba(255,0,4,0.15);background:rgba(255,0,4,0.02)">
+      <div class="pnl-h" style="border-bottom:1px solid rgba(255,0,4,0.06)">
+        <div class="pnl-h-l">
+          <span class="dot" style="background:#FF0004"></span>
+          <span class="tt" style="color:#FF0004">🔴 Процессы в зоне риска</span>
+        </div>
+        <div class="pnl-h-r"><span style="color:#FF0004;font-size:13px">1 процесс</span></div>
+      </div>
+      <div class="pnl-b" style="padding:0">
+        <div style="display:grid;grid-template-columns:28px 2fr 1.2fr 1fr 1fr 1fr 100px;gap:8px;padding:12px 16px;font-size:11px;color:#9AA3AF;text-transform:uppercase;border-bottom:1px solid rgba(255,0,4,0.04)">
+          <span></span><span>Процесс</span><span style="text-align:left">Целевая роль</span><span style="text-align:right">Просрочки</span><span style="text-align:right">%</span><span style="text-align:right">В работе</span><span style="text-align:center"></span>
+        </div>
+        <div style="display:grid;grid-template-columns:28px 2fr 1.2fr 1fr 1fr 1fr 100px;gap:8px;padding:12px 16px;font-size:14px;align-items:center;border-bottom:1px solid rgba(255,0,4,0.03)">
+          <span style="font-size:18px">📞</span>
+          <span style="color:#fff;font-weight:500">RDetector продажи</span>
+          <span style="color:#9AA3AF;font-size:13px">Менеджер по продажам</span>
+          <span style="text-align:right;font-weight:600;color:#FF0004">300</span>
+          <span style="text-align:right;color:#FF0004;font-weight:600">14.9%</span>
+          <span style="text-align:right;color:#FFB800">512</span>
+          <span style="text-align:center"><button class="btn btn-sm" style="background:rgba(255,0,4,0.1);color:#FF0004;border:none">Разобраться</button></span>
+        </div>
+        <div style="display:grid;grid-template-columns:28px 2fr 1.2fr 1fr 1fr 1fr 100px;gap:8px;padding:12px 16px;font-size:14px;align-items:center">
+          <span style="font-size:18px">💼</span>
+          <span style="color:#fff;font-weight:500">kitBot продажи</span>
+          <span style="color:#9AA3AF;font-size:13px">Менеджер по продажам</span>
+          <span style="text-align:right;font-weight:600;color:#FFB800">217</span>
+          <span style="text-align:right;color:#FFB800;font-weight:600">6.7%</span>
+          <span style="text-align:right;color:#FFB800">843</span>
+          <span style="text-align:center"><button class="btn btn-sm btn-s">Детали</button></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Эскалации -->
+  <div id="tab-esc" class="tab-content" style="display:none">
+    <div class="pnl">
+      <div class="pnl-h">
+        <div class="pnl-h-l">
+          <span class="dot" style="background:#F269D9"></span>
+          <span class="tt">🚨 Эскалации на меня</span>
+        </div>
+        <div class="pnl-h-r"><span style="color:#F269D9">2 эскалации</span></div>
+      </div>
+      <div class="pnl-b" style="padding:0">
+        <div style="display:grid;grid-template-columns:20px 2fr 1fr 1fr 90px;gap:8px;padding:12px 16px;font-size:11px;color:#9AA3AF;text-transform:uppercase;border-bottom:1px solid rgba(154,163,175,0.04)">
+          <span></span><span>Процесс</span><span style="text-align:right">Просрочено</span><span style="text-align:right">От кого</span><span style="text-align:center"></span>
+        </div>
+        <div style="display:grid;grid-template-columns:20px 2fr 1fr 1fr 90px;gap:8px;padding:12px 16px;font-size:14px;align-items:center;border-bottom:1px solid rgba(154,163,175,0.03)">
+          <span style="font-size:16px">🚨</span>
+          <span style="color:#fff">Согласование договоров</span>
+          <span style="text-align:right;color:#FF0004;font-weight:600">3ч 12м</span>
+          <span style="text-align:right;color:#9AA3AF">Сидоров К.</span>
+          <span style="text-align:center"><button class="btn btn-sm" style="background:rgba(242,105,217,0.1);color:#F269D9;border:none">Взять</button></span>
+        </div>
+        <div style="display:grid;grid-template-columns:20px 2fr 1fr 1fr 90px;gap:8px;padding:12px 16px;font-size:14px;align-items:center">
+          <span style="font-size:16px">⏰</span>
+          <span style="color:#fff">Закупки ТМЦ</span>
+          <span style="text-align:right;color:#FFB800;font-weight:600">1ч 05м</span>
+          <span style="text-align:right;color:#9AA3AF">Смирнов Д.</span>
+          <span style="text-align:center"><button class="btn btn-sm" style="background:rgba(242,105,217,0.1);color:#F269D9;border:none">Взять</button></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Статистика -->
+  <div id="tab-stats" class="tab-content" style="display:none">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;width:100%">
+      <div class="stat"><div class="v blue">12 847</div><div class="l">Всего запусков</div></div>
+      <div class="stat"><div class="v green">9 231</div><div class="l">В норме</div></div>
+      <div class="stat"><div class="v orange">2 416</div><div class="l">В работе</div></div>
+      <div class="stat"><div class="v red">584</div><div class="l">Просрочек SLA</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px">
+      <div class="pnl">
+        <div class="pnl-h"><div class="pnl-h-l"><span class="tt">По типам процессов</span></div></div>
+        <div class="pnl-b">
+          <div class="mtr"><span class="ml">💼 kitBot продажи</span><span class="mv">3 240</span></div>
+          <div class="mtr"><span class="ml">📊 kitBot аккаунтинг</span><span class="mv">5 892</span></div>
+          <div class="mtr"><span class="ml">📞 RDetector продажи</span><span class="mv">2 015</span></div>
+          <div class="mtr"><span class="ml">📝 Согласование договоров</span><span class="mv">1 200</span></div>
+          <div class="mtr"><span class="ml">🛒 Закупки ТМЦ</span><span class="mv">892</span></div>
+        </div>
+      </div>
+      <div class="pnl">
+        <div class="pnl-h"><div class="pnl-h-l"><span class="tt">Проблемные типы (% просрочек)</span></div></div>
+        <div class="pnl-b">
+          <div class="mtr"><span class="ml">🔴 RDetector продажи</span><span class="mv red">14.9%</span></div>
+          <div class="mtr"><span class="ml">🟡 kitBot продажи</span><span class="mv red">6.7%</span></div>
+          <div class="mtr"><span class="ml">🟡 Согласование договоров</span><span class="mv red">5.8%</span></div>
+          <div class="mtr"><span class="ml">🟡 kitBot аккаунтинг</span><span class="mv red">5.2%</span></div>
+          <div class="mtr"><span class="ml">🟢 Закупки ТМЦ</span><span class="mv green">4.5%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">Оркестра — v15 — новые статусы процессами</div>
+</div>
+</div></div>
+
+<script>
+var activeFilter = 'all';
+
+function togType(el) {
+  var body = el.nextElementSibling;
+  if (body && body.classList.contains('prb')) {
+    body.classList.toggle('show');
+  }
+}
+
+function togSteps(el) {
+  var steps = el.nextElementSibling;
+  while (steps && !steps.classList.contains('steps')) {
+    steps = steps.nextElementSibling;
+  }
+  if (steps) steps.classList.toggle('show');
+}
+
+function clickFilter(val, el) {
+  activeFilter = val;
+  document.querySelectorAll('.fchip[data-f]').forEach(function(c) { c.classList.remove('on'); });
+  if (el) el.classList.add('on');
+  doFilter();
+}
+
+function clickPeriod(period, el) {
+  document.querySelectorAll('.pchip').forEach(function(c) { c.classList.remove('on'); });
+  if (el) el.classList.add('on');
+
+  var now = new Date();
+  var from, to = new Date(now);
+  switch(period) {
+    case 'today': from = new Date(now); break;
+    case 'yesterday': from = new Date(now); from.setDate(from.getDate()-1); to = new Date(from); break;
+    case 'week': from = new Date(now); from.setDate(from.getDate()-7); break;
+    case 'month': from = new Date(now); from.setMonth(from.getMonth()-1); break;
+    case 'quarter': from = new Date(now); from.setMonth(from.getMonth()-3); break;
+  }
+  document.getElementById('dateFrom').value = fmtDate(from);
+  document.getElementById('dateTo').value = fmtDate(to);
+}
+
+function fmtDate(d) {
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function doFilter() {
+  var q = document.getElementById('searchInput').value.toLowerCase().trim();
+  var sys = document.getElementById('sysFilter').value;
+  var cards = document.querySelectorAll('.prc');
+  var visible = 0;
+
+  cards.forEach(function(c) {
+    if (c.classList.contains('nr')) return;
+    var name = c.getAttribute('data-name').toLowerCase();
+    var status = c.getAttribute('data-status');
+    var ints = (c.getAttribute('data-int') || '').toUpperCase();
+
+    var nameOk = !q || name.indexOf(q) !== -1;
+    var statusOk = activeFilter === 'all' || status === activeFilter;
+    var sysOk = !sys || ints.indexOf(sys.toUpperCase()) !== -1;
+
+    if (nameOk && statusOk && sysOk) {
+      c.classList.remove('hide');
+      visible++;
+    } else {
+      c.classList.add('hide');
+    }
+  });
+
+  document.getElementById('noResults').classList.toggle('show', visible === 0);
+  document.getElementById('resultCount').textContent = visible;
+  document.getElementById('cntAll').textContent = visible;
+  updateStats(visible === 0);
+}
+
+function updateStats(filteredOut) {
+  if (filteredOut) {
+    var total = document.querySelectorAll('.prc:not(.nr)').length;
+    var sums = {total:0, ok:0, wip:0, over:0, esc:0};
+    document.querySelectorAll('.prc:not(.hide):not(.nr)').forEach(function(c) {
+      var runs = parseInt(c.getAttribute('data-runs') || '0');
+      sums.total += runs;
+    });
+    document.getElementById('statTotal').textContent = sums.total.toLocaleString();
+    document.getElementById('statOk').textContent = Math.round(sums.total * 0.72).toLocaleString();
+    document.getElementById('statWip').textContent = Math.round(sums.total * 0.19).toLocaleString();
+    document.getElementById('statOver').textContent = Math.round(sums.total * 0.06).toLocaleString();
+    document.getElementById('statEsc').textContent = Math.round(sums.total * 0.02).toLocaleString();
+  } else {
+    document.getElementById('statTotal').textContent = '14 697';
+    document.getElementById('statOk').textContent = '10 578';
+    document.getElementById('statWip').textContent = '2 904';
+    document.getElementById('statOver').textContent = '771';
+    document.getElementById('statEsc').textContent = '308';
+  }
+}
+
+function resetAll() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('sysFilter').value = '';
+  activeFilter = 'all';
+  document.querySelectorAll('.fchip[data-f]').forEach(function(c) { c.classList.remove('on'); });
+  var allChip = document.querySelector('.fchip[data-f="all"]');
+  if (allChip) allChip.classList.add('on');
+  // Reset dates to today
+  var now = new Date();
+  document.getElementById('dateFrom').value = fmtDate(now);
+  document.getElementById('dateTo').value = fmtDate(now);
+  document.querySelectorAll('.pchip').forEach(function(c) { c.classList.remove('on'); });
+  var todayChip = document.querySelector('.pchip[data-p="today"]');
+  if (todayChip) todayChip.classList.add('on');
+  doFilter();
+}
+
+// Init
+(function() {
+  // Bind overdue buttons
+  document.getElementById("ov-btn-1").onclick = function(){ document.getElementById("overduePanel1").style.display = "block"; document.getElementById("overduePanel2").style.display = "none"; document.getElementById("overduePanel3").style.display = "none"; return false; };
+  document.getElementById("ov-btn-2").onclick = function(){ document.getElementById("overduePanel1").style.display = "none"; document.getElementById("overduePanel2").style.display = "block"; document.getElementById("overduePanel3").style.display = "none"; return false; };
+  document.getElementById("ov-btn-3").onclick = function(){ document.getElementById("overduePanel1").style.display = "none"; document.getElementById("overduePanel2").style.display = "none"; document.getElementById("overduePanel3").style.display = "block"; return false; };
+  var now = new Date();
+  document.getElementById('dateFrom').value = fmtDate(now);
+  document.getElementById('dateTo').value = fmtDate(now);
+
+  // Event delegation for overdue buttons
+  document.addEventListener('click', function(e) {
+    var target = e.target;
+    if (target.classList.contains('overdue-btn')) {
+      var procName = target.getAttribute('data-overdue');
+      if (procName) {
+        showOverdue(procName);
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    }
+  });
+})();
+
+// Overdue data and function
+var overdueData = {
+  'kitBot продажи': [
+    { name: 'Иванов Иван Петрович', role: 'Менеджер по продажам', step: 'Проверка счета в 1С', time: '2ч 14м', date: '19.06'},
+    { name: 'Петров Алексей Сергеевич', role: 'Менеджер по продажам', step: 'Прикрепление документов', time: '1ч 48м', date: '19.06'},
+    { name: 'Сидоров Дмитрий Николаевич', role: 'Менеджер по продажам', step: 'Проверка счета в 1С', time: '3ч 05м', date: '18.06'},
+    { name: 'Кузнецов Андрей Владимирович', role: 'Старший менеджер', step: 'Согласование КП', time: '2ч 30м', date: '18.06'},
+    { name: 'Соколова Мария Игоревна', role: 'Менеджер по продажам', step: 'Выставление счета', time: '1ч 12м', date: '18.06'}
+  ],
+  'kitBot аккаунтинг': [
+    { name: 'Белова Анна Викторовна', role: 'Бухгалтер', step: 'Формирование акта', time: '1ч 30м', date: '19.06'},
+    { name: 'Морозов Илья Олегович', role: 'Бухгалтер', step: 'Закрытие периода', time: '2ч 10м', date: '18.06'},
+    { name: 'Волкова Татьяна Сергеевна', role: 'Бухгалтер', step: 'Выгрузка в 1С', time: '45м', date: '18.06'}
+  ],
+  'Согласование договоров': [
+    { name: 'Григорьев Павел Андреевич', role: 'Юрист', step: 'Юридическая проверка', time: '3ч 12м', date: '19.06'},
+    { name: 'Дмитриев Артём Валерьевич', role: 'Юрист', step: 'Согласование условий', time: '2ч 40м', date: '18.06'}
+  ]
+};
+
+function showOverdue(procName) {
+  var data = overdueData[procName];
+  if (!data) return;
+
+  var panel = document.getElementById('overduePanel');
+  var content = document.getElementById('overdueContent');
+
+  // Close all details
+  document.querySelectorAll('[id^="detail"]').forEach(function(d) { d.style.display = 'none'; });
+
+  var html = '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+  html += '<span style="font-size:14px;font-weight:600;color:#fff">Просрочившие SLA &middot; ' + procName + '</span>';
+  html += '<span style="font-size:11px;color:#FF0004">' + data.length + ' сотрудников</span>';
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:6px 0;font-size:10px;color:#9AA3AF;text-transform:uppercase;border-bottom:1px solid rgba(255,0,4,0.04)">';
+  html += '<span>Сотрудник</span><span>Роль</span><span>На каком шаге</span><span style="text-align:right">Время</span><span style="text-align:right">Дата</span>';
+  html += '</div>';
+
+  data.forEach(function(item) {
+    html += '<div style="display:grid;grid-template-columns:2fr 1.2fr 1.5fr 80px 60px;gap:6px;padding:7px 0;font-size:12px;align-items:center;border-bottom:1px solid rgba(255,0,4,0.02)">';
+    html += '<span style="color:#fff">' + item.name + '</span>';
+    html += '<span style="color:#A2A2A2;font-size:11px">' + item.role + '</span>';
+    html += '<span style="color:#FF0004;font-size:11px">' + item.step + '</span>';
+    html += '<span style="text-align:right;color:#FF0004;font-weight:600">' + item.time + '</span>';
+    html += '<span style="text-align:right;color:#A2A2A2;font-size:11px">' + item.date + '</span>';
+    html += '</div>';
+  });
+
+  content.innerHTML = html;
+  panel.style.display = 'block';
+}
+</script>
+
+</body>
+</html>

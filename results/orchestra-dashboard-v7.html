@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Оркестра — v7: Фильтр процессов (рабочий)</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Roboto',sans-serif;background:#F5F6F8;padding:24px;display:flex;flex-direction:column;align-items:center;color:#404449}
+.app{width:1400px;max-width:100%;display:flex;flex-direction:column;gap:16px}
+
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:#fff;border-radius:20px;border:1px solid rgba(154,163,175,0.2)}
+.hdr-l{display:flex;align-items:center;gap:12px}
+.hdr-l .logo{width:34px;height:34px;background:linear-gradient(135deg,#5B8CFF,#3B6FDF);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.95rem}
+.hdr-l .name{font-weight:800;font-size:1.1rem;color:#404449}
+.hdr-l .badge{padding:3px 10px;border-radius:100px;font-size:.85rem;font-weight:600;background:rgba(91,140,255,0.08);color:#5B8CFF}
+.hdr-r{display:flex;align-items:center;gap:16px;font-size:.92rem;color:#B0B8C4}
+.hdr-r .user{display:flex;align-items:center;gap:6px;font-weight:500;color:#404449}
+.hdr-r .avatar{width:30px;height:30px;border-radius:50%;background:rgba(91,140,255,0.08);display:flex;align-items:center;justify-content:center;font-size:.85rem;color:#5B8CFF;font-weight:700}
+.hdr-r .dot-on{width:7px;height:7px;border-radius:50%;background:#2EC379;display:inline-block}
+.ver-tag{font-size:.7rem;color:#B0B8C4;background:#FAFBFC;padding:3px 10px;border-radius:5px;border:1px solid rgba(154,163,175,0.06)}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;padding:4px;background:#fff;border-radius:14px;border:1px solid rgba(154,163,175,0.1)}
+.tab{padding:7px 16px;border-radius:10px;font-size:.95rem;font-weight:500;color:#9AA3AF;cursor:pointer;border:none;background:transparent}
+.tab:hover{color:#404449}
+.tab.a{background:rgba(91,140,255,0.08);color:#5B8CFF;font-weight:600}
+
+/* ===== FILTER BAR (NEW) ===== */
+.filter-bar{display:flex;align-items:center;gap:10px;padding:12px 20px;background:#fff;border-radius:20px;border:1px solid rgba(154,163,175,0.12);flex-wrap:wrap}
+.filter-bar .f-search{flex:1;min-width:200px;position:relative}
+.filter-bar .f-search input{width:100%;padding:8px 12px 8px 34px;border:1px solid rgba(154,163,175,0.12);border-radius:10px;font-size:.95rem;font-family:'Roboto',sans-serif;color:#404449;background:#FAFBFC;outline:none;transition:border-color .15s}
+.filter-bar .f-search input:focus{border-color:#5B8CFF;background:#fff}
+.filter-bar .f-search input::placeholder{color:#B0B8C4}
+.filter-bar .f-search .f-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:.92rem;color:#B0B8C4}
+.f-chip{display:inline-flex;align-items:center;gap:4px;padding:7px 16px;border-radius:100px;font-size:.88rem;font-weight:500;cursor:pointer;border:1px solid rgba(154,163,175,0.08);background:#FAFBFC;color:#9AA3AF;transition:all .12s;user-select:none}
+.f-chip:hover{border-color:rgba(91,140,255,0.12);color:#404449}
+.f-chip.a{background:rgba(91,140,255,0.06);border-color:#5B8CFF;color:#5B8CFF;font-weight:600}
+.f-chip .c-cnt{padding:0 8px;border-radius:4px;font-size:.72rem;background:rgba(154,163,175,0.06);color:#B0B8C4}
+.f-chip.a .c-cnt{background:rgba(91,140,255,0.08);color:#5B8CFF}
+.f-chip.gr{color:#2EC379;border-color:rgba(46,195,121,0.12)}
+.f-chip.gr.a{background:rgba(46,195,121,0.06);color:#2EC379}
+.f-chip.rd{color:#FF0004;border-color:rgba(255,0,4,0.08)}
+.f-chip.rd.a{background:rgba(255,0,4,0.04);color:#FF0004}
+.f-chip .f-x{margin-left:2px;font-size:.85rem;opacity:.5}
+
+/* Date selector */
+.f-date-group{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.f-date-group .fd-label{font-size:.85rem;color:#B0B8C4;font-weight:500;white-space:nowrap}
+.f-date-input{padding:5px 10px;border:1px solid rgba(154,163,175,0.1);border-radius:8px;font-size:.85rem;font-family:'Roboto',sans-serif;color:#404449;background:#FAFBFC;outline:none;width:110px;cursor:pointer}
+.f-date-input:focus{border-color:#5B8CFF;background:#fff}
+.f-date-sep{font-size:.85rem;color:#B0B8C4}
+.f-period{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:6px;font-size:.82rem;font-weight:500;cursor:pointer;border:1px solid rgba(154,163,175,0.06);background:#FAFBFC;color:#9AA3AF;transition:all .1s}
+.f-period:hover{border-color:rgba(91,140,255,0.1);color:#404449}
+.f-period.a{background:rgba(91,140,255,0.06);border-color:#5B8CFF;color:#5B8CFF;font-weight:600}
+.f-period-gap{display:flex;gap:3px;flex-wrap:wrap}
+
+/* Panels */
+.pnl{background:#fff;border-radius:20px;border:1px solid rgba(154,163,175,0.12);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.02)}
+.pnl-h{padding:16px 26px;border-bottom:1px solid rgba(154,163,175,0.08);display:flex;align-items:center;justify-content:space-between}
+.pnl-h-l{display:flex;align-items:center;gap:8px}
+.pnl-h-l .tt{font-size:.95rem;font-weight:600;color:#9AA3AF;text-transform:uppercase;letter-spacing:.03em}
+.pnl-h-l .dot{width:7px;height:7px;border-radius:50%}
+.pnl-h-r{display:flex;align-items:center;gap:8px}
+.pnl-b{padding:22px 26px}
+
+/* Stats */
+.stats-r{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.stat{text-align:center;padding:12px 6px;background:#FAFBFC;border-radius:14px;border:1px solid rgba(154,163,175,0.08)}
+.stat .v{font-size:1.5rem;font-weight:800;color:#404449;line-height:1.15;margin-bottom:2px}
+.stat .v.bl{color:#5B8CFF}
+.stat .v.gr{color:#2EC379}
+.stat .v.rd{color:#FF0004}
+.stat .v.yl{color:#FFB800}
+.stat .l{font-size:.85rem;color:#9AA3AF;font-weight:500}
+
+/* Process type cards */
+.pr-type-list{display:flex;flex-direction:column;gap:8px}
+.pr-type{background:#FAFBFC;border-radius:16px;border:1px solid rgba(154,163,175,0.06);overflow:hidden;cursor:pointer;transition:all .12s}
+.pr-type:hover{border-color:rgba(91,140,255,0.12)}
+.pr-type.a{border-color:#5B8CFF;box-shadow:0 0 0 1px rgba(91,140,255,0.06)}
+.pr-type-h{padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.pr-type-h .pt-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.pr-type-h .pt-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:.88rem;min-width:32px}
+.pr-type-h .pt-info{flex:1;min-width:0}
+.pr-type-h .pt-info .pt-name{font-size:1rem;font-weight:600;color:#404449}
+.pr-type-h .pt-info .pt-meta{font-size:.85rem;color:#B0B8C4;margin-top:1px}
+.pr-type-h .pt-counts{display:flex;gap:10px;align-items:center;flex-shrink:0}
+.pt-count{text-align:center}
+.pt-count .pc-v{font-size:1.05rem;font-weight:700}
+.pt-count .pc-l{font-size:.7rem;color:#B0B8C4;text-transform:uppercase;margin-top:2px}
+.pt-count .pc-v.bl{color:#5B8CFF}
+.pt-count .pc-v.gr{color:#2EC379}
+.pt-count .pc-v.rd{color:#FF0004}
+.pt-count .pc-v.yl{color:#FFB800}
+
+/* Body */
+.pr-body{display:none;padding:0 20px 16px}
+.pr-body.show{display:block}
+
+/* Phases */
+.phases{display:flex;gap:6px;overflow-x:auto;padding:8px 0}
+.phase{flex:1;min-width:140px;padding:12px 14px;border-radius:12px;background:#fff;border:1px solid rgba(154,163,175,0.08);text-align:center;cursor:pointer}
+.phase:hover{border-color:rgba(91,140,255,0.2)}
+.phase.a{background:rgba(91,140,255,0.04);border-color:#5B8CFF}
+.phase .ph-n{font-size:.9rem;font-weight:600;color:#404449;margin-bottom:3px}
+.phase .ph-st{font-size:.7rem;color:#B0B8C4}
+.phase .ph-bar{height:5px;border-radius:2px;background:rgba(154,163,175,0.06);margin-top:5px;overflow:hidden}
+.phase .ph-bar .f{height:100%;border-radius:3px}
+.phase .ph-bar .f.gr{background:#2EC379}
+.phase .ph-bar .f.yl{background:#FFB800}
+.phase .ph-bar .f.rd{background:#FF0004}
+
+/* Stages */
+.stages-block{margin-top:10px}
+.stages-block .sb-h{font-size:.85rem;font-weight:600;color:#9AA3AF;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.stage-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(154,163,175,0.03);cursor:pointer}
+.stage-row:last-child{border-bottom:none}
+.stage-row:hover{background:#FAFBFC;margin:0 -8px;padding:6px 8px;border-radius:6px}
+.stage-row .sg-ind{width:4px;height:24px;border-radius:2px;min-width:4px}
+.stage-row .sg-ind.gr{background:#2EC379}
+.stage-row .sg-ind.yl{background:#FFB800}
+.stage-row .sg-ind.rd{background:#FF0004}
+.stage-row .sg-name{flex:1;font-size:.9rem;font-weight:500;color:#404449}
+.stage-row .sg-name .sg-sub{font-weight:400;color:#B0B8C4;font-size:.78rem;display:block}
+.stage-row .sg-count{font-size:.92rem;font-weight:600;min-width:32px;text-align:right}
+.stage-row .sg-count.gr{color:#2EC379}
+.stage-row .sg-count.yl{color:#FFB800}
+.stage-row .sg-count.rd{color:#FF0004}
+.stage-row .sg-bar{width:50px;height:5px;border-radius:2px;background:rgba(154,163,175,0.04);overflow:hidden}
+.stage-row .sg-bar .f{height:100%;border-radius:3px}
+
+/* Steps */
+.steps-block{display:none;padding:6px 0 6px 20px;margin-left:6px;border-left:1px solid rgba(154,163,175,0.06)}
+.steps-block.show{display:block}
+.step-item{display:flex;align-items:flex-start;gap:6px;padding:4px 6px;font-size:.85rem;border-radius:4px;margin:2px 0}
+.step-item:hover{background:#FAFBFC}
+.step-item .st-dot{width:7px;height:7px;border-radius:50%;margin-top:4px;min-width:7px}
+.step-item .st-dot.gr{background:#2EC379}
+.step-item .st-dot.yl{background:#FFB800}
+.step-item .st-dot.rd{background:#FF0004}
+.step-item .st-dot.bl{background:#5B8CFF}
+.step-item .st-info{flex:1}
+.step-item .st-info .st-name{font-weight:500;color:#404449;font-size:.85rem}
+.step-item .st-info .st-name .st-int{display:inline-block;padding:2px 7px;border-radius:4px;font-size:.65rem;font-weight:600;margin-left:6px;vertical-align:middle}
+.step-item .st-info .st-name .st-int.bi{background:rgba(91,140,255,0.08);color:#5B8CFF}
+.step-item .st-info .st-name .st-int.tg{background:rgba(242,105,217,0.08);color:#F269D9}
+.step-item .st-info .st-name .st-int.c1{background:rgba(46,195,121,0.08);color:#2EC379}
+.step-item .st-meta{font-size:.72rem;color:#B0B8C4;margin-top:2px}
+.step-item .st-stat{text-align:right;min-width:30px}
+.step-item .st-stat .st-v{font-weight:600;font-size:.88rem}
+.step-item .st-stat .st-v.gr{color:#2EC379}
+.step-item .st-stat .st-v.yl{color:#FFB800}
+.step-item .st-stat .st-v.rd{color:#FF0004}
+.step-item .st-stat .st-l{font-size:.65rem;color:#B0B8C4;display:block}
+
+/* Escalation */
+.esc-banner{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;font-size:.88rem;margin:6px 0}
+.esc-y{background:rgba(255,184,0,0.04);border:1px solid rgba(255,184,0,0.1);color:#B8860B}
+.esc-r{background:rgba(255,0,4,0.03);border:1px solid rgba(255,0,4,0.07);color:#CC0003}
+.esc-banner .eb-t{flex:1}
+.esc-banner .eb-act{padding:5px 12px;border-radius:6px;font-size:.82rem;font-weight:600;cursor:pointer;border:none;background:rgba(255,184,0,0.08);color:#B8860B}
+
+/* Tags & helpers */
+.tag{padding:4px 12px;border-radius:100px;font-size:.78rem;font-weight:600}
+.tag-g{background:rgba(46,195,121,0.06);color:#2EC379}
+.tag-y{background:rgba(255,184,0,0.06);color:#FFB800}
+.tag-r{background:rgba(255,0,4,0.06);color:#FF0004}
+.tag-b{background:rgba(91,140,255,0.06);color:#5B8CFF}
+.tag-0{background:rgba(154,163,175,0.06);color:#9AA3AF}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:8px;font-size:.64rem;font-weight:600;cursor:pointer;border:none;transition:all .12s}
+.btn-p{background:#5B8CFF;color:#fff}
+.btn-sm{padding:4px 8px;font-size:.58rem}
+.font-mono{font-feature-settings:'tnum' 1}
+
+/* Count badge */
+.cnt-b{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 7px;border-radius:100px;font-size:.7rem;font-weight:700;background:rgba(91,140,255,0.08);color:#5B8CFF}
+.cnt-b.gr{background:rgba(46,195,121,0.08);color:#2EC379}
+.cnt-b.rd{background:rgba(255,0,4,0.06);color:#FF0004}
+
+/* Hidden state for filter */
+.pr-type.hidden,.no-results{display:none}
+.no-results.show{display:flex;align-items:center;justify-content:center;padding:40px;font-size:1.1rem;color:#B0B8C4}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-l">
+      <span class="logo">О</span>
+      <span class="name">Оркестра</span>
+      <span class="badge">Control Tower</span>
+    </div>
+    <div class="hdr-r">
+      <span class="ver-tag">v7 — фильтры</span>
+      <span><span class="dot-on"></span> 19 июня 2026</span>
+      <span class="user"><span class="avatar">EA</span> Екатерина</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab a">📊 Мониторинг</button>
+    <button class="tab">🔍 Аналитика</button>
+    <button class="tab">⚙️ Конструктор</button>
+    <button class="tab">📋 Отчёты</button>
+    <button class="tab">🚨 Эскалации</button>
+  </div>
+
+  <!-- Stats -->
+  <!-- Stats with period indicator -->
+  <div class="stats-r">
+    <div class="stat"><div class="v bl">12 847</div><div class="l">Запусков <span id="statsPeriod" style="color:#B0B8C4;font-weight:400;font-size:.82rem">сегодня</span></div></div>
+    <div class="stat"><div class="v gr">9 231</div><div class="l">В норме</div></div>
+    <div class="stat"><div class="v yl">2 416</div><div class="l">В работе</div></div>
+    <div class="stat"><div class="v rd">584</div><div class="l">Просрочено</div></div>
+    <div class="stat"><div class="v" style="color:#F269D9">316</div><div class="l">Эскалировано</div></div>
+  </div>
+
+  <!-- ===== FILTER BAR ===== -->
+  <div class="filter-bar" id="filterBar">
+    <div class="f-search">
+      <span class="f-ico">🔍</span>
+      <input id="searchInput" type="text" placeholder="Поиск процесса по названию..." oninput="applyFilters()">
+    </div>
+    <!-- Status chips -->
+    <span class="f-chip a" data-filter="all" onclick="setFilter('all',this)">Все <span class="c-cnt">18</span></span>
+    <span class="f-chip gr" data-filter="normal" onclick="setFilter('normal',this)">✓ В норме <span class="c-cnt">4</span></span>
+    <span class="f-chip" data-filter="warning" onclick="setFilter('warning',this)">⚠️ Замедления <span class="c-cnt">4</span></span>
+    <span class="f-chip rd" data-filter="critical" onclick="setFilter('critical',this)">🔴 Просрочки <span class="c-cnt">2</span></span>
+    <!-- System filter -->
+    <select id="intFilter" onchange="applyFilters()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(154,163,175,0.1);font-size:.85rem;font-family:'Roboto',sans-serif;color:#404449;background:#FAFBFC;outline:none;cursor:pointer">
+      <option value="">Все системы</option>
+      <option value="B24">Битрикс24</option>
+      <option value="1C">1С: CRM</option>
+      <option value="TG">Telegram</option>
+      <option value="SAP">SAP</option>
+    </select>
+    <!-- Date selector -->
+    <div class="f-date-group">
+      <span class="fd-label">📅</span>
+      <input class="f-date-input" id="dateFrom" type="date" onchange="applyDateFilter()">
+      <span class="f-date-sep">—</span>
+      <input class="f-date-input" id="dateTo" type="date" onchange="applyDateFilter()">
+    </div>
+    <div class="f-period-gap">
+      <span class="f-period a" data-period="today" onclick="setPeriod('today',this)">Сегодня</span>
+      <span class="f-period" data-period="yesterday" onclick="setPeriod('yesterday',this)">Вчера</span>
+      <span class="f-period" data-period="week" onclick="setPeriod('week',this)">Неделя</span>
+      <span class="f-period" data-period="month" onclick="setPeriod('month',this)">Месяц</span>
+      <span class="f-period" data-period="quarter" onclick="setPeriod('quarter',this)">Квартал</span>
+    </div>
+    <button class="btn btn-sm btn-p" onclick="resetFilters()" style="font-size:.82rem">✕ Сбросить</button>
+  </div>
+
+  <!-- ===== PROCESS LIST ===== -->
+  <div class="pnl">
+    <div class="pnl-h">
+      <div class="pnl-h-l">
+        <span class="dot" style="background:#5B8CFF"></span>
+        <span class="tt">Типы процессов <span id="resultCount" style="font-weight:400;text-transform:none;font-size:.85rem">— 18 типов</span></span>
+      </div>
+      <div class="pnl-h-r">
+        <span style="font-size:.85rem;color:#B0B8C4">Нажмите на тип, чтобы развернуть</span>
+      </div>
+    </div>
+    <div class="pnl-b" id="processList">
+
+      <!-- ========== TYPE 1: kitBot продажи (selected, expanded) ========== -->
+      <div class="pr-type a" data-name="kitBot продажи" data-status="warning" data-int="B24 1C TG" data-runs="3240">
+        <div class="pr-type-h" onclick="toggleType(this)">
+          <div class="pt-left">
+            <span class="pt-icon" style="background:rgba(91,140,255,0.08);color:#5B8CFF">💼</span>
+            <div class="pt-info">
+              <div class="pt-name">kitBot продажи</div>
+              <div class="pt-meta">Согласование сделок до 1 млн · вл. Петров А.</div>
+            </div>
+          </div>
+          <div class="pt-counts">
+            <div class="pt-count"><div class="pc-v bl">3 240</div><div class="pc-l">запущено</div></div>
+            <div class="pt-count"><div class="pc-v gr">2 180</div><div class="pc-l">завершено</div></div>
+            <div class="pt-count"><div class="pc-v yl">843</div><div class="pc-l">в процессе</div></div>
+            <div class="pt-count"><div class="pc-v rd">217</div><div class="pc-l">просрочки</div></div>
+          </div>
+          <span class="tag tag-y">⚠️</span>
+        </div>
+        <!-- Body -->
+        <div class="pr-body show">
+          <!-- Phases -->
+          <div style="font-size:.85rem;font-weight:600;color:#9AA3AF;text-transform:uppercase;margin-bottom:6px">⬤ Этапы (4 фазы)</div>
+          <div class="phases">
+            <div class="phase a"><div class="ph-n">⏺Входящий поток</div><div class="ph-st">3 стадии</div><div class="ph-bar"><div class="f gr" style="width:100%"></div></div></div>
+            <div class="phase"><div class="ph-n">📋Квалификация</div><div class="ph-st">5 стадий</div><div class="ph-bar"><div class="f yl" style="width:74%"></div></div></div>
+            <div class="phase"><div class="ph-n">📄Ком. предложение</div><div class="ph-st">8 стадий</div><div class="ph-bar"><div class="f yl" style="width:48%"></div></div></div>
+            <div class="phase"><div class="ph-n">✅Закрытие</div><div class="ph-st">6 стадий</div><div class="ph-bar"><div class="f rd" style="width:22%"></div></div></div>
+          </div>
+          <!-- Stages -->
+          <div class="stages-block">
+            <div class="sb-h">📋 Фаза «Входящий поток» — стадии</div>
+            <div class="stage-row" onclick="toggleSteps(this)">
+              <span class="sg-ind gr"></span>
+              <span class="sg-name">Получение и валидация заявки<span class="sg-sub">Проверка входящего вебхука</span></span>
+              <span class="sg-bar"><div class="f" style="width:100%;background:#2EC379"></div></span>
+              <span class="sg-count gr">3 240</span>
+            </div>
+            <div class="steps-block show">
+              <div class="step-item"><span class="st-dot gr"></span><div class="st-info"><span class="st-name">Приём вебхука <span class="st-int bi">B24</span></span><div class="st-meta">Битрикс24</div></div><div class="st-stat"><span class="st-v gr">3 240</span><span class="st-l">100%</span></div></div>
+              <div class="step-item"><span class="st-dot gr"></span><div class="st-info"><span class="st-name">Валидация полей <span class="st-int bi">B24</span></span><div class="st-meta">2% брака</div></div><div class="st-stat"><span class="st-v gr">3 176</span><span class="st-l">98%</span></div></div>
+              <div class="step-item"><span class="st-dot gr"></span><div class="st-info"><span class="st-name">Запись в БД <span class="st-int c1">1С</span></span><div class="st-meta">1С: CRM</div></div><div class="st-stat"><span class="st-v gr">3 176</span><span class="st-l">98%</span></div></div>
+            </div>
+            <div class="stage-row" onclick="toggleSteps(this)">
+              <span class="sg-ind gr"></span>
+              <span class="sg-name">Маршрутизация по воронке<span class="sg-sub">Определение процесса по условиям</span></span>
+              <span class="sg-bar"><div class="f" style="width:96%;background:#2EC379"></div></span>
+              <span class="sg-count gr">3 112</span>
+            </div>
+            <div class="steps-block">
+              <div class="step-item"><span class="st-dot gr"></span><div class="st-info"><span class="st-name">Проверка: бюджет <span class="st-int c1">1С</span></span></div><div class="st-stat"><span class="st-v gr">3 112</span><span class="st-l">96%</span></div></div>
+              <div class="step-item"><span class="st-dot gr"></span><div class="st-info"><span class="st-name">Проверка: источник <span class="st-int bi">B24</span></span></div><div class="st-stat"><span class="st-v gr">3 080</span><span class="st-l">95%</span></div></div>
+              <div class="step-item"><span class="st-dot gr"></span><div class="st-info"><span class="st-name">Назначение воронки</span></div><div class="st-stat"><span class="st-v gr">3 080</span><span class="st-l">95%</span></div></div>
+            </div>
+            <div class="stage-row" onclick="toggleSteps(this)">
+              <span class="sg-ind yl"></span>
+              <span class="sg-name">Проверка выполнения условий<span class="sg-sub">SLA 30 мин · 217 просрочек</span></span>
+              <span class="sg-bar"><div class="f" style="width:74%;background:#FFB800"></div></span>
+              <span class="sg-count yl">843</span>
+            </div>
+            <div class="steps-block">
+              <div class="step-item"><span class="st-dot gr"></span><div class="st-info"><span class="st-name">Стадия сделки = "Новая"</span></div><div class="st-stat"><span class="st-v yl">843</span><span class="st-l">100%</span></div></div>
+              <div class="step-item"><span class="st-dot yl"></span><div class="st-info"><span class="st-name">Документы прикреплены <span class="st-int bi">B24</span></span></div><div class="st-stat"><span class="st-v yl">523</span><span class="st-l">62%</span></div></div>
+              <div class="step-item"><span class="st-dot rd"></span><div class="st-info"><span class="st-name">Счёт существует <span class="st-int c1">1С</span></span></div><div class="st-stat"><span class="st-v rd">346</span><span class="st-l">41%</span></div></div>
+              <div class="step-item"><span class="st-dot bl"></span><div class="st-info"><span class="st-name">Ответственный назначен <span class="st-int tg">TG</span></span></div><div class="st-stat"><span class="st-v">843</span><span class="st-l">100%</span></div></div>
+            </div>
+            <div class="stage-row" onclick="toggleSteps(this)">
+              <span class="sg-ind yl"></span>
+              <span class="sg-name">Уведомление менеджера<span class="sg-sub">Telegram + Email</span></span>
+              <span class="sg-bar"><div class="f" style="width:58%;background:#FFB800"></div></span>
+              <span class="sg-count yl">512</span>
+            </div>
+            <div class="steps-block">
+              <div class="step-item"><span class="st-dot yl"></span><div class="st-info"><span class="st-name">Telegram <span class="st-int tg">TG</span></span></div><div class="st-stat"><span class="st-v yl">512</span><span class="st-l">100%</span></div></div>
+              <div class="step-item"><span class="st-dot gr"></span><div class="st-info"><span class="st-name">Email-рассылка</span></div><div class="st-stat"><span class="st-v gr">512</span><span class="st-l">100%</span></div></div>
+            </div>
+          </div>
+          <div class="esc-banner esc-y">
+            <span>⏰</span>
+            <span class="eb-t">217 процессов с просроченным SLA. Тормозит <b>проверка счёта в 1С</b> (41% прохода).</span>
+            <button class="eb-act">⚡ Эскалация</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== TYPE 2: kitBot аккаунтинг ========== -->
+      <div class="pr-type" data-name="kitBot аккаунтинг" data-status="normal" data-int="1C TG API" data-runs="5892">
+        <div class="pr-type-h" onclick="toggleType(this)">
+          <div class="pt-left">
+            <span class="pt-icon" style="background:rgba(46,195,121,0.08);color:#2EC379">📊</span>
+            <div class="pt-info">
+              <div class="pt-name">kitBot аккаунтинг</div>
+              <div class="pt-meta">Бухгалтерские проводки и акты · вл. Сидорова И.</div>
+            </div>
+          </div>
+          <div class="pt-counts">
+            <div class="pt-count"><div class="pc-v bl">5 892</div><div class="pc-l">запущено</div></div>
+            <div class="pt-count"><div class="pc-v gr">5 124</div><div class="pc-l">завершено</div></div>
+            <div class="pt-count"><div class="pc-v yl">648</div><div class="pc-l">в процессе</div></div>
+            <div class="pt-count"><div class="pc-v rd">120</div><div class="pc-l">просрочки</div></div>
+          </div>
+          <span class="tag tag-g">✓</span>
+        </div>
+        <div class="pr-body">
+          <div style="padding:8px 0;font-size:.7rem;color:#B0B8C4">16 шагов · 3 фазы · <span style="color:#2EC379">5.2% просрочек</span></div>
+        </div>
+      </div>
+
+      <!-- ========== TYPE 3: RDetector продажи (critical) ========== -->
+      <div class="pr-type" data-name="RDetector продажи" data-status="critical" data-int="B24 TG" data-runs="2015">
+        <div class="pr-type-h" onclick="toggleType(this)">
+          <div class="pt-left">
+            <span class="pt-icon" style="background:rgba(255,0,4,0.08);color:#FF0004">📞</span>
+            <div class="pt-info">
+              <div class="pt-name">RDetector продажи</div>
+              <div class="pt-meta">Обработка входящих лидов · вл. Петрова М.</div>
+            </div>
+          </div>
+          <div class="pt-counts">
+            <div class="pt-count"><div class="pc-v bl">2 015</div><div class="pc-l">запущено</div></div>
+            <div class="pt-count"><div class="pc-v gr">1 203</div><div class="pc-l">завершено</div></div>
+            <div class="pt-count"><div class="pc-v yl">512</div><div class="pc-l">в процессе</div></div>
+            <div class="pt-count"><div class="pc-v rd">300</div><div class="pc-l">просрочки</div></div>
+          </div>
+          <span class="tag tag-r">🔴</span>
+        </div>
+        <div class="pr-body">
+          <div style="padding:8px 0;font-size:.7rem;color:#B0B8C4">28 шагов · 5 фаз · <span style="color:#FF0004">14.9% просрочек</span></div>
+          <div class="esc-banner esc-r">
+            <span>🚨</span>
+            <span class="eb-t"><b>300</b> процессов с превышением SLA. Критично!</span>
+            <button class="eb-act" style="background:rgba(255,0,4,0.06);color:#CC0003">Поднять</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== TYPE 4: Закупки ТМЦ ========== -->
+      <div class="pr-type" data-name="Закупки ТМЦ" data-status="warning" data-int="SAP 1C API" data-runs="892">
+        <div class="pr-type-h" onclick="toggleType(this)">
+          <div class="pt-left">
+            <span class="pt-icon" style="background:rgba(255,184,0,0.08);color:#B8860B">🛒</span>
+            <div class="pt-info">
+              <div class="pt-name">Закупки ТМЦ</div>
+              <div class="pt-meta">Согласование закупок до 500 000 · вл. Смирнов Д.</div>
+            </div>
+          </div>
+          <div class="pt-counts">
+            <div class="pt-count"><div class="pc-v bl">892</div><div class="pc-l">запущено</div></div>
+            <div class="pt-count"><div class="pc-v gr">710</div><div class="pc-l">завершено</div></div>
+            <div class="pt-count"><div class="pc-v yl">142</div><div class="pc-l">в процессе</div></div>
+            <div class="pt-count"><div class="pc-v rd">40</div><div class="pc-l">просрочки</div></div>
+          </div>
+          <span class="tag tag-y">⚠️</span>
+        </div>
+        <div class="pr-body">
+          <div style="padding:8px 0;font-size:.7rem;color:#B0B8C4">35 шагов · 6 фаз · <span style="color:#FFB800">4.5% просрочек</span></div>
+        </div>
+      </div>
+
+      <!-- ========== TYPE 5: Онбординг сотрудников ========== -->
+      <div class="pr-type" data-name="Онбординг сотрудников" data-status="normal" data-int="B24 TG" data-runs="808">
+        <div class="pr-type-h" onclick="toggleType(this)">
+          <div class="pt-left">
+            <span class="pt-icon" style="background:rgba(91,140,255,0.08);color:#5B8CFF">👤</span>
+            <div class="pt-info">
+              <div class="pt-name">Онбординг сотрудников</div>
+              <div class="pt-meta">Приём, адаптация, доступы · вл. HR-отдел</div>
+            </div>
+          </div>
+          <div class="pt-counts">
+            <div class="pt-count"><div class="pc-v bl">808</div><div class="pc-l">запущено</div></div>
+            <div class="pt-count"><div class="pc-v gr">708</div><div class="pc-l">завершено</div></div>
+            <div class="pt-count"><div class="pc-v yl">84</div><div class="pc-l">в процессе</div></div>
+            <div class="pt-count"><div class="pc-v rd">16</div><div class="pc-l">просрочки</div></div>
+          </div>
+          <span class="tag tag-g">✓</span>
+        </div>
+        <div class="pr-body">
+          <div style="padding:8px 0;font-size:.7rem;color:#B0B8C4">42 шага · 7 фаз · <span style="color:#2EC379">2.0% просрочек</span></div>
+        </div>
+      </div>
+
+      <!-- ========== TYPE 6: Согласование договоров ========== -->
+      <div class="pr-type" data-name="Согласование договоров" data-status="warning" data-int="B24 1C" data-runs="1200">
+        <div class="pr-type-h" onclick="toggleType(this)">
+          <div class="pt-left">
+            <span class="pt-icon" style="background:rgba(255,184,0,0.08);color:#B8860B">📝</span>
+            <div class="pt-info">
+              <div class="pt-name">Согласование договоров</div>
+              <div class="pt-meta">Юридическое согласование · вл. Юр. отдел</div>
+            </div>
+          </div>
+          <div class="pt-counts">
+            <div class="pt-count"><div class="pc-v bl">1 200</div><div class="pc-l">запущено</div></div>
+            <div class="pt-count"><div class="pc-v gr">890</div><div class="pc-l">завершено</div></div>
+            <div class="pt-count"><div class="pc-v yl">240</div><div class="pc-l">в процессе</div></div>
+            <div class="pt-count"><div class="pc-v rd">70</div><div class="pc-l">просрочки</div></div>
+          </div>
+          <span class="tag tag-y">⚠️</span>
+        </div>
+        <div class="pr-body">
+          <div style="padding:8px 0;font-size:.7rem;color:#B0B8C4">24 шага · 4 фазы · <span style="color:#FFB800">5.8% просрочек</span></div>
+        </div>
+      </div>
+
+      <!-- ========== TYPE 7: Обработка возвратов ========== -->
+      <div class="pr-type" data-name="Обработка возвратов" data-status="normal" data-int="1C API" data-runs="650">
+        <div class="pr-type-h" onclick="toggleType(this)">
+          <div class="pt-left">
+            <span class="pt-icon" style="background:rgba(46,195,121,0.08);color:#2EC379">🔄</span>
+            <div class="pt-info">
+              <div class="pt-name">Обработка возвратов</div>
+              <div class="pt-meta">Возвраты и корректировки · вл. Бухгалтерия</div>
+            </div>
+          </div>
+          <div class="pt-counts">
+            <div class="pt-count"><div class="pc-v bl">650</div><div class="pc-l">запущено</div></div>
+            <div class="pt-count"><div class="pc-v gr">590</div><div class="pc-l">завершено</div></div>
+            <div class="pt-count"><div class="pc-v yl">52</div><div class="pc-l">в процессе</div></div>
+            <div class="pt-count"><div class="pc-v rd">8</div><div class="pc-l">просрочки</div></div>
+          </div>
+          <span class="tag tag-g">✓</span>
+        </div>
+        <div class="pr-body">
+          <div style="padding:8px 0;font-size:.7rem;color:#B0B8C4">18 шагов · 3 фазы · <span style="color:#2EC379">1.2% просрочек</span></div>
+        </div>
+      </div>
+
+      <!-- ========== Placeholder for remaining types ========== -->
+      <div class="no-results" id="noResults">🔍 Ничего не найдено</div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="text-align:center;font-size:.78rem;color:#B0B8C4;padding:6px 0">
+    Оркестра · v7 · Фильтр · Демо
+  </div>
+
+</div>
+
+<script>
+var currentFilter = 'all';
+var currentPeriod = 'today';
+
+function toggleType(header) {
+  var body = header.nextElementSibling;
+  if (body && body.classList.contains('pr-body')) {
+    body.classList.toggle('show');
+  }
+}
+
+function toggleSteps(el) {
+  var steps = el.nextElementSibling;
+  while (steps && !steps.classList.contains('steps-block')) {
+    steps = steps.nextElementSibling;
+  }
+  if (steps) steps.classList.toggle('show');
+}
+
+function setFilter(val, el) {
+  currentFilter = val;
+  var chips = document.querySelectorAll('.f-chip[data-filter]');
+  chips.forEach(function(c) { c.classList.remove('a'); });
+  if (el) el.classList.add('a');
+  applyFilters();
+}
+
+function fmtDate(d) {
+  var y = d.getFullYear();
+  var m = String(d.getMonth() + 1).padStart(2, '0');
+  var day = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
+
+function setPeriod(period, el) {
+  currentPeriod = period;
+  var periods = document.querySelectorAll('.f-period');
+  periods.forEach(function(p) { p.classList.remove('a'); });
+  if (el) el.classList.add('a');
+
+  var now = new Date();
+  var from, to = new Date(now);
+
+  switch (period) {
+    case 'today':
+      from = new Date(now);
+      break;
+    case 'yesterday':
+      from = new Date(now);
+      from.setDate(from.getDate() - 1);
+      to = new Date(from);
+      break;
+    case 'week':
+      from = new Date(now);
+      from.setDate(from.getDate() - 7);
+      break;
+    case 'month':
+      from = new Date(now);
+      from.setMonth(from.getMonth() - 1);
+      break;
+    case 'quarter':
+      from = new Date(now);
+      from.setMonth(from.getMonth() - 3);
+      break;
+  }
+
+  document.getElementById('dateFrom').value = fmtDate(from);
+  document.getElementById('dateTo').value = fmtDate(to);
+  updateStatsPeriod();
+  applyFilters();
+}
+
+function applyDateFilter() {
+  var from = document.getElementById('dateFrom').value;
+  var to = document.getElementById('dateTo').value;
+  if (from && to) {
+    // Deselect any period chip
+    var periods = document.querySelectorAll('.f-period');
+    periods.forEach(function(p) { p.classList.remove('a'); });
+    currentPeriod = 'custom';
+    updateStatsPeriod();
+    applyFilters();
+  }
+}
+
+function updateStatsPeriod() {
+  var el = document.getElementById('statsPeriod');
+  var labels = {
+    'today': 'сегодня',
+    'yesterday': 'вчера',
+    'week': 'за 7 дней',
+    'month': 'за месяц',
+    'quarter': 'за квартал',
+    'custom': 'за период'
+  };
+  el.textContent = labels[currentPeriod] || 'за период';
+}
+
+function applyFilters() {
+  var q = document.getElementById('searchInput').value.toLowerCase().trim();
+  var intVal = document.getElementById('intFilter').value;
+  var types = document.querySelectorAll('.pr-type');
+  var visible = 0;
+
+  types.forEach(function(t) {
+    var name = t.getAttribute('data-name').toLowerCase();
+    var status = t.getAttribute('data-status');
+    var ints = t.getAttribute('data-int') || '';
+
+    var nameOk = !q || name.indexOf(q) !== -1;
+    var statusOk = currentFilter === 'all' || status === currentFilter;
+    var intOk = !intVal || ints.indexOf(intVal) !== -1;
+
+    if (nameOk && statusOk && intOk) {
+      t.classList.remove('hidden');
+      visible++;
+    } else {
+      t.classList.add('hidden');
+    }
+  });
+
+  var nr = document.getElementById('noResults');
+  if (visible === 0) { nr.classList.add('show'); } else { nr.classList.remove('show'); }
+
+  document.getElementById('resultCount').textContent = '— ' + visible + ' типов из 18';
+}
+
+function resetFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('intFilter').value = '';
+  currentFilter = 'all';
+  var chips = document.querySelectorAll('.f-chip[data-filter]');
+  chips.forEach(function(c) { c.classList.remove('a'); });
+  var allChip = document.querySelector('.f-chip[data-filter="all"]');
+  if (allChip) allChip.classList.add('a');
+  // Reset date to today
+  setPeriod('today', document.querySelector('.f-period[data-period="today"]'));
+  applyFilters();
+}
+
+// Init
+(function(){
+  document.querySelector('.f-chip[data-filter="all"]').classList.add('a');
+  // Set date range to today
+  var now = new Date();
+  document.getElementById('dateFrom').value = fmtDate(now);
+  document.getElementById('dateTo').value = fmtDate(now);
+  updateStatsPeriod();
+  // Set initial stats from real data
+  var total = 3240 + 5892 + 2015 + 892 + 808 + 1200 + 650;
+  var statEls = document.querySelectorAll('.stat .v');
+  if (statEls.length >= 5) {
+    statEls[0].textContent = total.toLocaleString();
+    statEls[1].textContent = Math.round(total * 0.72).toLocaleString();
+    statEls[2].textContent = (total - Math.round(total * 0.72)).toLocaleString();
+    statEls[3].textContent = '771';
+    statEls[4].textContent = '308';
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Виджет — Рейтинг операторов</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: #f5f6fa;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    /* ===== Демо-контейнер главной страницы ===== */
+    .main-layout {
+      max-width: 1080px;
+      width: 100%;
+    }
+    .main-layout h2 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-bottom: 24px;
+    }
+
+    /* ===== Сетка виджетов на главной ===== */
+    .widgets-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+    .widget-placeholder {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      padding: 24px;
+      min-height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #d1d5db;
+      font-size: 14px;
+      font-weight: 500;
+      border: 1px dashed #e2e8f0;
+    }
+
+    /* ===== ВИДЖЕТ РЕЙТИНГА ===== */
+    .rating-widget {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .rating-widget:hover {
+      box-shadow: 0 4px 16px rgba(79,70,229,0.12);
+    }
+
+    /* Шапка виджета */
+    .widget-header {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      padding: 20px 24px 18px;
+      color: #fff;
+    }
+    .widget-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .widget-header p {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    /* Тело виджета */
+    .widget-body {
+      padding: 20px 24px;
+    }
+
+    /* Место пользователя */
+    .my-place {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .place-badge {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 800;
+      color: #4f46e5;
+      flex-shrink: 0;
+      border: 2px solid #c7d2fe;
+    }
+    .place-badge.top-three {
+      border-color: #f59e0b;
+    }
+    .place-info h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a2e;
+      margin-bottom: 2px;
+    }
+    .place-info .stats {
+      font-size: 13px;
+      color: #6b7280;
+    }
+    .place-info .stats strong {
+      color: #4f46e5;
+      font-weight: 700;
+    }
+
+    /* Прогресс до лидера */
+    .gap-to-leader {
+      background: #f8fafc;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      border: 1px solid #f1f5f9;
+    }
+    .gap-to-leader .label {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 6px;
+    }
+    .gap-to-leader .bar-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .gap-to-leader .bar-track {
+      flex: 1;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .gap-to-leader .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #4f46e5, #818cf8);
+    }
+    .gap-to-leader .bar-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1a1a2e;
+      white-space: nowrap;
+    }
+
+    /* Кнопка */
+    .widget-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px 0;
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      text-decoration: none;
+    }
+    .widget-btn:hover {
+      background: #4338ca;
+    }
+    .widget-btn:active {
+      transform: scale(0.98);
+    }
+    .widget-btn .arrow {
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    /* Топ-3 в виджете (опционально) */
+    .widget-top3 {
+      margin-top: 16px;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 16px;
+    }
+    .widget-top3 .mini-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+    .mini-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 0;
+    }
+    .mini-row .pos {
+      width: 20px;
+      font-weight: 700;
+      font-size: 13px;
+      color: #6b7280;
+      text-align: center;
+    }
+    .mini-row .pos.gold   { color: #b45309; }
+    .mini-row .pos.silver { color: #6b7280; }
+    .mini-row .pos.bronze { color: #9a3412; }
+    .mini-row .name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+    }
+    .mini-row .score {
+      margin-left: auto;
+      font-size: 13px;
+      font-weight: 600;
+      color: #4f46e5;
+    }
+
+    @media (max-width: 768px) {
+      .widgets-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="main-layout">
+  <h2>Главная страница корп-портала</h2>
+  <div class="widgets-grid">
+    <!-- Виджет рейтинга -->
+    <div class="rating-widget">
+      <div class="widget-header">
+        <h3>🏆 Рейтинг операторов</h3>
+        <p>Твоё место среди коллег</p>
+      </div>
+      <div class="widget-body">
+        <div class="my-place">
+          <div class="place-badge">17</div>
+          <div class="place-info">
+            <h4>Екатерина Крылова</h4>
+            <div class="stats">
+              Оценка: <strong>68</strong> баллов · Оператор ПС
+            </div>
+            <div class="stats" style="margin-top:2px;">
+              Всего: <strong>42</strong> участника
+            </div>
+          </div>
+        </div>
+        <div class="gap-to-leader">
+          <div class="label">Отставание от лидера</div>
+          <div class="bar-container">
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 69%"></div>
+            </div>
+            <span class="bar-label">30 баллов</span>
+          </div>
+        </div>
+        <a href="rating-page.html" class="widget-btn">
+          Перейти к полному рейтингу
+          <span class="arrow">→</span>
+        </a>
+        <div class="widget-top3">
+          <div class="mini-title">Топ-3 рейтинга</div>
+          <div class="mini-row"><span class="pos gold">🥇</span><span class="name">Анна Смирнова</span><span class="score">98</span></div>
+          <div class="mini-row"><span class="pos silver">🥈</span><span class="name">Иван Петров</span><span class="score">95</span></div>
+          <div class="mini-row"><span class="pos bronze">🥉</span><span class="name">Мария Иванова</span><span class="score">92</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Заглушки других виджетов -->
+    <div class="widget-placeholder">📊 Другой виджет</div>
+    <div class="widget-placeholder">📅 Ещё виджет</div>
+  </div>
+</div>
+</body>
+</html>
