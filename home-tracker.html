@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Домашний трекер</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23A8D5BA'/><path d='M50 15 L15 45 L25 45 L25 85 L45 85 L45 60 L55 60 L55 85 L75 85 L75 45 L85 45 Z' fill='white'/></svg>" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f7f5; color: #333; min-height: 100vh; padding: 16px;
+      font-size: 14px;
+    }
+    .app { max-width: 1200px; margin: 0 auto; }
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      background: #fff; border-radius: 12px; padding: 14px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 16px;
+    }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .header-left h1 { font-size: 20px; font-weight: 700; color: #2d5a3e; }
+    .header-actions { display: flex; gap: 8px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 7px 14px; border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: background .15s, opacity .15s;
+      font-family: inherit;
+    }
+    .btn-primary { background: #7bc47f; color: #fff; }
+    .btn-primary:hover { background: #5eab62; }
+    .btn-secondary { background: #e8ece8; color: #333; }
+    .btn-secondary:hover { background: #d5dbd5; }
+    .btn-danger { background: #e88383; color: #fff; }
+    .btn-danger:hover { background: #d46666; }
+    .btn-success { background: #7bc47f; color: #fff; }
+    .btn-success:hover { background: #5eab62; }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-icon { padding: 6px; background: transparent; color: #666; border-radius: 6px; }
+    .btn-icon:hover { background: #e8ece8; }
+    .layout { display: flex; flex-direction: column; gap: 16px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .card {
+      background: #fff; border-radius: 12px; padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .card-header h2 { font-size: 16px; font-weight: 700; color: #2d5a3e; }
+    .card-header h2 .emoji { margin-right: 6px; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 12px; }
+    .tab {
+      padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
+      cursor: pointer; background: #e8ece8; color: #555; border: none; font-family: inherit;
+      transition: background .15s;
+    }
+    .tab.active { background: #7bc47f; color: #fff; }
+    .tab:hover:not(.active) { background: #d5dbd5; }
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.35);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000; opacity: 0; pointer-events: none;
+      transition: opacity .2s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal {
+      background: #fff; border-radius: 14px; padding: 24px;
+      min-width: 420px; max-width: 520px; max-height: 90vh; overflow-y: auto;
+    }
+    .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 14px; color: #2d5a3e; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 8px 10px; border: 1px solid #d5dbd5; border-radius: 8px;
+      font-size: 13px; font-family: inherit; background: #fff;
+    }
+    .form-group textarea { resize: vertical; min-height: 50px; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: #7bc47f; outline: none; box-shadow: 0 0 0 2px rgba(123,196,127,.2);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+    .item-list { display: flex; flex-direction: column; gap: 6px; }
+    .item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: 8px; background: #fafcfa;
+      border: 1px solid #e8ece8; transition: background .15s;
+    }
+    .item:hover { background: #f0f7f0; }
+    .item-info { flex: 1; min-width: 0; }
+    .item-title { font-weight: 600; font-size: 15px; }
+    .item-meta { font-size: 13px; color: #888; margin-top: 3px; }
+    .item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .item-checkbox { width: 20px; height: 20px; cursor: pointer; accent-color: #7bc47f; flex-shrink: 0; }
+    .item.done { opacity: .55; }
+    .item.done .item-title { text-decoration: line-through; }
+    .empty-state { text-align: center; color: #b5c6b5; padding: 24px 12px; font-size: 13px; }
+    .category-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 6px;
+      font-size: 12px; font-weight: 600; background: #e8ece8; color: #555;
+    }
+    .badge-large { background: #f7c948; color: #333; }
+    .badge-regular { background: #a8d5ba; color: #333; }
+    .badge-event { background: #c4a8d5; color: #fff; }
+    .toast {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      padding: 14px 28px; border-radius: 12px; background: rgba(0,0,0,.82); color: #fff;
+      font-size: 14px; font-weight: 600; z-index: 2000; text-align: center;
+      max-width: 380px; opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .toast.show { opacity: 1; }
+    .tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 4px; }
+    .tag-large { background: #f7c94833; color: #7a6300; }
+    .tag-regular { background: #a8d5ba44; color: #2d6a3e; }
+    .item-chip {
+      display: inline-block; padding: 3px 8px; border-radius: 20px;
+      font-size: 11px; font-weight: 500; background: #e8ece8; color: #555;
+      margin: 2px 4px 2px 0;
+    }
+    .item-chip .del { margin-left: 4px; cursor: pointer; font-weight: 700; color: #aaa; }
+    .item-chip .del:hover { color: #e88383; }
+    .purchases-total { font-size: 12px; color: #888; margin: 4px 0 8px; }
+    .settings-card { margin-top: 0; }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="header">
+    <div class="header-left">
+      <h1>🏠 Домашний трекер</h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-icon" onclick="toggleSettings()" title="Настройки">⚙️</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- Settings -->
+    <div class="card" style="display:none" id="settingsCard">
+      <div class="card-header"><h2>⚙️ Настройки</h2></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-sm btn-primary" onclick="saveDataToFile()" style="width:100%">💾 Сохранить данные в файл</button>
+        <button class="btn btn-sm btn-primary" onclick="document.getElementById('fileInput').click()" style="width:100%">📂 Загрузить данные из файла</button>
+        <input type="file" id="fileInput" accept=".json" style="display:none" onchange="loadDataFromFile(event)" />
+        <button class="btn btn-sm btn-secondary" onclick="showBackupList()" style="width:100%">⏱ Восстановить из бэкапа</button>
+        <div id="backupList" style="display:none;margin-top:4px"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <!-- Chores widget -->
+      <div class="card">
+        <div class="card-header">
+          <h2><span class="emoji">🧹</span>Дела по дому</h2>
+          <button class="btn btn-sm btn-primary" onclick="openChoreModal()">+ Дело</button>
+        </div>
+        <div style="margin-bottom:10px;display:flex;flex-wrap:wrap;gap:4px" id="categoryFilter"></div>
+        <div id="choreList" class="item-list"></div>
+      </div>
+
+      <!-- Purchases widget -->
+      <div class="card">
+        <div class="card-header">
+          <h2><span class="emoji">🛒</span>Покупки</h2>
+          <button class="btn btn-sm btn-primary" onclick="openPurchaseModal()">+ Покупка</button>
+        </div>
+        <div class="tabs">
+          <button class="tab active" data-purchase-tab="all" onclick="setPurchaseTab('all')">Все</button>
+          <button class="tab" data-purchase-tab="large" onclick="setPurchaseTab('large')">Крупные</button>
+          <button class="tab" data-purchase-tab="regular" onclick="setPurchaseTab('regular')">Повседневные</button>
+        </div>
+        <div class="purchases-total" id="purchasesTotal"></div>
+        <div id="purchaseList" class="item-list"></div>
+      </div>
+    </div>
+
+    <!-- Events widget -->
+    <div class="card">
+      <div class="card-header">
+        <h2><span class="emoji">📅</span>События</h2>
+        <button class="btn btn-sm btn-primary" onclick="openEventModal()">+ Событие</button>
+      </div>
+      <div id="eventList" class="item-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Chore Modal -->
+<div class="modal-overlay" id="choreModal">
+  <div class="modal">
+    <h3 id="choreModalTitle">Новое дело</h3>
+    <input type="hidden" id="choreId" />
+    <div class="form-group">
+      <label>Название</label>
+      <input id="choreTitle" placeholder="Например: помыть посуду" />
+    </div>
+    <div class="form-group">
+      <label>Категория</label>
+      <select id="choreCategory"></select>
+    </div>
+    <div class="form-group">
+      <label>Ответственный</label>
+      <select id="choreAssignee"><option value="Я">Я</option><option value="Муж">Муж</option><option value="Оба">Оба</option></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Дата</label>
+        <input id="choreDate" type="date" />
+      </div>
+      <div class="form-group">
+        <label>Приоритет</label>
+        <select id="chorePriority"><option value="Низкий">Низкий</option><option value="Средний" selected>Средний</option><option value="Высокий">Высокий</option></select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('choreModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveChore()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Purchase Modal -->
+<div class="modal-overlay" id="purchaseModal">
+  <div class="modal">
+    <h3 id="purchaseModalTitle">Новая покупка</h3>
+    <input type="hidden" id="purchaseId" />
+    <div class="form-group">
+      <label>Название</label>
+      <input id="purchaseTitle" placeholder="Например: холодильник" />
+    </div>
+    <div class="form-group">
+      <label>Тип</label>
+      <select id="purchaseType"><option value="regular">Повседневная</option><option value="large">Крупная</option></select>
+    </div>
+    <div class="form-group">
+      <label>Сумма (₽)</label>
+      <input id="purchaseAmount" type="number" placeholder="0" />
+    </div>
+    <div class="form-group">
+      <label>Комментарий</label>
+      <input id="purchaseComment" placeholder="Где купить, бренд и т.д." />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('purchaseModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="savePurchase()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Event Modal -->
+<div class="modal-overlay" id="eventModal">
+  <div class="modal">
+    <h3 id="eventModalTitle">Новое событие</h3>
+    <input type="hidden" id="eventId" />
+    <div class="form-group">
+      <label>Название</label>
+      <input id="eventTitle" placeholder="Например: День рождения мамы" />
+    </div>
+    <div class="form-group">
+      <label>Тип события</label>
+      <select id="eventType">
+        <option value="День рождения">🎂 День рождения</option>
+        <option value="Поездка">✈️ Поездка</option>
+        <option value="Свадьба">💍 Свадьба</option>
+        <option value="Юбилей">🎉 Юбилей</option>
+        <option value="Праздник">🎊 Праздник</option>
+        <option value="Встреча">🤝 Встреча</option>
+        <option value="Другое">📌 Другое</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Дата</label>
+        <input id="eventDate" type="date" />
+      </div>
+      <div class="form-group">
+        <label>Время</label>
+        <input id="eventTime" type="time" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Место</label>
+      <input id="eventPlace" placeholder="Где будет проходить" />
+    </div>
+    <div class="form-group">
+      <label>Комментарий</label>
+      <textarea id="eventComment" placeholder="Подарок, дресс-код и т.д."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('eventModal')">Отмена</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Category Modal -->
+<div class="modal-overlay" id="categoryModal">
+  <div class="modal">
+    <h3 id="categoryModalTitle">Управление категориями</h3>
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <input id="categoryInput" placeholder="Новая категория" style="flex:1;padding:8px 10px;border:1px solid #d5dbd5;border-radius:8px;font-size:13px" />
+      <button class="btn btn-primary" onclick="addCategory()">+</button>
+    </div>
+    <div id="categoryList" style="max-height:300px;overflow-y:auto"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('categoryModal')">Готово</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// --- Data ---
+const LS = {
+  chores: 'ht_chores', categories: 'ht_categories', purchases: 'ht_purchases',
+  events: 'ht_events'
+};
+
+function loadData(key, def) {
+  try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; }
+}
+function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); autoBackup(); }
+
+let chores = loadData(LS.chores, []);
+let categories = loadData(LS.categories, ['Хозяйственные дела']);
+let purchases = loadData(LS.purchases, []);
+let events = loadData(LS.events, []);
+
+// --- Helpers ---
+function genId(arr) { return arr.length ? String(Math.max(...arr.map(t => Number(t.id))) + 1) : '1'; }
+function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function formatDate(d) { if (!d) return '—'; return new Date(d + 'T00:00:00').toLocaleDateString('ru-RU'); }
+function todayStr() {
+  const t = new Date(); return t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// --- Auto-backup ---
+function autoBackup() {
+  const now = Date.now();
+  const last = Number(localStorage.getItem('ht_last_backup_asked') || 0);
+  if (now - last < 3600000) return;
+  localStorage.setItem('ht_last_backup_asked', String(now));
+  setTimeout(() => {
+    if (confirm('Сделать резервную копию данных?')) {
+      const backups = JSON.parse(localStorage.getItem('ht_backups') || '[]');
+      const snapshot = {
+        chores, categories, purchases, events,
+        time: new Date().toLocaleString('ru-RU')
+      };
+      backups.unshift(snapshot);
+      if (backups.length > 5) backups.length = 5;
+      localStorage.setItem('ht_backups', JSON.stringify(backups));
+      toast('Резервная копия сохранена');
+    }
+  }, 100);
+}
+
+// --- Categories ---
+function openCategoryModal() {
+  renderCategoryList();
+  openModal('categoryModal');
+}
+
+function renderCategoryList() {
+  categories = loadData(LS.categories, ['Хозяйственные дела']);
+  const el = document.getElementById('categoryList');
+  el.innerHTML = categories.map((c, i) => {
+    const del = i === 0 ? '' : `<button class="btn btn-sm btn-danger" style="padding:2px 6px;font-size:10px" onclick="deleteCategory(${i})">✕</button>`;
+    return `<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #eee">
+      <span style="flex:1;font-size:13px">${escHtml(c)}</span>
+      ${del}
+    </div>`;
+  }).join('');
+}
+
+function addCategory() {
+  const inp = document.getElementById('categoryInput');
+  const name = inp.value.trim();
+  if (!name) { toast('Введите название категории'); return; }
+  categories = loadData(LS.categories, ['Хозяйственные дела']);
+  categories.push(name);
+  saveData(LS.categories, categories);
+  inp.value = '';
+  renderCategoryList();
+  renderChores();
+  populateCategorySelect();
+  toast('Категория добавлена');
+}
+
+function deleteCategory(i) {
+  const name = categories[i];
+  if (i === 0) { toast('Нельзя удалить базовую категорию'); return; }
+  if (!confirm(`Удалить категорию «${name}»?`)) return;
+  categories = loadData(LS.categories, []);
+  categories.splice(i, 1);
+  saveData(LS.categories, categories);
+  renderCategoryList();
+  renderChores();
+  populateCategorySelect();
+  toast('Категория удалена');
+}
+
+function populateCategorySelect(selected) {
+  categories = loadData(LS.categories, ['Хозяйственные дела']);
+  const sel = document.getElementById('choreCategory');
+  sel.innerHTML = categories.map(c => `<option value="${escHtml(c)}"${c===selected?' selected':''}>${escHtml(c)}</option>`).join('');
+}
+
+function renderCategoryFilter() {
+  categories = loadData(LS.categories, ['Хозяйственные дела']);
+  const container = document.getElementById('categoryFilter');
+  let html = `<span class="item-chip" style="cursor:pointer;background:${activeCategoryFilter===''?'#7bc47f':'#e8ece8'};color:${activeCategoryFilter===''?'#fff':'#555'}" onclick="filterByCategory('')">Все</span>`;
+  categories.forEach(c => {
+    const active = activeCategoryFilter === c;
+    html += `<span class="item-chip" style="cursor:pointer;background:${active?'#7bc47f':'#e8ece8'};color:${active?'#fff':'#555'}" onclick="filterByCategory('${escHtml(c)}')">${escHtml(c)}</span>`;
+  });
+  html += `<button class="btn btn-sm btn-secondary" style="padding:2px 8px;font-size:10px;margin-left:auto" onclick="openCategoryModal()">⚙️</button>`;
+  container.innerHTML = html;
+}
+
+let activeCategoryFilter = '';
+
+function filterByCategory(cat) {
+  activeCategoryFilter = cat;
+  renderCategoryFilter();
+  renderChores();
+}
+
+// --- Chores ---
+function openChoreModal(chore) {
+  document.getElementById('choreModalTitle').textContent = chore ? 'Редактировать дело' : 'Новое дело';
+  document.getElementById('choreId').value = chore ? chore.id : '';
+  document.getElementById('choreTitle').value = chore ? chore.title : '';
+  populateCategorySelect(chore ? chore.category : '');
+  document.getElementById('choreAssignee').value = chore ? chore.assignee : 'Я';
+  document.getElementById('choreDate').value = chore ? chore.date : todayStr();
+  document.getElementById('chorePriority').value = chore ? chore.priority : 'Средний';
+  openModal('choreModal');
+}
+
+function saveChore() {
+  const id = document.getElementById('choreId').value;
+  const title = document.getElementById('choreTitle').value.trim();
+  if (!title) { toast('Введите название дела'); return; }
+  chores = loadData(LS.chores, []);
+  const data = {
+    title,
+    category: document.getElementById('choreCategory').value,
+    assignee: document.getElementById('choreAssignee').value,
+    date: document.getElementById('choreDate').value || '',
+    priority: document.getElementById('chorePriority').value,
+    done: false
+  };
+  if (id) {
+    const idx = chores.findIndex(c => c.id === id);
+    if (idx !== -1) { data.done = chores[idx].done; Object.assign(chores[idx], data); }
+  } else {
+    data.id = genId(chores);
+    chores.unshift(data);
+  }
+  saveData(LS.chores, chores);
+  closeModal('choreModal');
+  renderChores();
+  toast(id ? 'Дело обновлено' : 'Дело создано');
+}
+
+function deleteChore(id) {
+  if (!confirm('Удалить дело?')) return;
+  chores = loadData(LS.chores, []);
+  chores = chores.filter(c => c.id !== id);
+  saveData(LS.chores, chores);
+  renderChores();
+  toast('Дело удалено');
+}
+
+function toggleChore(id) {
+  chores = loadData(LS.chores, []);
+  const c = chores.find(x => x.id === id);
+  if (c) { c.done = !c.done; saveData(LS.chores, chores); renderChores(); }
+}
+
+function renderChores() {
+  chores = loadData(LS.chores, []);
+  const container = document.getElementById('choreList');
+  let filtered = chores;
+  if (activeCategoryFilter) filtered = filtered.filter(c => c.category === activeCategoryFilter);
+  filtered.sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-state">Нет дел</div>';
+    return;
+  }
+  container.innerHTML = filtered.map(c => {
+    return `<div class="item${c.done?' done':''}">
+      <input class="item-checkbox" type="checkbox" ${c.done?'checked':''} onchange="toggleChore('${c.id}')" />
+      <div class="item-info">
+        <div class="item-title">${escHtml(c.title)}</div>
+        <div class="item-meta">
+          <span class="category-badge">${escHtml(c.category)}</span>
+          ${c.assignee ? '<span style="margin-left:4px">👤 '+escHtml(c.assignee)+'</span>' : ''}
+          ${c.date ? '<span style="margin-left:4px">📅 '+formatDate(c.date)+'</span>' : ''}
+          ${c.priority === 'Высокий' ? '<span style="margin-left:8px;font-size:20px">🔴</span>' : c.priority === 'Низкий' ? '<span style="margin-left:8px;font-size:20px">🟢</span>' : '<span style="margin-left:8px;font-size:20px">🟡</span>'}
+        </div>
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-sm btn-secondary" onclick="openChoreModal(chores.find(x=>x.id==='${c.id}'))">✎</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteChore('${c.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// --- Purchases ---
+let activePurchaseTab = 'all';
+
+function setPurchaseTab(tab) {
+  activePurchaseTab = tab;
+  document.querySelectorAll('[data-purchase-tab]').forEach(el => el.classList.toggle('active', el.dataset.purchaseTab === tab));
+  renderPurchases();
+}
+
+function openPurchaseModal(purchase) {
+  document.getElementById('purchaseModalTitle').textContent = purchase ? 'Редактировать покупку' : 'Новая покупка';
+  document.getElementById('purchaseId').value = purchase ? purchase.id : '';
+  document.getElementById('purchaseTitle').value = purchase ? purchase.title : '';
+  document.getElementById('purchaseType').value = purchase ? purchase.type : 'regular';
+  document.getElementById('purchaseAmount').value = purchase ? purchase.amount : '';
+  document.getElementById('purchaseComment').value = purchase ? (purchase.comment||'') : '';
+  openModal('purchaseModal');
+}
+
+function savePurchase() {
+  const id = document.getElementById('purchaseId').value;
+  const title = document.getElementById('purchaseTitle').value.trim();
+  if (!title) { toast('Введите название покупки'); return; }
+  purchases = loadData(LS.purchases, []);
+  const data = {
+    title,
+    type: document.getElementById('purchaseType').value,
+    amount: Number(document.getElementById('purchaseAmount').value) || 0,
+    comment: document.getElementById('purchaseComment').value.trim(),
+    done: false
+  };
+  if (id) {
+    const idx = purchases.findIndex(p => p.id === id);
+    if (idx !== -1) { data.done = purchases[idx].done; Object.assign(purchases[idx], data); }
+  } else {
+    data.id = genId(purchases);
+    purchases.unshift(data);
+  }
+  saveData(LS.purchases, purchases);
+  closeModal('purchaseModal');
+  renderPurchases();
+  toast(id ? 'Покупка обновлена' : 'Покупка добавлена');
+}
+
+function deletePurchase(id) {
+  if (!confirm('Удалить покупку?')) return;
+  purchases = loadData(LS.purchases, []);
+  purchases = purchases.filter(p => p.id !== id);
+  saveData(LS.purchases, purchases);
+  renderPurchases();
+  toast('Покупка удалена');
+}
+
+function togglePurchase(id) {
+  purchases = loadData(LS.purchases, []);
+  const p = purchases.find(x => x.id === id);
+  if (p) { p.done = !p.done; saveData(LS.purchases, purchases); renderPurchases(); }
+}
+
+function renderPurchases() {
+  purchases = loadData(LS.purchases, []);
+  const container = document.getElementById('purchaseList');
+  let filtered = purchases;
+  if (activePurchaseTab === 'large') filtered = filtered.filter(p => p.type === 'large');
+  else if (activePurchaseTab === 'regular') filtered = filtered.filter(p => p.type === 'regular');
+  filtered.sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
+
+  const totalLarge = purchases.filter(p => p.type === 'large').length;
+  const totalRegular = purchases.filter(p => p.type === 'regular').length;
+  document.getElementById('purchasesTotal').textContent = `Крупных: ${totalLarge} · Повседневных: ${totalRegular}`;
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="empty-state">Нет покупок</div>';
+    return;
+  }
+  container.innerHTML = filtered.map(p => {
+    const typeTag = p.type === 'large' ? '<span class="tag tag-large">Крупная</span>' : '<span class="tag tag-regular">Повседневная</span>';
+    const amountStr = p.amount ? p.amount.toLocaleString('ru-RU')+' ₽' : '';
+    return `<div class="item${p.done?' done':''}">
+      <input class="item-checkbox" type="checkbox" ${p.done?'checked':''} onchange="togglePurchase('${p.id}')" />
+      <div class="item-info">
+        <div class="item-title">${escHtml(p.title)} ${typeTag}</div>
+        <div class="item-meta">
+          ${amountStr ? '<span>💰 '+amountStr+'</span>' : ''}
+          ${p.comment ? '<span style="margin-left:6px">💬 '+escHtml(p.comment)+'</span>' : ''}
+        </div>
+      </div>
+      <div class="item-actions">
+        <button class="btn btn-sm btn-secondary" onclick="openPurchaseModal(purchases.find(x=>x.id==='${p.id}'))">✎</button>
+        <button class="btn btn-sm btn-danger" onclick="deletePurchase('${p.id}')">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// --- Events ---
+function openEventModal(event) {
+  document.getElementById('eventModalTitle').textContent = event ? 'Редактировать событие' : 'Новое событие';
+  document.getElementById('eventId').value = event ? event.id : '';
+  document.getElementById('eventTitle').value = event ? event.title : '';
+  document.getElementById('eventType').value = event ? event.type : 'День рождения';
+  document.getElementById('eventDate').value = event ? event.date : '';
+  document.getElementById('eventTime').value = event ? (event.time||'') : '';
+  document.getElementById('eventPlace').value = event ? (event.place||'') : '';
+  document.getElementById('eventComment').value = event ? (event.comment||'') : '';
+  openModal('eventModal');
+}
+
+function saveEvent() {
+  const id = document.getElementById('eventId').value;
+  const title = document.getElementById('eventTitle').value.trim();
+  if (!title) { toast('Введите название события'); return; }
+  events = loadData(LS.events, []);
+  const data = {
+    title,
+    type: document.getElementById('eventType').value,
+    date: document.getElementById('eventDate').value || '',
+    time: document.getElementById('eventTime').value || '',
+    place: document.getElementById('eventPlace').value.trim(),
+    comment: document.getElementById('eventComment').value.trim(),
+    done: false
+  };
+  if (id) {
+    const idx = events.findIndex(e => e.id === id);
+    if (idx !== -1) { data.done = events[idx].done; Object.assign(events[idx], data); }
+  } else {
+    data.id = genId(events);
+    events.unshift(data);
+  }
+  saveData(LS.events, events);
+  closeModal('eventModal');
+  renderEvents();
+  toast(id ? 'Событие обновлено' : 'Событие создано');
+}
+
+function deleteEvent(id) {
+  if (!confirm('Удалить событие?')) return;
+  events = loadData(LS.events, []);
+  events = events.filter(e => e.id !== id);
+  saveData(LS.events, events);
+  renderEvents();
+  toast('Событие удалено');
+}
+
+function toggleEvent(id) {
+  events = loadData(LS.events, []);
+  const e = events.find(x => x.id === id);
+  if (e) { e.done = !e.done; saveData(LS.events, events); renderEvents(); }
+}
+
+const EVENT_EMOJI = {
+  'День рождения': '🎂', 'Поездка': '✈️', 'Свадьба': '💍',
+  'Юбилей': '🎉', 'Праздник': '🎊', 'Встреча': '🤝', 'Другое': '📌'
+};
+
+const MONTHS_RU_UPPER = ['ЯНВАРЬ','ФЕВРАЛЬ','МАРТ','АПРЕЛЬ','МАЙ','ИЮНЬ','ИЮЛЬ','АВГУСТ','СЕНТЯБРЬ','ОКТЯБРЬ','НОЯБРЬ','ДЕКАБРЬ'];
+
+function renderEvents() {
+  events = loadData(LS.events, []);
+  const container = document.getElementById('eventList');
+  events.sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
+  if (events.length === 0) {
+    container.innerHTML = '<div class="empty-state">Нет событий</div>';
+    return;
+  }
+
+  const groups = {};
+  events.forEach(e => {
+    let key = 'Без даты';
+    if (e.date) {
+      const d = new Date(e.date + 'T00:00:00');
+      key = MONTHS_RU_UPPER[d.getMonth()] + ' ' + d.getFullYear();
+    }
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(e);
+  });
+
+  const sortedKeys = Object.keys(groups).sort((a, b) => {
+    if (a === 'Без даты') return 1;
+    if (b === 'Без даты') return -1;
+    const ma = a.match(/(\d+)$/);
+    const mb = b.match(/(\d+)$/);
+    const ya = ma ? Number(ma[1]) : 0;
+    const yb = mb ? Number(mb[1]) : 0;
+    if (ya !== yb) return ya - yb;
+    const na = MONTHS_RU_UPPER.indexOf(a.replace(' ' + ya, ''));
+    const nb = MONTHS_RU_UPPER.indexOf(b.replace(' ' + yb, ''));
+    return na - nb;
+  });
+
+  container.innerHTML = sortedKeys.map(key => {
+    const items = groups[key].map(e => {
+      const emoji = EVENT_EMOJI[e.type] || '📌';
+      const dateStr = e.date ? formatDate(e.date) : '';
+      const timeStr = e.time ? ' '+e.time : '';
+      return `<div class="item${e.done?' done':''}">
+        <input class="item-checkbox" type="checkbox" ${e.done?'checked':''} onchange="toggleEvent('${e.id}')" />
+        <div class="item-info">
+          <div class="item-title">${emoji} ${escHtml(e.title)} <span class="category-badge">${escHtml(e.type)}</span></div>
+          <div class="item-meta">
+            ${dateStr ? '<span>📅 '+dateStr+timeStr+'</span>' : ''}
+            ${e.place ? '<span style="margin-left:6px">📍 '+escHtml(e.place)+'</span>' : ''}
+            ${e.comment ? '<span style="margin-left:6px">💬 '+escHtml(e.comment)+'</span>' : ''}
+          </div>
+        </div>
+        <div class="item-actions">
+          <button class="btn btn-sm btn-secondary" onclick="openEventModal(events.find(x=>x.id==='${e.id}'))">✎</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteEvent('${e.id}')">✕</button>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div style="font-size:13px;font-weight:700;color:#2d5a3e;margin:8px 0 4px;letter-spacing:0.5px">${key}</div>` + items;
+  }).join('');
+}
+
+// --- Settings ---
+let settingsVisible = false;
+function toggleSettings() {
+  settingsVisible = !settingsVisible;
+  document.getElementById('settingsCard').style.display = settingsVisible ? 'block' : 'none';
+  if (settingsVisible) renderBackupList();
+}
+
+function saveDataToFile() {
+  const data = { chores, categories, purchases, events, savedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'home-tracker-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Данные сохранены в файл');
+}
+
+function loadDataFromFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.chores) { localStorage.setItem(LS.chores, JSON.stringify(data.chores)); }
+      if (data.categories) { localStorage.setItem(LS.categories, JSON.stringify(data.categories)); }
+      if (data.purchases) { localStorage.setItem(LS.purchases, JSON.stringify(data.purchases)); }
+      if (data.events) { localStorage.setItem(LS.events, JSON.stringify(data.events)); }
+      toast('Данные загружены');
+      location.reload();
+    } catch(err) { toast('Ошибка при загрузке файла'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function renderBackupList() {
+  const el = document.getElementById('backupList');
+  if (!el) return;
+  const backups = JSON.parse(localStorage.getItem('ht_backups') || '[]');
+  if (backups.length === 0) { el.innerHTML = '<div style="font-size:11px;color:#b5c6b5;padding:4px 0">Нет бэкапов</div>'; return; }
+  el.innerHTML = backups.slice(0, 10).map((b, i) =>
+    `<div style="display:flex;align-items:center;gap:4px;padding:4px 0;font-size:11px;border-bottom:1px solid #eee">
+      <span style="flex:1">${b.time}</span>
+      <button class="btn btn-sm btn-secondary" style="padding:2px 6px;font-size:10px" onclick="restoreBackup(${i})">Восст.</button>
+    </div>`
+  ).join('');
+}
+
+function showBackupList() {
+  const el = document.getElementById('backupList');
+  if (el) { el.style.display = el.style.display === 'none' ? 'block' : 'none'; renderBackupList(); }
+}
+
+function restoreBackup(idx) {
+  if (!confirm('Восстановить данные из бэкапа?')) return;
+  const backups = JSON.parse(localStorage.getItem('ht_backups') || '[]');
+  const snap = backups[idx];
+  if (!snap) return;
+  localStorage.setItem(LS.chores, JSON.stringify(snap.chores));
+  localStorage.setItem(LS.categories, JSON.stringify(snap.categories));
+  localStorage.setItem(LS.purchases, JSON.stringify(snap.purchases));
+  localStorage.setItem(LS.events, JSON.stringify(snap.events));
+  toast('Бэкап восстановлен');
+  location.reload();
+}
+
+// --- Init ---
+function init() {
+  chores = loadData(LS.chores, []);
+  categories = loadData(LS.categories, ['Хозяйственные дела']);
+  purchases = loadData(LS.purchases, []);
+  events = loadData(LS.events, []);
+  renderCategoryFilter();
+  renderChores();
+  renderPurchases();
+  renderEvents();
+}
+init();
+</script>
+</body>
+</html>
