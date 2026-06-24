@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/storage.dart';
+import '../data/firestore_service.dart';
 import '../models/models.dart';
 import '../widgets/purchase_dialog.dart';
 
@@ -17,6 +18,9 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
   void initState() {
     super.initState();
     _load();
+    FirestoreService.dataChanges.listen((_) {
+      _load();
+    });
   }
 
   Future<void> _load() async {
@@ -169,13 +173,16 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 2),
       child: ListTile(
+        contentPadding: const EdgeInsets.only(left: 4, right: 0),
         leading: Checkbox(value: p.done, onChanged: (_) => _toggle(p.id)),
         title: Row(
           children: [
             Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
             const SizedBox(width: 8),
-            Text(p.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-            const SizedBox(width: 6),
+            Flexible(
+              child: Text(p.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15), overflow: TextOverflow.ellipsis),
+            ),
+            const SizedBox(width: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
@@ -187,16 +194,22 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
             ),
           ],
         ),
-        subtitle: Text(
-          '💰 ${p.amount.toStringAsFixed(0)} ₽${p.comment.isNotEmpty ? ' · 💬 ${p.comment}' : ''}',
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            IconButton(icon: const Icon(Icons.edit_outlined, size: 18), onPressed: () => _showDialog(p)),
-            IconButton(icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red), onPressed: () => _delete(p.id)),
+            Text('💰 ${p.amount.toStringAsFixed(0)} ₽', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            if (p.comment.isNotEmpty)
+              Text(p.comment, style: const TextStyle(fontSize: 12, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis),
           ],
+        ),
+        trailing: SizedBox(
+          width: 72,
+          child: Row(
+            children: [
+              IconButton(icon: const Icon(Icons.edit_outlined, size: 18), onPressed: () => _showDialog(p)),
+              IconButton(icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red), onPressed: () => _delete(p.id)),
+            ],
+          ),
         ),
       ),
     );

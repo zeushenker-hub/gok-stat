@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/storage.dart';
+import '../data/firestore_service.dart';
 import '../models/models.dart';
 import '../widgets/event_dialog.dart';
 
@@ -16,6 +17,9 @@ class _EventsScreenState extends State<EventsScreen> {
   void initState() {
     super.initState();
     _load();
+    FirestoreService.dataChanges.listen((_) {
+      _load();
+    });
   }
 
   Future<void> _load() async {

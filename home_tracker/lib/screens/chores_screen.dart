@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/storage.dart';
+import '../data/firestore_service.dart';
 import '../models/models.dart';
 import '../widgets/chore_dialog.dart';
 
@@ -18,6 +19,9 @@ class _ChoresScreenState extends State<ChoresScreen> {
   void initState() {
     super.initState();
     _load();
+    FirestoreService.dataChanges.listen((_) {
+      _load();
+    });
   }
 
   Future<void> _load() async {
@@ -128,11 +132,6 @@ class _ChoresScreenState extends State<ChoresScreen> {
                     itemCount: filtered.length,
                     itemBuilder: (_, i) {
                       final c = filtered[i];
-                      final prioColor = c.priority == 'Высокий'
-                          ? Colors.red
-                          : c.priority == 'Низкий'
-                              ? Colors.green
-                              : Colors.orange;
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 3),
                         child: ListTile(
@@ -155,7 +154,10 @@ class _ChoresScreenState extends State<ChoresScreen> {
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text('🔴🟡🟢'['ВысокийНизкийСредний'.indexOf(c.priority) >= 0 ? 0 : 0].toString(), style: TextStyle(fontSize: 20, color: prioColor)),
+                              Text(
+                                c.priority == 'Высокий' ? '🔴' : c.priority == 'Низкий' ? '🟢' : '🟡',
+                                style: const TextStyle(fontSize: 20),
+                              ),
                               IconButton(
                                 icon: const Icon(Icons.edit_outlined, size: 18),
                                 onPressed: () => _showDialog(c),

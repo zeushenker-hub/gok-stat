@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../data/firestore_service.dart';
 import 'chores_screen.dart';
 import 'purchases_screen.dart';
 import 'events_screen.dart';
@@ -12,16 +13,25 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 0;
 
-  final _pages = const [
-    ChoresScreen(),
-    PurchasesScreen(),
-    EventsScreen(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    FirestoreService.dataChanges.listen((_) {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_index],
+      body: IndexedStack(
+        index: _index,
+        children: const [
+          ChoresScreen(),
+          PurchasesScreen(),
+          EventsScreen(),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
