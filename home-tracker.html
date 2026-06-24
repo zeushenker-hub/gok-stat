@@ -337,22 +337,101 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore-compat.js"></script>
 <script>
-// --- Data ---
-const LS = {
-  chores: 'ht_chores', categories: 'ht_categories', purchases: 'ht_purchases',
-  events: 'ht_events'
+const firebaseConfig = {
+  apiKey: "AIzaSyAfDhxqBCK_Yi8yXW19dmtUTTiArmK-hSs",
+  authDomain: "ihome-app777.firebaseapp.com",
+  projectId: "ihome-app777",
+  storageBucket: "ihome-app777.firebasestorage.app",
+  messagingSenderId: "259416185087",
+  appId: "1:259416185087:web:7ae35f534e37a455e494ca",
+  measurementId: "G-09JWJFJ3ZE"
 };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const FAMILY_DOC = db.collection('families').doc('family_main');
 
-function loadData(key, def) {
-  try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; }
+// --- Data keys in Firestore ---
+const KEYS = { chores: 'chores', categories: 'categories', purchases: 'purchases', events: 'events' };
+
+async function loadData(key, def) {
+  try {
+    const snap = await FAMILY_DOC.collection('data').doc(key).get();
+    const data = snap.data();
+    return data ? data.items : def;
+  } catch { return def; }
 }
-function saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); autoBackup(); }
+async function saveData(key, data) {
+  await FAMILY_DOC.collection('data').doc(key).set({ items: data });
+  autoBackup();
+}
 
-let chores = loadData(LS.chores, []);
-let categories = loadData(LS.categories, ['Хозяйственные дела']);
-let purchases = loadData(LS.purchases, []);
-let events = loadData(LS.events, []);
+// Global state (sync with Firestore)
+let chores = [];
+let categories = ['Хозяйственные дела'];
+let purchases = [];
+let events = [];
+let _initialLoadDone = false;
+
+async function reloadAll() {
+  if (!_initialLoadDone) return;
+  try {
+    const snap = await FAMILY_DOC.collection('data').get();
+    const all = {};
+    snap.forEach(doc => { all[doc.id] = doc.data()?.items; });
+    if (all.chores) chores = all.chores;
+    if (all.categories) categories = all.categories;
+    if (all.purchases) purchases = all.purchases;
+    if (all.events) events = all.events;
+  } catch(e) {}
+  renderCategoryFilter();
+  renderChores();
+  renderPurchases();
+  renderEvents();
+}
+
+function renderAll() {
+  renderCategoryFilter();
+  renderChores();
+  renderPurchases();
+  renderEvents();
+}
+
+// Old API shim
+const LS = { chores: 'chores', categories: 'categories', purchases: 'purchases', events: 'events' };
+
+async function oldLoadData(key, def) { return def; }
+async function oldSaveData(key, data) {
+  const fireKey = key.replace('ht_', '');
+  await saveData(KEYS[fireKey] || fireKey, data);
+}
+
+// Replace global functions
+const __origLoadData = window.loadData;
+window.loadData = function(key, def) {
+  // already loaded globally, just return what we have
+  switch(key) {
+    case LS.chores: case 'ht_chores': return chores.length ? chores : def;
+    case LS.categories: case 'ht_categories': return categories.length ? categories : def;
+    case LS.purchases: case 'ht_purchases': return purchases.length ? purchases : def;
+    case LS.events: case 'ht_events': return events.length ? events : def;
+    default: return def;
+  }
+};
+window.saveData = async function(key, data) {
+  const map = { 'ht_chores':'chores', 'ht_categories':'categories', 'ht_purchases':'purchases', 'ht_events':'events' };
+  const fireKey = map[key] || key;
+  switch(fireKey) {
+    case 'chores': chores = data; break;
+    case 'categories': categories = data; break;
+    case 'purchases': purchases = data; break;
+    case 'events': events = data; break;
+  }
+  await saveData(fireKey, data);
+  renderAll();
+};
 
 // --- Helpers ---
 function genId(arr) { return arr.length ? String(Math.max(...arr.map(t => Number(t.id))) + 1) : '1'; }
@@ -819,15 +898,15 @@ function loadDataFromFile(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = function(ev) {
+  reader.onload = async function(ev) {
     try {
       const data = JSON.parse(ev.target.result);
-      if (data.chores) { localStorage.setItem(LS.chores, JSON.stringify(data.chores)); }
-      if (data.categories) { localStorage.setItem(LS.categories, JSON.stringify(data.categories)); }
-      if (data.purchases) { localStorage.setItem(LS.purchases, JSON.stringify(data.purchases)); }
-      if (data.events) { localStorage.setItem(LS.events, JSON.stringify(data.events)); }
+      if (data.chores) await saveData(KEYS.chores, data.chores);
+      if (data.categories) await saveData(KEYS.categories, data.categories);
+      if (data.purchases) await saveData(KEYS.purchases, data.purchases);
+      if (data.events) await saveData(KEYS.events, data.events);
       toast('Данные загружены');
-      location.reload();
+      await reloadAll();
     } catch(err) { toast('Ошибка при загрузке файла'); }
   };
   reader.readAsText(file);
@@ -852,29 +931,29 @@ function showBackupList() {
   if (el) { el.style.display = el.style.display === 'none' ? 'block' : 'none'; renderBackupList(); }
 }
 
-function restoreBackup(idx) {
+async function restoreBackup(idx) {
   if (!confirm('Восстановить данные из бэкапа?')) return;
   const backups = JSON.parse(localStorage.getItem('ht_backups') || '[]');
   const snap = backups[idx];
   if (!snap) return;
-  localStorage.setItem(LS.chores, JSON.stringify(snap.chores));
-  localStorage.setItem(LS.categories, JSON.stringify(snap.categories));
-  localStorage.setItem(LS.purchases, JSON.stringify(snap.purchases));
-  localStorage.setItem(LS.events, JSON.stringify(snap.events));
+  if (snap.chores) await saveData(KEYS.chores, snap.chores);
+  if (snap.categories) await saveData(KEYS.categories, snap.categories);
+  if (snap.purchases) await saveData(KEYS.purchases, snap.purchases);
+  if (snap.events) await saveData(KEYS.events, snap.events);
   toast('Бэкап восстановлен');
-  location.reload();
+  await reloadAll();
 }
 
 // --- Init ---
-function init() {
-  chores = loadData(LS.chores, []);
-  categories = loadData(LS.categories, ['Хозяйственные дела']);
-  purchases = loadData(LS.purchases, []);
-  events = loadData(LS.events, []);
-  renderCategoryFilter();
-  renderChores();
-  renderPurchases();
-  renderEvents();
+async function init() {
+  _initialLoadDone = false;
+  await reloadAll();
+  _initialLoadDone = true;
+
+  // Listen to real-time updates
+  FAMILY_DOC.collection('data').onSnapshot(() => {
+    reloadAll();
+  });
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
