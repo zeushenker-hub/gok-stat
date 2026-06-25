@@ -3,6 +3,8 @@ name: Update data.json from Google Sheets
 on:
   schedule:
     - cron: '*/5 * * * *'
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
