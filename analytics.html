@@ -168,36 +168,13 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 
 <script>
 const COLORS = { blue: '#3b82f6', green: '#22c55e', amber: '#eab308', purple: '#a855f7', red: '#ef4444', gray: '#475569' };
-const SHEET_ID = '15PKewFsJYH99OLeC5LvIcHrt9W9tjFBl1067-yVDJAY';
 
 let charts = {};
 
-function loadData() {
-return new Promise((resolve, reject) => {
-const cb = 'g_' + Math.random().toString(36).slice(2);
-const s = document.createElement('script');
-s.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('ГОК')}&callback=${cb}`;
-window[cb] = function(resp) {
-delete window[cb]; s.remove();
-if (resp.status !== 'ok') { reject(new Error('Google API error')); return; }
-const rows = resp.table.rows;
-const data = [];
-for (let r = 0; r < rows.length; r++) {
-const c = rows[r].c || [];
-data.push({
-company: c[0]?.v || '', inn: String(c[1]?.v ?? ''),
-okved: String(c[2]?.v ?? ''), gendir: c[3]?.v || '',
-tel1: String(c[5]?.v ?? ''), tel2: String(c[6]?.v ?? ''),
-responsible: c[7]?.v || null, call1: c[8]?.v || null,
-afterNdz: c[9]?.v || null, comment: c[10]?.v || null
-});
-}
-resolve(data);
-};
-s.onerror = () => { delete window[cb]; reject(new Error('Script load failed')); };
-document.head.appendChild(s);
-setTimeout(() => { if (window[cb]) { delete window[cb]; reject(new Error('Timeout')); } }, 20000);
-});
+async function loadData() {
+const resp = await fetch('data.json');
+if (!resp.ok) throw new Error('HTTP ' + resp.status);
+return await resp.json();
 }
 
 function analyze(data) {
