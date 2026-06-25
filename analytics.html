@@ -516,15 +516,6 @@ document.getElementById('content').style.display = 'block';
 document.getElementById('loading').innerHTML = `<div style="color:#ef4444;font-size:16px">Ошибка загрузки данных: ${e.message}</div>`;
 }
 }
-renderManagerTable(result);
-renderOkvedTable(result);
-renderMatrix(result);
-renderCharts(result);
-scheduleAutoReload();
-} catch (e) {
-document.getElementById('loading').innerHTML = `<div style="color:#ef4444;font-size:16px">Ошибка загрузки данных: ${e.message}</div>`;
-}
-}
 
 let autoReloadTimer = null;
 
