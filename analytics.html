@@ -53,7 +53,7 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 <h1>CRM Аналитика — Стратегия RD</h1>
 <p>Конверсия и эффективность воронки обзвона | Сегмент: ГОК (горно-обогатительные комбинаты)</p>
 <div id="headerBadge" class="badge">Загрузка данных...</div>
-<button id="refreshBtn" onclick="refreshData()" style="display:none;background:#334155;border:1px solid #475569;color:#e2e8f0;padding:4px 12px;border-radius:8px;font-size:12px;margin-top:8px;cursor:pointer">🔄 Обновить данные из Google Sheets</button>
+<div id="updateTimestamp" class="badge" style="display:none;background:transparent;border:1px solid #334155;color:#94a3b8;margin-left:8px"></div>
 <div class="rule">
 <strong>Правила расчёта:</strong><br>
 <span class="badge badge-green">Дозвон</span> Звонок1="Да" <strong>ИЛИ</strong> ПослеНДЗ="Да после НДЗ"<br>
@@ -237,17 +237,20 @@ return { total, dozvon, ndz, ndzVybrat, ndzNdz, ndzDa, neObr, otrabotano, matrix
 }
 
 function renderCards(r) {
+const dPct = (r.dozvon / r.total * 100).toFixed(1);
+const oPct = (r.otrabotano / r.total * 100).toFixed(1);
 const cards = [
-{ label: 'Всего компаний', value: r.total, sub: 'в базе ГОК', cls: '' },
-{ label: 'Дозвон', value: r.dozvon, sub: (r.dozvon / r.total * 100).toFixed(1) + '%', cls: 'green' },
-{ label: 'НДЗ', value: r.ndz, sub: (r.ndz / r.total * 100).toFixed(1) + '%', cls: 'amber' },
-{ label: 'НДЗ + выбрано', value: r.ndzVybrat, sub: 'нужно дозваниваться', cls: 'blue' },
-{ label: 'НДЗ + НДЗ', value: r.ndzNdz, sub: 'повторный НДЗ', cls: 'red' },
-{ label: 'Отработано', value: r.otrabotano, sub: (r.otrabotano / r.total * 100).toFixed(1) + '%', cls: 'green' },
-{ label: 'Не обработано', value: r.neObr, sub: (r.neObr / r.total * 100).toFixed(1) + '%', cls: '' },
+{ label: 'Всего компаний', value: r.total, sub: 'в базе ГОК', cls: '', arrow: false },
+{ label: 'Отработано', value: r.otrabotano, sub: oPct + '% от общего', cls: 'green', arrow: true },
+{ label: 'Дозвон', value: r.dozvon, sub: dPct + '% от общего', cls: 'green', arrow: true },
 ];
 document.getElementById('cards').innerHTML = cards.map(c =>
-`<div class="card"><div class="label">${c.label}</div><div class="value${c.cls ? ' ' + c.cls : ''}">${c.value}</div><div class="sub">${c.sub}</div></div>`
+`<div class="card" style="position:relative">
+${c.arrow ? '<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);color:#475569;font-size:18px">↓</div>' : ''}
+<div class="label">${c.label}</div>
+<div class="value${c.cls ? ' ' + c.cls : ''}">${c.value}</div>
+<div class="sub">${c.sub}</div>
+</div>`
 ).join('');
 }
 
@@ -480,10 +483,11 @@ try {
 const data = await loadData();
 const result = analyze(data);
 
-document.getElementById('headerBadge').textContent = `Всего записей: ${result.total} | Данные: Google Sheets (ГОК) | Обновлено: ${new Date().toLocaleDateString('ru-RU')}`;
+document.getElementById('headerBadge').textContent = `Всего записей: ${result.total} | Данные: Google Sheets (ГОК)`;
+document.getElementById('updateTimestamp').textContent = `Данные актуальны на ${new Date().toLocaleString('ru-RU')}`;
+document.getElementById('updateTimestamp').style.display = 'inline-block';
 document.getElementById('loading').style.display = 'none';
 document.getElementById('content').style.display = 'block';
-document.getElementById('refreshBtn').style.display = 'inline-block';
 
 renderCards(result);
 renderManagerTable(result);
@@ -496,27 +500,10 @@ document.getElementById('loading').innerHTML = `<div style="color:#ef4444;font-s
 }
 }
 
-async function refreshData() {
-document.getElementById('refreshBtn').textContent = '🔄 Обновление...';
-document.getElementById('refreshBtn').disabled = true;
-try {
-const resp = await fetch('update_data.py?' + Date.now());
-if (!resp.ok) throw new Error('HTTP ' + resp.status);
-const result = await resp.text();
-alert('Данные обновлены!\n' + result);
-location.reload();
-} catch (e) {
-alert('Ошибка: ' + e.message + '\n\nЗапусти в терминале:\npython3 update_data.py\nзатем обнови страницу (Cmd+R)');
-document.getElementById('refreshBtn').textContent = '🔄 Обновить данные из Google Sheets';
-document.getElementById('refreshBtn').disabled = false;
-}
-}
-
 let autoReloadTimer = null;
 
 function scheduleAutoReload() {
 const minutes = 5;
-document.getElementById('headerBadge').textContent += ` | Автообновление каждые ${minutes} мин`;
 autoReloadTimer = setInterval(async () => {
 try {
 const resp = await fetch('data.json?_=' + Date.now());
