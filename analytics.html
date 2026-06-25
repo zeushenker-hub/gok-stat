@@ -188,7 +188,7 @@ return wrapper.rows;
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRhJd6AktvhyyZafJDWxg4pHmwugE5twEgtt6Dz3MMWNS6KMuutKvh2r_Aj33LmcH48x8z2pnGNrTcO/pub?gid=243256728&single=true&output=csv';
 
 async function loadDataFromSheets() {
-const resp = await fetch(CSV_URL + '&_=' + Date.now());
+const resp = await fetch(CSV_URL, { redirect: 'follow' });
 if (!resp.ok) throw new Error('HTTP ' + resp.status);
 const csv = await resp.text();
 const lines = csv.split('\n').filter(l => l.trim());
