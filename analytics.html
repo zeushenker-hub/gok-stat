@@ -490,6 +490,7 @@ renderManagerTable(result);
 renderOkvedTable(result);
 renderMatrix(result);
 renderCharts(result);
+scheduleAutoReload();
 } catch (e) {
 document.getElementById('loading').innerHTML = `<div style="color:#ef4444;font-size:16px">Ошибка загрузки данных: ${e.message}</div>`;
 }
@@ -509,6 +510,32 @@ alert('Ошибка: ' + e.message + '\n\nЗапусти в терминале:\
 document.getElementById('refreshBtn').textContent = '🔄 Обновить данные из Google Sheets';
 document.getElementById('refreshBtn').disabled = false;
 }
+}
+
+let autoReloadTimer = null;
+
+function scheduleAutoReload() {
+const minutes = 5;
+document.getElementById('headerBadge').textContent += ` | Автообновление каждые ${minutes} мин`;
+autoReloadTimer = setInterval(async () => {
+try {
+const resp = await fetch('data.json?_=' + Date.now());
+if (!resp.ok) return;
+const newData = await resp.json();
+if (newData.length > 0) {
+rebuild(newData);
+}
+} catch (_) {}
+}, minutes * 60 * 1000);
+}
+
+function rebuild(data) {
+const result = analyze(data);
+renderCards(result);
+renderManagerTable(result);
+renderOkvedTable(result);
+renderMatrix(result);
+renderCharts(result);
 }
 
 init();
