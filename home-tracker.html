@@ -433,7 +433,11 @@ window.saveData = async function(key, data) {
     case 'purchases': purchases = data; break;
     case 'events': events = data; break;
   }
-  await saveData(fireKey, data);
+  // Пишем в Firestore напрямую, без рекурсии
+  try {
+    await FAMILY_DOC.collection('data').doc(fireKey).set({ items: data });
+  } catch(e) { console.warn('Firestore write error:', e); }
+  autoBackup();
   renderAll();
 };
 
@@ -649,7 +653,7 @@ function openPurchaseModal(purchase) {
   openModal('purchaseModal');
 }
 
-function savePurchase() {
+async function savePurchase() {
   const id = document.getElementById('purchaseId').value;
   const title = document.getElementById('purchaseTitle').value.trim();
   if (!title) { toast('Введите название покупки'); return; }
@@ -671,7 +675,7 @@ function savePurchase() {
     data.id = genId(purchases);
     purchases.unshift(data);
   }
-  saveData(LS.purchases, purchases);
+  await saveData(LS.purchases, purchases);
   closeModal('purchaseModal');
   renderPurchases();
   toast(id ? 'Покупка обновлена' : 'Покупка добавлена');
