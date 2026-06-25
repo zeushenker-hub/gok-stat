@@ -41,6 +41,10 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 .badge-red { background: #290b0b; color: #f87171; }
 .badge-gray { background: #1e293b; color: #94a3b8; }
 .full-width { grid-column: 1 / -1; }
+.funnel-row { display: flex; gap: 16px; margin-bottom: 16px; }
+.funnel-row .card { flex: 1; text-align: center; position: relative; }
+.funnel-arrow { position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); color: #475569; font-size: 20px; z-index: 1; }
+.stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
 .loading { text-align: center; padding: 60px; color: #94a3b8; font-size: 18px; }
 .loading .spinner { border: 4px solid #1e293b; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 16px; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -239,19 +243,39 @@ return { total, dozvon, ndz, ndzVybrat, ndzNdz, ndzDa, neObr, otrabotano, matrix
 function renderCards(r) {
 const dPct = (r.dozvon / r.total * 100).toFixed(1);
 const oPct = (r.otrabotano / r.total * 100).toFixed(1);
-const cards = [
-{ label: 'Всего компаний', value: r.total, sub: 'в базе ГОК', cls: '', arrow: false },
-{ label: 'Отработано', value: r.otrabotano, sub: oPct + '% от общего', cls: 'green', arrow: true },
-{ label: 'Дозвон', value: r.dozvon, sub: dPct + '% от общего', cls: 'green', arrow: true },
+const nPct = (r.neObr / r.total * 100).toFixed(1);
+
+const funnel = [
+{ label: 'Всего компаний', value: r.total, sub: 'в базе ГОК', cls: '' },
+{ label: 'Отработано', value: r.otrabotano, sub: oPct + '% от общего', cls: 'green' },
+{ label: 'Дозвон', value: r.dozvon, sub: dPct + '% от общего', cls: 'green' },
 ];
-document.getElementById('cards').innerHTML = cards.map(c =>
-`<div class="card" style="position:relative">
-${c.arrow ? '<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);color:#475569;font-size:18px">↓</div>' : ''}
+
+const stats = [
+{ label: 'НДЗ', value: r.ndz, sub: (r.ndz / r.total * 100).toFixed(1) + '%', cls: 'amber' },
+{ label: 'НДЗ + выбрано', value: r.ndzVybrat, sub: 'нужно дозваниваться', cls: 'blue' },
+{ label: 'НДЗ + НДЗ', value: r.ndzNdz, sub: 'повторный НДЗ', cls: 'red' },
+{ label: 'Не обработано', value: r.neObr, sub: nPct + '%', cls: '' },
+];
+
+let html = '<div class="funnel-row">';
+html += funnel.map((c, i) =>
+`<div class="card funnel-card">
+${i > 0 ? '<div class="funnel-arrow">↓</div>' : ''}
 <div class="label">${c.label}</div>
 <div class="value${c.cls ? ' ' + c.cls : ''}">${c.value}</div>
 <div class="sub">${c.sub}</div>
 </div>`
 ).join('');
+html += '</div>';
+
+html += '<div class="stats-row">';
+html += stats.map(c =>
+`<div class="card"><div class="label">${c.label}</div><div class="value${c.cls ? ' ' + c.cls : ''}">${c.value}</div><div class="sub">${c.sub}</div></div>`
+).join('');
+html += '</div>';
+
+document.getElementById('cards').innerHTML = html;
 }
 
 function renderManagerTable(r) {
