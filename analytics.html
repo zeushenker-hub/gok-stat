@@ -176,7 +176,7 @@ const COLORS = { blue: '#3b82f6', green: '#22c55e', amber: '#eab308', purple: '#
 let charts = {};
 
 async function loadData() {
-const resp = await fetch('data.json');
+const resp = await fetch('data.json?_=' + Date.now());
 if (!resp.ok) throw new Error('HTTP ' + resp.status);
 return await resp.json();
 }
