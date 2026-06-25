@@ -196,7 +196,7 @@ resolve(data);
 };
 s.onerror = () => { delete window[cb]; reject(new Error('Script load failed')); };
 document.head.appendChild(s);
-setTimeout(() => { if (window[cb]) { delete window[cb]; reject(new Error('Timeout')); } }, 15000);
+setTimeout(() => { if (window[cb]) { delete window[cb]; reject(new Error('Timeout')); } }, 20000);
 });
 }
 
