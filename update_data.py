@@ -1,8 +1,9 @@
 import urllib.request, json, urllib.parse, os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 SHEET_ID = '15PKewFsJYH99OLeC5LvIcHrt9W9tjFBl1067-yVDJAY'
 SHEET_NAME = 'ГОК'
+TZ = timezone(timedelta(hours=4))
 OUTPUT = os.path.join(os.path.dirname(__file__), 'data.json')
 
 url = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:json&sheet={urllib.parse.quote(SHEET_NAME)}'
@@ -30,7 +31,7 @@ for r in data['table']['rows']:
     if len(c) > 10: row['comment'] = c[10]['v'] if c[10] else None
     rows.append(row)
 
-now = datetime.now(timezone.utc).strftime('%d.%m.%Y, %H:%M:%S')
+now = datetime.now(TZ).strftime('%d.%m.%Y, %H:%M:%S')
 with open(OUTPUT, 'w', encoding='utf-8') as f:
     f.write('{"updated":"' + now + '","rows":')
     json.dump(rows, f, ensure_ascii=False)

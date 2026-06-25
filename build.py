@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import json, urllib.request, urllib.parse, os, re
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 SHEET_ID = '15PKewFsJYH99OLeC5LvIcHrt9W9tjFBl1067-yVDJAY'
 SHEET_NAME = 'ГОК'
@@ -35,7 +35,7 @@ def fetch_data():
 
 def build():
     rows = fetch_data()
-    now = datetime.now(timezone.utc).strftime('%d.%m.%Y, %H:%M:%S')
+    now = datetime.now(timezone(timedelta(hours=4))).strftime('%d.%m.%Y, %H:%M:%S')
     with open(DATA_FILE, 'w', encoding='utf-8') as f:
         f.write('{"updated":"' + now + '","rows":')
         json.dump(rows, f, ensure_ascii=False)
