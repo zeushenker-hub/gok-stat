@@ -61,9 +61,9 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 <div class="rule">
 <strong>Правила расчёта:</strong><br>
 <span class="badge badge-green">Дозвон</span> Звонок1="Да" <strong>ИЛИ</strong> ПослеНДЗ="Да после НДЗ"<br>
-<span class="badge badge-amber">НДЗ</span> (Звонок1="НДЗ" <strong>И</strong> ПослеНДЗ="выбрать") <strong>ИЛИ</strong> (Звонок1="НДЗ" <strong>И</strong> ПослеНДЗ="НДЗ")<br>
+<span class="badge badge-amber">НДЗ</span> (Звонок1="НДЗ" <strong>И</strong> ПослеНДЗ пусто) <strong>ИЛИ</strong> (Звонок1="НДЗ" <strong>И</strong> ПослеНДЗ="НДЗ")<br>
 <span class="badge badge-gray">Не обработано</span> всё остальное<br>
-<span class="badge badge-green">Отработано</span> все записи, кроме (Звонок1="выбрать" <strong>И</strong> ПослеНДЗ="выбрать") <strong>И</strong> (Звонок1 пусто <strong>И</strong> ПослеНДЗ пусто)
+<span class="badge badge-green">Отработано</span> все записи, кроме (Звонок1 пусто <strong>И</strong> ПослеНДЗ пусто)
 </div>
 </div>
 
@@ -123,7 +123,6 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 <th>→ %</th>
 <th>НДЗ</th>
 <th>→ %</th>
-<th>НДЗ+выбрать</th>
 <th>НДЗ+НДЗ</th>
 <th>НДЗ→Да</th>
 <th>Не обраб.</th>
@@ -158,7 +157,6 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 <thead>
 <tr>
 <th></th>
-<th style="text-align:center">После НДЗ: выбрано</th>
 <th style="text-align:center">После НДЗ: НДЗ</th>
 <th style="text-align:center;color:#22c55e">После НДЗ: Да</th>
 <th style="text-align:center">Пусто</th>
@@ -186,14 +184,14 @@ return wrapper.rows;
 function analyze(data) {
 const total = data.length;
 
-let dozvon = 0, ndz = 0, ndzVybrat = 0, ndzNdz = 0, ndzDa = 0, neObr = 0, otrabotano = 0;
+let dozvon = 0, ndz = 0, ndzNdz = 0, ndzDa = 0, neObr = 0, otrabotano = 0;
 
 const matrix = {};
 const byManager = {};
 const byOkved = {};
 
 function addManager(name, field, val) {
-if (!byManager[name]) byManager[name] = { total: 0, dozvon: 0, ndz: 0, ndz_v: 0, ndz_n: 0, ndz_da: 0, ne_obr: 0 };
+if (!byManager[name]) byManager[name] = { total: 0, dozvon: 0, ndz: 0, ndz_n: 0, ndz_da: 0, ne_obr: 0 };
 if (field === 'total') byManager[name].total += val;
 else byManager[name][field] += val;
 }
@@ -210,21 +208,19 @@ matrix[mk] = (matrix[mk] || 0) + 1;
 addManager(mgr, 'total', 1);
 
 const isDozvon = c1 === 'Да' || af === 'Да после НДЗ';
-const isNdzVybrat = c1 === 'НДЗ' && af === 'выбрать';
-const isNdzNdz = c1 === 'НДЗ' && af === 'НДЗ';
-const isNdz = isNdzVybrat || isNdzNdz;
+const isNdz = c1 === 'НДЗ' && (af === 'НДЗ' || af === null);
 
 if (isDozvon) {
 dozvon++;
 otrabotano++;
 addManager(mgr, 'dozvon', 1);
 if (af === 'Да после НДЗ') addManager(mgr, 'ndz_da', 1);
-} else if (isNdzVybrat) {
-ndz++; ndzVybrat++; otrabotano++;
-addManager(mgr, 'ndz', 1); addManager(mgr, 'ndz_v', 1);
-} else if (isNdzNdz) {
+} else if (isNdz && af === 'НДЗ') {
 ndz++; ndzNdz++; otrabotano++;
 addManager(mgr, 'ndz', 1); addManager(mgr, 'ndz_n', 1);
+} else if (isNdz) {
+ndz++; otrabotano++;
+addManager(mgr, 'ndz', 1);
 } else if (c1 === 'НДЗ' && af === 'Да после НДЗ') {
 dozvon++; otrabotano++;
 addManager(mgr, 'dozvon', 1);
@@ -239,7 +235,7 @@ ndzDa++;
 }
 }
 
-return { total, dozvon, ndz, ndzVybrat, ndzNdz, ndzDa, neObr, otrabotano, matrix, byManager, byOkved, data };
+return { total, dozvon, ndz, ndzNdz, ndzDa, neObr, otrabotano, matrix, byManager, byOkved, data };
 }
 
 function renderCards(r) {
@@ -255,7 +251,6 @@ const funnel = [
 
 const stats = [
 { label: 'НДЗ', value: r.ndz, sub: (r.ndz / r.total * 100).toFixed(1) + '%', cls: 'amber' },
-{ label: 'НДЗ + выбрано', value: r.ndzVybrat, sub: 'нужно дозваниваться', cls: 'blue' },
 { label: 'НДЗ + НДЗ', value: r.ndzNdz, sub: 'повторный НДЗ', cls: 'red' },
 { label: 'Не обработано', value: r.neObr, sub: nPct + '%', cls: '' },
 ];
@@ -294,7 +289,6 @@ return `<tr>
 <td><span class="badge ${dPct > 0 ? 'badge-blue' : 'badge-gray'}">${dPct}%</span></td>
 <td><span class="badge ${m.ndz ? 'badge-amber' : 'badge-gray'}">${m.ndz}</span></td>
 <td>${nPct}%</td>
-<td>${m.ndz_v}</td>
 <td>${m.ndz_n}</td>
 <td>${m.ndz_da}</td>
 <td>${m.ne_obr}</td>
@@ -322,7 +316,7 @@ r.byOkved[ok].total++;
 const c1 = row.call1;
 const af = row.afterNdz;
 if (c1 === 'Да' || af === 'Да после НДЗ') r.byOkved[ok].dozvon++;
-else if (c1 === 'НДЗ' && (af === 'выбрать' || af === 'НДЗ')) r.byOkved[ok].ndz++;
+else if (c1 === 'НДЗ' && (af === null || af === 'НДЗ')) r.byOkved[ok].ndz++;
 }
 
 const keys = Object.keys(r.byOkved).sort();
@@ -347,11 +341,10 @@ function renderMatrix(r) {
 const rows = [
 { label: 'Звонок 1 = Да', mKey: 'Да', color: 'green', badge: 'дозвон' },
 { label: 'Звонок 1 = НДЗ', mKey: 'НДЗ', color: 'amber', badge: null },
-{ label: 'Звонок 1 = выбрано', mKey: 'выбрать', color: '', badge: null },
 { label: 'Пусто', mKey: '∅', color: '', badge: null },
 ];
-const colKeys = ['выбрать', 'НДЗ', 'Да после НДЗ', '∅'];
-const colLabels = ['выбрано', 'НДЗ', 'Да', 'Пусто'];
+const colKeys = ['НДЗ', 'Да после НДЗ', '∅'];
+const colLabels = ['НДЗ', 'Да', 'Пусто'];
 
 let html = '';
 for (const row of rows) {
@@ -360,7 +353,7 @@ let cells = '';
 for (let ci = 0; ci < colKeys.length; ci++) {
 const v = r.matrix[row.mKey + '|' + colKeys[ci]] || 0;
 rowTotal += v;
-const isAmber = row.mKey === 'НДЗ' && (colKeys[ci] === 'выбрать' || colKeys[ci] === 'НДЗ');
+const isAmber = row.mKey === 'НДЗ' && colKeys[ci] === 'НДЗ';
 cells += `<td style="text-align:center">${isAmber && v ? '<span class="badge badge-amber">' + v + '</span>' : v}</td>`;
 }
 const labelBadge = row.badge ? ` <span class="badge badge-${row.color}">${row.badge}</span>` : '';
@@ -423,9 +416,10 @@ y: { stacked: true, beginAtZero: true, max: total, ticks: { color: '#94a3b8' } }
 }
 });
 
-const call1Data = { 'НДЗ': 0, 'Да': 0, 'выбрать': 0, '∅': 0 };
+const call1Data = { 'НДЗ': 0, 'Да': 0, '∅': 0 };
 for (const row of r.data) {
 const k = row.call1 || '∅';
+if (k === 'выбрать') continue;
 call1Data[k] = (call1Data[k] || 0) + 1;
 }
 const call1Labels = Object.keys(call1Data).map(k => k === '∅' ? 'пусто' : k);
@@ -435,7 +429,7 @@ charts.call1Chart = new Chart(document.getElementById('call1Chart'), {
 type: 'doughnut',
 data: {
 labels: call1Labels.map((l, i) => `${l} (${call1Values[i]})`),
-datasets: [{ data: call1Values, backgroundColor: ['#eab308', '#22c55e', '#3b82f6', '#475569'] }]
+datasets: [{ data: call1Values, backgroundColor: ['#eab308', '#22c55e', '#475569'] }]
 },
 options: {
 responsive: true, maintainAspectRatio: false,
@@ -443,9 +437,10 @@ plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, fo
 }
 });
 
-const afterData = { 'выбрать': 0, 'НДЗ': 0, 'Да после НДЗ': 0, '∅': 0 };
+const afterData = { 'НДЗ': 0, 'Да после НДЗ': 0, '∅': 0 };
 for (const row of r.data) {
 const k = row.afterNdz || '∅';
+if (k === 'выбрать') continue;
 afterData[k] = (afterData[k] || 0) + 1;
 }
 const afterLabels = Object.keys(afterData).map(k => k === '∅' ? 'пусто' : k === 'Да после НДЗ' ? 'Да после НДЗ' : k);
@@ -455,7 +450,7 @@ charts.afterNdzChart = new Chart(document.getElementById('afterNdzChart'), {
 type: 'doughnut',
 data: {
 labels: afterLabels.map((l, i) => `${l} (${afterValues[i]})`),
-datasets: [{ data: afterValues, backgroundColor: ['#3b82f6', '#475569', '#eab308', '#22c55e'] }]
+datasets: [{ data: afterValues, backgroundColor: ['#eab308', '#22c55e', '#475569'] }]
 },
 options: {
 responsive: true, maintainAspectRatio: false,
