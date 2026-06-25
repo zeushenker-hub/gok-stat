@@ -21,3 +21,4 @@ scripts/
 !update_data.py
 !build.py
 !.github/workflows/fetch_data.py
+sw.js
