@@ -68,16 +68,4 @@ class FirestoreService {
   static Stream<void> get dataChanges {
     return _family.snapshots().map((_) => null);
   }
-
-  // --- Product names history (never deleted) ---
-  static Future<Set<String>> loadProductNames() async {
-    final snap = await _family.doc('product_names').get();
-    final raw = snap.data() as Map<String, dynamic>?;
-    if (raw == null || raw['items'] == null) return {};
-    return Set<String>.from(raw['items'] as List);
-  }
-
-  static Future<void> saveProductNames(List<String> names) async {
-    await _family.doc('product_names').set({'items': names});
-  }
 }

@@ -134,6 +134,8 @@
     .item-chip .del:hover { color: #e88383; }
     .purchases-total { font-size: 12px; color: #888; margin: 4px 0 8px; }
     .settings-card { margin-top: 0; }
+    .suggestion-item { padding: 8px 12px; cursor: pointer; font-size: 13px; }
+    .suggestion-item:hover { background: #E3F2FD; }
   </style>
 </head>
 <body>
@@ -239,7 +241,10 @@
     <input type="hidden" id="purchaseId" />
     <div class="form-group">
       <label>Название</label>
-      <input id="purchaseTitle" placeholder="Например: молоко" />
+      <div style="position:relative">
+        <input id="purchaseTitle" placeholder="Например: молоко" autocomplete="off" />
+        <div id="purchaseSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #d5dbd5;border-radius:0 0 8px 8px;z-index:999;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1)"></div>
+      </div>
     </div>
     <div class="form-group">
       <label>Статус</label>
@@ -682,6 +687,7 @@ function openPurchaseModal(purchase) {
   document.getElementById('purchaseAmount').value = purchase ? purchase.amount : '';
   document.getElementById('purchaseComment').value = purchase ? (purchase.comment||'') : '';
   openModal('purchaseModal');
+  try { setupAutocomplete(); } catch(e) { console.warn(e); }
 }
 
 async function savePurchase() {
@@ -1003,6 +1009,58 @@ async function restoreBackup(idx) {
   if (snap.events) await saveData(KEYS.events, snap.events);
   toast('Бэкап восстановлен');
   await reloadAll();
+}
+
+
+// --- Справочник продуктов ---
+const PRODUCT_CATALOG = {
+  'Мясо и птица': [
+    'Курица целая', 'Куриная грудка', 'Куриное бедро', 'Куриные ножки',
+    'Куриные крылья', 'Куриный фарш', 'Свинина', 'Говядина', 'Фарш (свинина/говядина)',
+  ],
+  'Рыба': ['Морской язык', 'Сёмга дикая', 'Сельдь', 'Скумбрия', 'Тилапия'],
+  'Молочные и яйца': ['Яйца', 'Молоко', 'Сыр', 'Масло сливочное', 'Масло топлёное'],
+  'Бакалея': ['Хлеб', 'Булка', 'Печенье', 'Мука', 'Гречка', 'Рис', 'Макароны', 'Соль', 'Сахар', 'Масло подсолнечное', 'Приправа'],
+  'Овощи': ['Лук', 'Чеснок', 'Картофель', 'Морковь'],
+};
+
+function getAllProductNames() {
+  const names = new Set();
+  Object.values(PRODUCT_CATALOG).forEach(arr => arr.forEach(n => names.add(n)));
+  return [...names].sort();
+}
+
+function setupAutocomplete() {
+  const input = document.getElementById('purchaseTitle');
+  const container = document.getElementById('purchaseSuggestions');
+  if (!input || !container) return;
+
+  function showSuggestions() {
+    const text = input.value.trim().toLowerCase();
+    if (text.length < 1) { container.style.display = 'none'; return; }
+    const all = getAllProductNames();
+    const filtered = all.filter(function(n) { return n.toLowerCase().includes(text); }).slice(0, 10);
+    if (filtered.length === 0) { container.style.display = 'none'; return; }
+    container.innerHTML = '';
+    filtered.forEach(function(name) {
+      const div = document.createElement('div');
+      div.className = 'suggestion-item';
+      div.textContent = name;
+      div.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        input.value = name;
+        container.style.display = 'none';
+      });
+      container.appendChild(div);
+    });
+    container.style.display = 'block';
+  }
+
+  input.addEventListener('input', showSuggestions);
+  input.addEventListener('focus', showSuggestions);
+  input.addEventListener('blur', function() {
+    setTimeout(function() { container.style.display = 'none'; }, 200);
+  });
 }
 
 // --- Init ---
