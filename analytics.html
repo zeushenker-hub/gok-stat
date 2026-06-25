@@ -119,10 +119,8 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 <tr>
 <th>Менеджер</th>
 <th>Всего</th>
-<th>Дозвон</th>
-<th>→ %</th>
-<th>НДЗ</th>
-<th>→ %</th>
+<th colspan="2">Дозвон</th>
+<th colspan="2">НДЗ</th>
 <th>НДЗ+НДЗ</th>
 <th>НДЗ→Да</th>
 <th>Не обраб.</th>
@@ -151,21 +149,6 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 </div>
 </div>
 
-<div class="panel full-width">
-<h2>Матрица конверсии — Звонок 1 × После НДЗ</h2>
-<table>
-<thead>
-<tr>
-<th></th>
-<th style="text-align:center">После НДЗ: НДЗ</th>
-<th style="text-align:center;color:#22c55e">После НДЗ: Да</th>
-<th style="text-align:center">Пусто</th>
-<th style="text-align:center">Итого</th>
-</tr>
-</thead>
-<tbody id="matrixTable"></tbody>
-</table>
-</div>
 </div>
 
 <script>
@@ -337,45 +320,6 @@ return `<tr><td>${ok}</td><td>${descDetail}</td><td>${d.total}</td><td>${d.dozvo
 document.getElementById('okvedTable').innerHTML = html;
 }
 
-function renderMatrix(r) {
-const rows = [
-{ label: 'Звонок 1 = Да', mKey: 'Да', color: 'green', badge: 'дозвон' },
-{ label: 'Звонок 1 = НДЗ', mKey: 'НДЗ', color: 'amber', badge: null },
-{ label: 'Пусто', mKey: '∅', color: '', badge: null },
-];
-const colKeys = ['НДЗ', 'Да после НДЗ', '∅'];
-const colLabels = ['НДЗ', 'Да', 'Пусто'];
-
-let html = '';
-for (const row of rows) {
-let rowTotal = 0;
-let cells = '';
-for (let ci = 0; ci < colKeys.length; ci++) {
-const v = r.matrix[row.mKey + '|' + colKeys[ci]] || 0;
-rowTotal += v;
-const isAmber = row.mKey === 'НДЗ' && colKeys[ci] === 'НДЗ';
-cells += `<td style="text-align:center">${isAmber && v ? '<span class="badge badge-amber">' + v + '</span>' : v}</td>`;
-}
-const labelBadge = row.badge ? ` <span class="badge badge-${row.color}">${row.badge}</span>` : '';
-html += `<tr><td><strong>${row.label}</strong>${labelBadge}</td>${cells}<td style="text-align:center"><strong>${rowTotal}</strong></td></tr>`;
-}
-
-let colTotals = colKeys.map(k => {
-let s = 0;
-for (const row of rows) s += r.matrix[row.mKey + '|' + k] || 0;
-return s;
-});
-
-const totalAll = colTotals.reduce((a, b) => a + b, 0);
-const footerCells = colTotals.map((v, i) => {
-const cls = i === 1 ? 'amber' : i === 2 ? 'green' : '';
-return `<td style="text-align:center">${cls ? '<strong style="color:' + COLORS[cls] + '">' : '<strong>'}${v}${cls ? '</strong>' : '</strong>'}</td>`;
-}).join('');
-html += `<tr style="border-top:2px solid #334155;font-weight:600;"><td><strong>Итого</strong></td>${footerCells}<td style="text-align:center"><strong>${totalAll}</strong></td></tr>`;
-
-document.getElementById('matrixTable').innerHTML = html;
-}
-
 function renderCharts(r) {
 const total = r.total;
 
@@ -512,7 +456,6 @@ document.getElementById('content').style.display = 'block';
 renderCards(result);
 renderManagerTable(result);
 renderOkvedTable(result);
-renderMatrix(result);
 renderCharts(result);
 scheduleAutoReload();
 } catch (e) {
@@ -538,11 +481,9 @@ rebuild(newData);
 
 function rebuild(data) {
 const result = analyze(data);
-cachedResult = result;
 renderCards(result);
 renderManagerTable(result);
 renderOkvedTable(result);
-renderMatrix(result);
 renderCharts(result);
 const header = document.getElementById('headerBadge');
 header.textContent = `Всего записей: ${result.total} | Данные: Google Sheets (ГОК)`;
