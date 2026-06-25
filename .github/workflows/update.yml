@@ -1,0 +1,30 @@
+name: Update data.json from Google Sheets
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch and save data
+        run: python3 .github/workflows/fetch_data.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add data.json
+          git diff --staged --quiet || (git commit -m "auto-update data.json" && git push)
