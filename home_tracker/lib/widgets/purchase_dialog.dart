@@ -13,10 +13,14 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
   late TextEditingController _titleCtrl;
   late TextEditingController _amountCtrl;
   late TextEditingController _commentCtrl;
+  late TextEditingController _quantityCtrl;
   late String _type;
   late String _category;
   late String _date;
   late String _purchaseStatus;
+  late String _unit;
+
+  static const _units = ['г', 'кг', 'мл', 'л', 'шт'];
 
   String _today() {
     final n = DateTime.now();
@@ -30,10 +34,12 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
     _titleCtrl = TextEditingController(text: p?.title ?? '');
     _amountCtrl = TextEditingController(text: p != null && p.amount > 0 ? p.amount.toStringAsFixed(0) : '');
     _commentCtrl = TextEditingController(text: p?.comment ?? '');
+    _quantityCtrl = TextEditingController(text: p != null && p.quantity != 1.0 ? p.quantity.toString() : '');
     _type = p?.type ?? 'regular';
     _category = p?.category ?? 'Продукты';
     _date = p?.date ?? _today();
     _purchaseStatus = p?.purchaseStatus ?? 'planned';
+    _unit = p?.unit ?? 'шт';
   }
 
   @override
@@ -41,6 +47,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
     _titleCtrl.dispose();
     _amountCtrl.dispose();
     _commentCtrl.dispose();
+    _quantityCtrl.dispose();
     super.dispose();
   }
 
@@ -79,7 +86,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
               value: _category,
               items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
               onChanged: (v) => setState(() => _category = v ?? _category),
-              decoration: const InputDecoration(labelText: 'Категория товара', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'Категория', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -97,7 +104,34 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
               },
             ),
             const SizedBox(height: 12),
-            TextField(controller: _amountCtrl, decoration: const InputDecoration(labelText: 'Сумма (₽)', border: OutlineInputBorder()), keyboardType: TextInputType.number),
+            // Row: Количество + Единица
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: _quantityCtrl,
+                    decoration: const InputDecoration(labelText: 'Количество', border: OutlineInputBorder()),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _unit,
+                    items: _units.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
+                    onChanged: (v) => setState(() => _unit = v ?? _unit),
+                    decoration: const InputDecoration(labelText: 'Ед.', border: OutlineInputBorder(), isDense: true),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _amountCtrl,
+              decoration: const InputDecoration(labelText: 'Цена (₽)', border: OutlineInputBorder()),
+              keyboardType: TextInputType.number,
+            ),
             const SizedBox(height: 12),
             TextField(controller: _commentCtrl, decoration: const InputDecoration(labelText: 'Комментарий', border: OutlineInputBorder())),
           ],
@@ -116,6 +150,8 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
               category: _category,
               date: _date,
               amount: double.tryParse(_amountCtrl.text) ?? 0,
+              quantity: double.tryParse(_quantityCtrl.text) ?? 1.0,
+              unit: _unit,
               comment: _commentCtrl.text.trim(),
               purchaseStatus: _purchaseStatus,
             );

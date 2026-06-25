@@ -648,6 +648,8 @@ function openPurchaseModal(purchase) {
   document.getElementById('purchaseType').value = purchase ? purchase.type : 'regular';
   document.getElementById('purchaseCategory').value = purchase ? (purchase.category||'Продукты') : 'Продукты';
   document.getElementById('purchaseDate').value = purchase ? purchase.date : todayStr();
+  document.getElementById('purchaseQuantity').value = purchase ? (purchase.quantity||1) : 1;
+  document.getElementById('purchaseUnit').value = purchase ? (purchase.unit||'шт') : 'шт';
   document.getElementById('purchaseAmount').value = purchase ? purchase.amount : '';
   document.getElementById('purchaseComment').value = purchase ? (purchase.comment||'') : '';
   openModal('purchaseModal');
@@ -665,6 +667,8 @@ async function savePurchase() {
     type: document.getElementById('purchaseType').value,
     category: document.getElementById('purchaseCategory').value,
     date: document.getElementById('purchaseDate').value || todayStr(),
+    quantity: Number(document.getElementById('purchaseQuantity').value) || 1,
+    unit: document.getElementById('purchaseUnit').value || 'шт',
     amount: Number(document.getElementById('purchaseAmount').value) || 0,
     comment: document.getElementById('purchaseComment').value.trim(),
   };
