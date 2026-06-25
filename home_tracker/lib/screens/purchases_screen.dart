@@ -205,13 +205,17 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
     final typeTag = p.type == 'large' ? 'Крупная' : 'Повседневная';
 
     return Card(
+      color: isPurchased ? const Color(0xFFE8F5E9) : null,
       margin: const EdgeInsets.symmetric(vertical: 2),
       child: ListTile(
         contentPadding: const EdgeInsets.only(left: 4, right: 0),
-        leading: Checkbox(
-          value: isPurchased,
-          onChanged: (_) => _toggleStatus(p.id),
-          activeColor: Colors.green,
+        leading: IconButton(
+          icon: Icon(
+            isPurchased ? Icons.check_circle : Icons.radio_button_unchecked,
+            color: isPurchased ? Colors.green : Colors.grey,
+            size: 24,
+          ),
+          onPressed: () => _toggleStatus(p.id),
         ),
         title: Row(
           children: [
@@ -220,11 +224,9 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
             Flexible(
               child: Text(
                 p.title,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 15,
-                  decoration: isPurchased ? TextDecoration.lineThrough : null,
-                  color: isPurchased ? Colors.grey : null,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
