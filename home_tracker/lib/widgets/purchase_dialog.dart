@@ -49,12 +49,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
   }
 
   Future<void> _loadNames() async {
-    final fromCatalog = allCatalogNames();
-    final history = <String>{};
-    for (final p in await Storage.loadPurchases()) {
-      if (p.title.isNotEmpty) history.add(p.title);
-    }
-    _allNames = {...fromCatalog, ...history}.toList()..sort();
+    _allNames = (await loadAllProductNames()).toList()..sort();
   }
 
   @override
@@ -82,7 +77,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
                     name.toLowerCase().contains(textEditingValue.text.toLowerCase()));
               },
               fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
-                // Синхронизируем с _titleCtrl
+                // Синхронизируем _titleCtrl с вводом пользователя
                 if (controller.text != _titleCtrl.text) {
                   _titleCtrl.text = controller.text;
                 }
@@ -90,6 +85,9 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
                   controller: controller,
                   focusNode: focusNode,
                   decoration: const InputDecoration(labelText: 'Название', border: OutlineInputBorder()),
+                  onChanged: (value) {
+                    _titleCtrl.text = value;
+                  },
                 );
               },
               onSelected: (value) {
@@ -187,6 +185,8 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
           onPressed: () {
             final title = _titleCtrl.text.trim();
             if (title.isEmpty) return;
+            // Сохраняем название в историю (никогда не удаляется)
+            saveProductName(title);
             final purchase = Purchase(
               id: widget.purchase?.id ?? Storage.genId(),
               title: title,
