@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/storage.dart';
+import '../data/product_catalog.dart';
 import '../models/models.dart';
 
 class PurchaseDialog extends StatefulWidget {
@@ -21,17 +22,31 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
   late String _unit;
   late String _store;
 
+  final _focusNode = FocusNode();
+  final _layerLink = LayerLink();
+  OverlayEntry? _overlayEntry;
+
+  List<String> _suggestions = [];
   static const _units = ['г', 'кг', 'мл', 'л', 'шт'];
   static const _stores = ['Гуливер', 'Рынок', 'Пятерочка', 'Чижик', 'Перекресток', 'Магнит', 'Ашан', 'Другое'];
 
-  String _today() {
-    final n = DateTime.now();
-    return '${n.year}-${n.month.toString().padLeft(2, '0')}-${n.day.toString().padLeft(2, '0')}';
+  // Собираем все возможные названия из каталога + истории
+  List<String> _allSuggestions() {
+    final fromCatalog = allCatalogNames();
+    // Добавляем историю из всех сохранённых покупок
+    final history = <String>{};
+    for (final p in _allPurchases) {
+      if (p.title.isNotEmpty) history.add(p.title);
+    }
+    return {...fromCatalog, ...history}.toList()..sort();
   }
+
+  List<Purchase> _allPurchases = [];
 
   @override
   void initState() {
     super.initState();
+    _loadHistory();
     final p = widget.purchase;
     _titleCtrl = TextEditingController(text: p?.title ?? '');
     _amountCtrl = TextEditingController(text: p != null && p.amount > 0 ? p.amount.toStringAsFixed(0) : '');
@@ -43,14 +58,96 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
     _purchaseStatus = p?.purchaseStatus ?? 'planned';
     _unit = p?.unit ?? 'шт';
     _store = p?.store ?? '';
+
+    _titleCtrl.addListener(_onTitleChanged);
+    _focusNode.addListener(_onFocusChanged);
+  }
+
+  Future<void> _loadHistory() async {
+    _allPurchases = await Storage.loadPurchases();
+  }
+
+  String _today() {
+    final n = DateTime.now();
+    return '${n.year}-${n.month.toString().padLeft(2, '0')}-${n.day.toString().padLeft(2, '0')}';
+  }
+
+  void _onTitleChanged() {
+    final text = _titleCtrl.text.trim().toLowerCase();
+    if (text.length >= 1 && _focusNode.hasFocus) {
+      final all = _allSuggestions();
+      _suggestions = all.where((s) => s.toLowerCase().contains(text)).take(10).toList();
+    } else {
+      _suggestions = [];
+    }
+    _updateOverlay();
+  }
+
+  void _onFocusChanged() {
+    if (!_focusNode.hasFocus) {
+      _suggestions = [];
+      _updateOverlay();
+    }
+  }
+
+  void _selectSuggestion(String s) {
+    _titleCtrl.text = s;
+    _titleCtrl.selection = TextSelection.fromPosition(TextPosition(offset: s.length));
+    _suggestions = [];
+    _updateOverlay();
+    _focusNode.unfocus();
+    FocusScope.of(context).requestFocus(FocusNode());
+  }
+
+  void _updateOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
+    if (_suggestions.isEmpty) return;
+
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        width: 320,
+        child: CompositedTransformFollower(
+          link: _layerLink,
+          showWhenUnlinked: false,
+          offset: const Offset(0, 0),
+          child: Material(
+            elevation: 4,
+            borderRadius: BorderRadius.circular(8),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 200),
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                shrinkWrap: true,
+                itemCount: _suggestions.length,
+                itemBuilder: (_, i) => InkWell(
+                  onTap: () => _selectSuggestion(_suggestions[i]),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    child: Text(_suggestions[i], style: const TextStyle(fontSize: 14)),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    Overlay.of(context).insert(_overlayEntry!);
   }
 
   @override
   void dispose() {
+    _titleCtrl.removeListener(_onTitleChanged);
     _titleCtrl.dispose();
     _amountCtrl.dispose();
     _commentCtrl.dispose();
     _quantityCtrl.dispose();
+    _focusNode.dispose();
+    _overlayEntry?.remove();
     super.dispose();
   }
 
@@ -63,7 +160,26 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Название', border: OutlineInputBorder())),
+            CompositedTransformTarget(
+              link: _layerLink,
+              child: TextField(
+                controller: _titleCtrl,
+                focusNode: _focusNode,
+                decoration: InputDecoration(
+                  labelText: 'Название',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: _suggestions.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.close, size: 16),
+                          onPressed: () {
+                            _suggestions = [];
+                            _updateOverlay();
+                          },
+                        )
+                      : null,
+                ),
+              ),
+            ),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: _purchaseStatus,
@@ -92,7 +208,6 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
               decoration: const InputDecoration(labelText: 'Категория', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 10),
-            // Магазин
             DropdownButtonFormField<String>(
               value: _store.isEmpty ? null : _store,
               items: [
@@ -118,7 +233,6 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
               },
             ),
             const SizedBox(height: 10),
-            // Row: Количество + Единица
             Row(
               children: [
                 Expanded(
@@ -155,6 +269,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Отмена')),
         FilledButton(
           onPressed: () {
+            _overlayEntry?.remove();
             final title = _titleCtrl.text.trim();
             if (title.isEmpty) return;
             final purchase = Purchase(
