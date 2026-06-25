@@ -28,7 +28,7 @@ class HomeTrackerApp extends StatelessWidget {
       locale: const Locale('ru', 'RU'),
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF7BC47F),
+          seedColor: const Color(0xFF4FC3F7),
           brightness: Brightness.light,
         ),
         useMaterial3: true,

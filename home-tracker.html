@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>iHOME — семейный трекер</title>
   <meta name="description" content="Семейный трекер дел, покупок и событий" />
-  <meta name="theme-color" content="#7bc47f" />
+  <meta name="theme-color" content="#4FC3F7" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icon-192.png" sizes="192x192" />
   <link rel="apple-touch-icon" href="icon-192.png" />
@@ -17,7 +17,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #f5f7f5; color: #333; min-height: 100vh; padding: 16px;
+      background: #E3F2FD; color: #333; min-height: 100vh; padding: 16px;
       font-size: 14px;
     }
     .app { max-width: 1200px; margin: 0 auto; }
@@ -27,7 +27,7 @@
       box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 16px;
     }
     .header-left { display: flex; align-items: center; gap: 10px; }
-    .header-left h1 { font-size: 20px; font-weight: 700; color: #2d5a3e; }
+    .header-left h1 { font-size: 20px; font-weight: 700; color: #01579B; }
     .header-actions { display: flex; gap: 8px; }
     .btn {
       display: inline-flex; align-items: center; gap: 5px;
@@ -36,17 +36,17 @@
       transition: background .15s, opacity .15s;
       font-family: inherit;
     }
-    .btn-primary { background: #7bc47f; color: #fff; }
-    .btn-primary:hover { background: #5eab62; }
-    .btn-secondary { background: #e8ece8; color: #333; }
-    .btn-secondary:hover { background: #d5dbd5; }
+    .btn-primary { background: #4FC3F7; color: #fff; }
+    .btn-primary:hover { background: #29B6F6; }
+    .btn-secondary { background: #E3F2FD; color: #333; }
+    .btn-secondary:hover { background: #BBDEFB; }
     .btn-danger { background: #e88383; color: #fff; }
     .btn-danger:hover { background: #d46666; }
-    .btn-success { background: #7bc47f; color: #fff; }
-    .btn-success:hover { background: #5eab62; }
+    .btn-success { background: #4FC3F7; color: #fff; }
+    .btn-success:hover { background: #29B6F6; }
     .btn-sm { padding: 4px 10px; font-size: 12px; }
     .btn-icon { padding: 6px; background: transparent; color: #666; border-radius: 6px; }
-    .btn-icon:hover { background: #e8ece8; }
+    .btn-icon:hover { background: #E3F2FD; }
     .layout { display: flex; flex-direction: column; gap: 16px; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .card {
@@ -57,16 +57,16 @@
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 14px;
     }
-    .card-header h2 { font-size: 16px; font-weight: 700; color: #2d5a3e; }
+    .card-header h2 { font-size: 16px; font-weight: 700; color: #01579B; }
     .card-header h2 .emoji { margin-right: 6px; }
     .tabs { display: flex; gap: 4px; margin-bottom: 12px; }
     .tab {
       padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
-      cursor: pointer; background: #e8ece8; color: #555; border: none; font-family: inherit;
+      cursor: pointer; background: #E3F2FD; color: #555; border: none; font-family: inherit;
       transition: background .15s;
     }
-    .tab.active { background: #7bc47f; color: #fff; }
-    .tab:hover:not(.active) { background: #d5dbd5; }
+    .tab.active { background: #4FC3F7; color: #fff; }
+    .tab:hover:not(.active) { background: #BBDEFB; }
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,.35);
       display: flex; align-items: center; justify-content: center;
@@ -78,40 +78,40 @@
       background: #fff; border-radius: 14px; padding: 24px;
       min-width: 420px; max-width: 520px; max-height: 90vh; overflow-y: auto;
     }
-    .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 14px; color: #2d5a3e; }
+    .modal h3 { font-size: 18px; font-weight: 700; margin-bottom: 14px; color: #01579B; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 4px; }
     .form-group input, .form-group select, .form-group textarea {
-      width: 100%; padding: 8px 10px; border: 1px solid #d5dbd5; border-radius: 8px;
+      width: 100%; padding: 8px 10px; border: 1px solid #BBDEFB; border-radius: 8px;
       font-size: 13px; font-family: inherit; background: #fff;
     }
     .form-group textarea { resize: vertical; min-height: 50px; }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-      border-color: #7bc47f; outline: none; box-shadow: 0 0 0 2px rgba(123,196,127,.2);
+      border-color: #4FC3F7; outline: none; box-shadow: 0 0 0 2px rgba(123,196,127,.2);
     }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
     .item-list { display: flex; flex-direction: column; gap: 6px; }
     .item {
       display: flex; align-items: center; gap: 8px;
-      padding: 8px 10px; border-radius: 8px; background: #fafcfa;
-      border: 1px solid #e8ece8; transition: background .15s;
+      padding: 8px 10px; border-radius: 8px; background: #F5F9FF;
+      border: 1px solid #E3F2FD; transition: background .15s;
     }
-    .item:hover { background: #f0f7f0; }
+    .item:hover { background: #E1F5FE; }
     .item-info { flex: 1; min-width: 0; }
     .item-title { font-weight: 600; font-size: 15px; }
     .item-meta { font-size: 13px; color: #888; margin-top: 3px; }
     .item-actions { display: flex; gap: 4px; flex-shrink: 0; }
-    .item-checkbox { width: 20px; height: 20px; cursor: pointer; accent-color: #7bc47f; flex-shrink: 0; }
+    .item-checkbox { width: 20px; height: 20px; cursor: pointer; accent-color: #4FC3F7; flex-shrink: 0; }
     .item.done { opacity: .55; }
     .item.done .item-title { text-decoration: line-through; }
     .empty-state { text-align: center; color: #b5c6b5; padding: 24px 12px; font-size: 13px; }
     .category-badge {
       display: inline-block; padding: 3px 10px; border-radius: 6px;
-      font-size: 12px; font-weight: 600; background: #e8ece8; color: #555;
+      font-size: 12px; font-weight: 600; background: #E3F2FD; color: #555;
     }
     .badge-large { background: #f7c948; color: #333; }
-    .badge-regular { background: #a8d5ba; color: #333; }
+    .badge-regular { background: #B3E5FC; color: #333; }
     .badge-event { background: #c4a8d5; color: #fff; }
     .toast {
       position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
@@ -122,11 +122,11 @@
     }
     .toast.show { opacity: 1; }
     .tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; margin-left: 4px; }
-    .tag-large { background: #f7c94833; color: #7a6300; }
-    .tag-regular { background: #a8d5ba44; color: #2d6a3e; }
+    .tag-large { background: #4FC3F733; color: #01579B; }
+    .tag-regular { background: #B3E5FC44; color: #2d6a3e; }
     .item-chip {
       display: inline-block; padding: 3px 8px; border-radius: 20px;
-      font-size: 11px; font-weight: 500; background: #e8ece8; color: #555;
+      font-size: 11px; font-weight: 500; background: #E3F2FD; color: #555;
       margin: 2px 4px 2px 0;
     }
     .item-chip .del { margin-left: 4px; cursor: pointer; font-weight: 700; color: #aaa; }
@@ -329,7 +329,7 @@
   <div class="modal">
     <h3 id="categoryModalTitle">Управление категориями</h3>
     <div style="display:flex;gap:6px;margin-bottom:12px">
-      <input id="categoryInput" placeholder="Новая категория" style="flex:1;padding:8px 10px;border:1px solid #d5dbd5;border-radius:8px;font-size:13px" />
+      <input id="categoryInput" placeholder="Новая категория" style="flex:1;padding:8px 10px;border:1px solid #BBDEFB;border-radius:8px;font-size:13px" />
       <button class="btn btn-primary" onclick="addCategory()">+</button>
     </div>
     <div id="categoryList" style="max-height:300px;overflow-y:auto"></div>
@@ -527,10 +527,10 @@ function populateCategorySelect(selected) {
 function renderCategoryFilter() {
   categories = loadData(LS.categories, ['Хозяйственные дела']);
   const container = document.getElementById('categoryFilter');
-  let html = `<span class="item-chip" style="cursor:pointer;background:${activeCategoryFilter===''?'#7bc47f':'#e8ece8'};color:${activeCategoryFilter===''?'#fff':'#555'}" onclick="filterByCategory('')">Все</span>`;
+  let html = `<span class="item-chip" style="cursor:pointer;background:${activeCategoryFilter===''?'#4FC3F7':'#E3F2FD'};color:${activeCategoryFilter===''?'#fff':'#555'}" onclick="filterByCategory('')">Все</span>`;
   categories.forEach(c => {
     const active = activeCategoryFilter === c;
-    html += `<span class="item-chip" style="cursor:pointer;background:${active?'#7bc47f':'#e8ece8'};color:${active?'#fff':'#555'}" onclick="filterByCategory('${escHtml(c)}')">${escHtml(c)}</span>`;
+    html += `<span class="item-chip" style="cursor:pointer;background:${active?'#4FC3F7':'#E3F2FD'};color:${active?'#fff':'#555'}" onclick="filterByCategory('${escHtml(c)}')">${escHtml(c)}</span>`;
   });
   html += `<button class="btn btn-sm btn-secondary" style="padding:2px 8px;font-size:10px;margin-left:auto" onclick="openCategoryModal()">⚙️</button>`;
   container.innerHTML = html;
@@ -734,7 +734,7 @@ function renderPurchases() {
   }
 
   const CAT_COLORS = {
-    'Продукты': '#7bc47f', 'Хозяйственные': '#7bc47f',
+    'Продукты': '#4FC3F7', 'Хозяйственные': '#4FC3F7',
     'Ремонт': '#f7c948', 'Одежда': '#c4a8d5',
     'Техника': '#a9d3f2', 'Другое': '#cdd6d8'
   };
@@ -749,7 +749,7 @@ function renderPurchases() {
     });
     const itemsHtml = items.map(p => {
       const isPurchased = (p.purchaseStatus||'planned') === 'purchased';
-      const statusLabel = isPurchased ? '<span class="tag tag-regular" style="background:#a8d5ba44;color:#2d6a3e">Куплено</span>' : '<span class="tag tag-large" style="background:#f7c94833;color:#7a6300">План</span>';
+      const statusLabel = isPurchased ? '<span class="tag tag-regular" style="background:#B3E5FC44;color:#01579B">Куплено</span>' : '<span class="tag tag-large" style="background:#4FC3F733;color:#01579B">План</span>';
       const amountStr = p.amount ? p.amount.toLocaleString('ru-RU')+' ₽' : '';
       const catColor = CAT_COLORS[p.category] || '#cdd6d8';
       const doneClass = isPurchased ? ' done' : '';
@@ -771,9 +771,9 @@ function renderPurchases() {
     }).join('');
 
     const dateLabel = dateKey === 'Без даты' ? 'Без даты' : formatDate(dateKey);
-    return `<div style="font-size:13px;font-weight:700;color:#2d5a3e;margin:8px 0 2px;display:flex;align-items:center;justify-content:space-between">
+    return `<div style="font-size:13px;font-weight:700;color:#01579B;margin:8px 0 2px;display:flex;align-items:center;justify-content:space-between">
       <span>📅 ${dateLabel}</span>
-      <span style="font-size:14px;background:#e8ece8;padding:2px 10px;border-radius:8px">${dayTotal.toLocaleString('ru-RU')} ₽</span>
+      <span style="font-size:14px;background:#E3F2FD;padding:2px 10px;border-radius:8px">${dayTotal.toLocaleString('ru-RU')} ₽</span>
     </div>` + itemsHtml;
   }).join('');
 }
@@ -894,7 +894,7 @@ function renderEvents() {
         </div>
       </div>`;
     }).join('');
-    return `<div style="font-size:13px;font-weight:700;color:#2d5a3e;margin:8px 0 4px;letter-spacing:0.5px">${key}</div>` + items;
+    return `<div style="font-size:13px;font-weight:700;color:#01579B;margin:8px 0 4px;letter-spacing:0.5px">${key}</div>` + items;
   }).join('');
 }
 

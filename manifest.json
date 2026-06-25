@@ -5,8 +5,8 @@
   "start_url": "home-tracker.html",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#f5f7f5",
-  "theme_color": "#7bc47f",
+  "background_color": "#E3F2FD",
+  "theme_color": "#4FC3F7",
   "lang": "ru",
   "icons": [
     {
