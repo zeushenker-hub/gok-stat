@@ -508,37 +508,14 @@ const data = await loadData();
 const result = analyze(data);
 
 document.getElementById('headerBadge').textContent = `Всего записей: ${result.total} | Данные: Google Sheets (ГОК)`;
+document.getElementById('updateTimestamp').textContent = `Данные актуальны на ${new Date().toLocaleString('ru-RU')}`;
+document.getElementById('updateTimestamp').style.display = 'inline-block';
 document.getElementById('loading').style.display = 'none';
 document.getElementById('content').style.display = 'block';
-
-renderCards(result);
-renderManagerTable(result);
-renderOkvedTable(result);
-renderMatrix(result);
-renderCharts(result);
-scheduleAutoReload();
-
-fetchUpdateTimestamp();
 } catch (e) {
 document.getElementById('loading').innerHTML = `<div style="color:#ef4444;font-size:16px">Ошибка загрузки данных: ${e.message}</div>`;
 }
 }
-
-async function fetchUpdateTimestamp() {
-try {
-const repo = 'zeushenker-hub/gok-stat';
-const resp = await fetch(`https://api.github.com/repos/${repo}/commits?path=data.json&per_page=1`);
-if (!resp.ok) throw new Error();
-const commits = await resp.json();
-const date = new Date(commits[0].commit.committer.date);
-document.getElementById('updateTimestamp').textContent = `Данные актуальны на ${date.toLocaleString('ru-RU')}`;
-} catch {
-document.getElementById('updateTimestamp').textContent = `Данные актуальны на ${new Date().toLocaleString('ru-RU')}`;
-}
-document.getElementById('updateTimestamp').style.display = 'inline-block';
-}
-
-renderCards(result);
 renderManagerTable(result);
 renderOkvedTable(result);
 renderMatrix(result);
