@@ -261,11 +261,38 @@
       </select>
     </div>
     <div class="form-group">
+      <label>Магазин</label>
+      <select id="purchaseStore">
+        <option value="">Не выбран</option>
+        <option value="Гуливер">Гуливер</option>
+        <option value="Рынок">Рынок</option>
+        <option value="Пятерочка">Пятерочка</option>
+        <option value="Чижик">Чижик</option>
+        <option value="Перекресток">Перекресток</option>
+        <option value="Магнит">Магнит</option>
+        <option value="Ашан">Ашан</option>
+        <option value="Другое">Другое</option>
+      </select>
+    </div>
+    <div class="form-group">
       <label>Дата покупки</label>
       <input id="purchaseDate" type="date" />
     </div>
     <div class="form-group">
-      <label>Сумма (₽)</label>
+      <label>Количество</label>
+      <div style="display:flex;gap:8px">
+        <input id="purchaseQuantity" type="number" step="0.01" value="1" style="flex:2" placeholder="1" />
+        <select id="purchaseUnit" style="flex:1">
+          <option value="г">г</option>
+          <option value="кг">кг</option>
+          <option value="мл">мл</option>
+          <option value="л">л</option>
+          <option value="шт" selected>шт</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Цена (₽)</label>
       <input id="purchaseAmount" type="number" placeholder="0" />
     </div>
     <div class="form-group">
@@ -443,7 +470,7 @@ window.saveData = async function(key, data) {
 };
 
 // --- Helpers ---
-function genId(arr) { return arr.length ? String(Math.max(...arr.map(t => Number(t.id))) + 1) : '1'; }
+function genId(arr) { return Date.now().toString(36) + Math.random().toString(36).substring(2,6); }
 function escHtml(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -651,6 +678,7 @@ function openPurchaseModal(purchase) {
   document.getElementById('purchaseDate').value = purchase ? purchase.date : todayStr();
   document.getElementById('purchaseQuantity').value = purchase ? (purchase.quantity||1) : 1;
   document.getElementById('purchaseUnit').value = purchase ? (purchase.unit||'шт') : 'шт';
+  document.getElementById('purchaseStore').value = purchase ? (purchase.store||'') : '';
   document.getElementById('purchaseAmount').value = purchase ? purchase.amount : '';
   document.getElementById('purchaseComment').value = purchase ? (purchase.comment||'') : '';
   openModal('purchaseModal');
@@ -668,6 +696,7 @@ async function savePurchase() {
     type: document.getElementById('purchaseType').value,
     category: document.getElementById('purchaseCategory').value,
     date: document.getElementById('purchaseDate').value || todayStr(),
+    store: document.getElementById('purchaseStore').value || '',
     quantity: Number(document.getElementById('purchaseQuantity').value) || 1,
     unit: document.getElementById('purchaseUnit').value || 'шт',
     amount: Number(document.getElementById('purchaseAmount').value) || 0,

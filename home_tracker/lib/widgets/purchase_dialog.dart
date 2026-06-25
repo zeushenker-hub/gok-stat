@@ -19,8 +19,10 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
   late String _date;
   late String _purchaseStatus;
   late String _unit;
+  late String _store;
 
   static const _units = ['г', 'кг', 'мл', 'л', 'шт'];
+  static const _stores = ['Гуливер', 'Рынок', 'Пятерочка', 'Чижик', 'Перекресток', 'Магнит', 'Ашан', 'Другое'];
 
   String _today() {
     final n = DateTime.now();
@@ -40,6 +42,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
     _date = p?.date ?? _today();
     _purchaseStatus = p?.purchaseStatus ?? 'planned';
     _unit = p?.unit ?? 'шт';
+    _store = p?.store ?? '';
   }
 
   @override
@@ -61,7 +64,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Название', border: OutlineInputBorder())),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: _purchaseStatus,
               items: const [
@@ -71,7 +74,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
               onChanged: (v) => setState(() => _purchaseStatus = v ?? _purchaseStatus),
               decoration: const InputDecoration(labelText: 'Статус', border: OutlineInputBorder()),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: _type,
               items: const [
@@ -81,14 +84,25 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
               onChanged: (v) => setState(() => _type = v ?? _type),
               decoration: const InputDecoration(labelText: 'Тип', border: OutlineInputBorder()),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: _category,
               items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
               onChanged: (v) => setState(() => _category = v ?? _category),
               decoration: const InputDecoration(labelText: 'Категория', border: OutlineInputBorder()),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
+            // Магазин
+            DropdownButtonFormField<String>(
+              value: _store.isEmpty ? null : _store,
+              items: [
+                const DropdownMenuItem(value: '', child: Text('Не выбран')),
+                ..._stores.map((s) => DropdownMenuItem(value: s, child: Text(s))),
+              ],
+              onChanged: (v) => setState(() => _store = v ?? ''),
+              decoration: const InputDecoration(labelText: 'Магазин', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 10),
             TextField(
               decoration: const InputDecoration(labelText: 'Дата', border: OutlineInputBorder()),
               readOnly: true,
@@ -103,7 +117,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
                 if (d != null) setState(() => _date = '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}');
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             // Row: Количество + Единица
             Row(
               children: [
@@ -115,7 +129,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: _unit,
@@ -126,13 +140,13 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             TextField(
               controller: _amountCtrl,
               decoration: const InputDecoration(labelText: 'Цена (₽)', border: OutlineInputBorder()),
               keyboardType: TextInputType.number,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             TextField(controller: _commentCtrl, decoration: const InputDecoration(labelText: 'Комментарий', border: OutlineInputBorder())),
           ],
         ),
@@ -152,6 +166,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
               amount: double.tryParse(_amountCtrl.text) ?? 0,
               quantity: double.tryParse(_quantityCtrl.text) ?? 1.0,
               unit: _unit,
+              store: _store,
               comment: _commentCtrl.text.trim(),
               purchaseStatus: _purchaseStatus,
             );

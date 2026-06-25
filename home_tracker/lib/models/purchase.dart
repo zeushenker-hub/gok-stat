@@ -9,6 +9,7 @@ class Purchase {
   String purchaseStatus;
   final double quantity;
   final String unit;
+  final String store;
 
   Purchase({
     required this.id,
@@ -21,12 +22,14 @@ class Purchase {
     this.purchaseStatus = 'planned',
     this.quantity = 1.0,
     this.unit = 'шт',
+    this.store = '',
   });
 
   Map<String, dynamic> toJson() => {
     'id': id, 'title': title, 'type': type, 'category': category,
     'date': date, 'amount': amount, 'unit': unit,
     'quantity': quantity, 'comment': comment, 'purchaseStatus': purchaseStatus,
+    'store': store,
   };
 
   factory Purchase.fromJson(Map<String, dynamic> j) => Purchase(
@@ -40,5 +43,6 @@ class Purchase {
     quantity: (j['quantity'] as num?)?.toDouble() ?? 1.0,
     comment: j['comment'] as String? ?? '',
     purchaseStatus: j['purchaseStatus'] as String? ?? (j['done'] == true ? 'purchased' : 'planned'),
+    store: j['store'] as String? ?? '',
   );
 }

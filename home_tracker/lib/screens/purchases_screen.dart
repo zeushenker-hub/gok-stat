@@ -251,7 +251,7 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('💰 ${p.amount.toStringAsFixed(0)} ₽', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            Text('💰 ${p.amount.toStringAsFixed(0)} ₽ · ${p.quantity} ${p.unit}${p.store.isNotEmpty ? ' · ${p.store}' : ''}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
             if (p.comment.isNotEmpty)
               Text(p.comment, style: const TextStyle(fontSize: 12, color: Colors.grey), maxLines: 1, overflow: TextOverflow.ellipsis),
           ],
