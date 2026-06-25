@@ -1,8 +1,9 @@
-import urllib.request, json, urllib.parse
+import urllib.request, json, urllib.parse, os
 from datetime import datetime, timezone
 
 SHEET_ID = '15PKewFsJYH99OLeC5LvIcHrt9W9tjFBl1067-yVDJAY'
 SHEET_NAME = 'ГОК'
+OUTPUT = os.path.join(os.path.dirname(__file__), 'data.json')
 
 url = f'https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:json&sheet={urllib.parse.quote(SHEET_NAME)}'
 req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -30,9 +31,9 @@ for r in data['table']['rows']:
     rows.append(row)
 
 now = datetime.now(timezone.utc).strftime('%d.%m.%Y, %H:%M:%S')
-with open('data.json', 'w', encoding='utf-8') as f:
+with open(OUTPUT, 'w', encoding='utf-8') as f:
     f.write('{"updated":"' + now + '","rows":')
     json.dump(rows, f, ensure_ascii=False)
     f.write('}')
 
-print(f'OK: {len(rows)} rows, updated: {now}')
+print(f'OK: {len(rows)} rows -> {OUTPUT} (updated: {now})')

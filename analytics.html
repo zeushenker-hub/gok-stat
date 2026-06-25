@@ -178,7 +178,9 @@ let charts = {};
 async function loadData() {
 const resp = await fetch('data.json?_=' + Date.now());
 if (!resp.ok) throw new Error('HTTP ' + resp.status);
-return await resp.json();
+const wrapper = await resp.json();
+window.__dataUpdated = wrapper.updated || '';
+return wrapper.rows;
 }
 
 function analyze(data) {
@@ -508,7 +510,7 @@ const data = await loadData();
 const result = analyze(data);
 
 document.getElementById('headerBadge').textContent = `Всего записей: ${result.total} | Данные: Google Sheets (ГОК)`;
-document.getElementById('updateTimestamp').textContent = `Данные актуальны на ${new Date().toLocaleString('ru-RU')}`;
+document.getElementById('updateTimestamp').textContent = `Данные актуальны на ${window.__dataUpdated || new Date().toLocaleString('ru-RU')}`;
 document.getElementById('updateTimestamp').style.display = 'inline-block';
 document.getElementById('loading').style.display = 'none';
 document.getElementById('content').style.display = 'block';
