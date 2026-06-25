@@ -105,6 +105,7 @@
     .item-checkbox { width: 20px; height: 20px; cursor: pointer; accent-color: #4FC3F7; flex-shrink: 0; }
     .item.done { opacity: .55; }
     .item.done .item-title { text-decoration: line-through; }
+    .item.purchased { background: #E8F5E9 !important; border-color: #A5D6A7 !important; }
     .empty-state { text-align: center; color: #b5c6b5; padding: 24px 12px; font-size: 13px; }
     .category-badge {
       display: inline-block; padding: 3px 10px; border-radius: 6px;
@@ -648,6 +649,8 @@ function openPurchaseModal(purchase) {
   document.getElementById('purchaseType').value = purchase ? purchase.type : 'regular';
   document.getElementById('purchaseCategory').value = purchase ? (purchase.category||'Продукты') : 'Продукты';
   document.getElementById('purchaseDate').value = purchase ? purchase.date : todayStr();
+  document.getElementById('purchaseQuantity').value = purchase ? (purchase.quantity||1) : 1;
+  document.getElementById('purchaseUnit').value = purchase ? (purchase.unit||'шт') : 'шт';
   document.getElementById('purchaseAmount').value = purchase ? purchase.amount : '';
   document.getElementById('purchaseComment').value = purchase ? (purchase.comment||'') : '';
   openModal('purchaseModal');
@@ -665,6 +668,8 @@ async function savePurchase() {
     type: document.getElementById('purchaseType').value,
     category: document.getElementById('purchaseCategory').value,
     date: document.getElementById('purchaseDate').value || todayStr(),
+    quantity: Number(document.getElementById('purchaseQuantity').value) || 1,
+    unit: document.getElementById('purchaseUnit').value || 'шт',
     amount: Number(document.getElementById('purchaseAmount').value) || 0,
     comment: document.getElementById('purchaseComment').value.trim(),
   };
@@ -756,9 +761,9 @@ function renderPurchases() {
       const statusLabel = isPurchased ? '<span class="tag tag-regular" style="background:#B3E5FC44;color:#01579B">Куплено</span>' : '<span class="tag tag-large" style="background:#4FC3F733;color:#01579B">План</span>';
       const amountStr = p.amount ? p.amount.toLocaleString('ru-RU')+' ₽' : '';
       const catColor = CAT_COLORS[p.category] || '#cdd6d8';
-      const doneClass = isPurchased ? ' done' : '';
+      const doneClass = isPurchased ? ' purchased' : '';
       return `<div class="item${doneClass}">
-        <input class="item-checkbox" type="checkbox" ${isPurchased?'checked':''} onchange="togglePurchase('${p.id}')" />
+        <span style="cursor:pointer;font-size:20px" onclick="togglePurchase('${p.id}')">${isPurchased ? '✅' : '⬜'}</span>
         <div class="item-info">
           <div class="item-title"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${catColor};margin-right:6px;vertical-align:middle"></span>${escHtml(p.title)} ${statusLabel}</div>
           <div class="item-meta">
