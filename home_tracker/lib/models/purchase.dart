@@ -6,7 +6,7 @@ class Purchase {
   final String date;
   final double amount;
   final String comment;
-  bool done;
+  String purchaseStatus; // 'planned' or 'purchased'
 
   Purchase({
     required this.id,
@@ -16,12 +16,12 @@ class Purchase {
     required this.date,
     this.amount = 0,
     this.comment = '',
-    this.done = false,
+    this.purchaseStatus = 'planned',
   });
 
   Map<String, dynamic> toJson() => {
     'id': id, 'title': title, 'type': type, 'category': category,
-    'date': date, 'amount': amount, 'comment': comment, 'done': done,
+    'date': date, 'amount': amount, 'comment': comment, 'purchaseStatus': purchaseStatus,
   };
 
   factory Purchase.fromJson(Map<String, dynamic> j) => Purchase(
@@ -32,6 +32,6 @@ class Purchase {
     date: j['date'] as String,
     amount: (j['amount'] as num?)?.toDouble() ?? 0,
     comment: j['comment'] as String? ?? '',
-    done: j['done'] as bool? ?? false,
+    purchaseStatus: j['purchaseStatus'] as String? ?? (j['done'] == true ? 'purchased' : 'planned'),
   );
 }

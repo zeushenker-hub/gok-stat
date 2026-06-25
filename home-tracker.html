@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Домашний трекер</title>
-  <meta name="description" content="Трекер домашних дел, покупок и событий для семьи" />
+  <title>iHOME — семейный трекер</title>
+  <meta name="description" content="Семейный трекер дел, покупок и событий" />
   <meta name="theme-color" content="#7bc47f" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icon-192.png" sizes="192x192" />
@@ -139,7 +139,7 @@
 <div class="app" id="app">
   <div class="header">
     <div class="header-left">
-      <h1>🏠 Домашний трекер</h1>
+      <h1>🏠 iHOME</h1>
     </div>
     <div class="header-actions">
       <button class="btn btn-icon" onclick="toggleSettings()" title="Настройки">⚙️</button>
@@ -178,8 +178,8 @@
         </div>
         <div class="tabs">
           <button class="tab active" data-purchase-tab="all" onclick="setPurchaseTab('all')">Все</button>
-          <button class="tab" data-purchase-tab="large" onclick="setPurchaseTab('large')">Крупные</button>
-          <button class="tab" data-purchase-tab="regular" onclick="setPurchaseTab('regular')">Повседневные</button>
+          <button class="tab" data-purchase-tab="planned" onclick="setPurchaseTab('planned')">📋 План</button>
+          <button class="tab" data-purchase-tab="purchased" onclick="setPurchaseTab('purchased')">✅ Куплено</button>
         </div>
         <div class="purchases-total" id="purchasesTotal"></div>
         <div id="purchaseList" class="item-list"></div>
@@ -239,6 +239,10 @@
     <div class="form-group">
       <label>Название</label>
       <input id="purchaseTitle" placeholder="Например: молоко" />
+    </div>
+    <div class="form-group">
+      <label>Статус</label>
+      <select id="purchaseStatusSelect"><option value="planned">📋 Запланировано</option><option value="purchased">✅ Куплено</option></select>
     </div>
     <div class="form-group">
       <label>Тип</label>
@@ -636,6 +640,7 @@ function openPurchaseModal(purchase) {
   document.getElementById('purchaseModalTitle').textContent = purchase ? 'Редактировать покупку' : 'Новая покупка';
   document.getElementById('purchaseId').value = purchase ? purchase.id : '';
   document.getElementById('purchaseTitle').value = purchase ? purchase.title : '';
+  document.getElementById('purchaseStatusSelect').value = purchase ? (purchase.purchaseStatus||'planned') : 'planned';
   document.getElementById('purchaseType').value = purchase ? purchase.type : 'regular';
   document.getElementById('purchaseCategory').value = purchase ? (purchase.category||'Продукты') : 'Продукты';
   document.getElementById('purchaseDate').value = purchase ? purchase.date : todayStr();
@@ -648,19 +653,20 @@ function savePurchase() {
   const id = document.getElementById('purchaseId').value;
   const title = document.getElementById('purchaseTitle').value.trim();
   if (!title) { toast('Введите название покупки'); return; }
-  purchases = loadData(LS.purchases, []);
+  purchases = JSON.parse(JSON.stringify(loadData(LS.purchases, [])));
+  const purchaseStatus = document.getElementById('purchaseStatusSelect').value;
   const data = {
     title,
+    purchaseStatus,
     type: document.getElementById('purchaseType').value,
     category: document.getElementById('purchaseCategory').value,
     date: document.getElementById('purchaseDate').value || todayStr(),
     amount: Number(document.getElementById('purchaseAmount').value) || 0,
     comment: document.getElementById('purchaseComment').value.trim(),
-    done: false
   };
   if (id) {
     const idx = purchases.findIndex(p => p.id === id);
-    if (idx !== -1) { data.done = purchases[idx].done; Object.assign(purchases[idx], data); }
+    if (idx !== -1) { data.purchaseStatus = purchases[idx].purchaseStatus || 'planned'; Object.assign(purchases[idx], data); }
   } else {
     data.id = genId(purchases);
     purchases.unshift(data);
@@ -683,17 +689,33 @@ function deletePurchase(id) {
 function togglePurchase(id) {
   purchases = loadData(LS.purchases, []);
   const p = purchases.find(x => x.id === id);
-  if (p) { p.done = !p.done; saveData(LS.purchases, purchases); renderPurchases(); }
+  if (p) {
+    p.purchaseStatus = p.purchaseStatus === 'planned' ? 'purchased' : 'planned';
+    saveData(LS.purchases, purchases);
+    renderPurchases();
+  }
 }
 
 function renderPurchases() {
   purchases = loadData(LS.purchases, []);
   const container = document.getElementById('purchaseList');
   let filtered = purchases;
-  if (activePurchaseTab === 'large') filtered = filtered.filter(p => p.type === 'large');
-  else if (activePurchaseTab === 'regular') filtered = filtered.filter(p => p.type === 'regular');
+  if (activePurchaseTab === 'planned') filtered = filtered.filter(p => (p.purchaseStatus||'planned') === 'planned');
+  else if (activePurchaseTab === 'purchased') filtered = filtered.filter(p => (p.purchaseStatus||'planned') === 'purchased');
 
-  // group by date, newest first
+  // Summary
+  const totalPlanned = purchases.filter(p => (p.purchaseStatus||'planned') === 'planned').reduce((s, p) => s + (p.amount||0), 0);
+  const totalPurchased = purchases.filter(p => (p.purchaseStatus||'planned') === 'purchased').reduce((s, p) => s + (p.amount||0), 0);
+  const plannedCount = purchases.filter(p => (p.purchaseStatus||'planned') === 'planned').length;
+  const purchasedCount = purchases.filter(p => (p.purchaseStatus||'planned') === 'purchased').length;
+
+  document.getElementById('purchasesTotal').innerHTML =
+    '<div style="display:flex;gap:24px;justify-content:center">' +
+    '<div><span style="font-size:12px;color:#888">📋 План</span><br><span style="font-weight:800;font-size:18px;color:#e67e22">'+totalPlanned.toLocaleString('ru-RU')+' ₽</span><br><span style="font-size:11px;color:#999">'+plannedCount+' шт.</span></div>' +
+    '<div><span style="font-size:12px;color:#888">✅ Куплено</span><br><span style="font-weight:800;font-size:18px;color:#27ae60">'+totalPurchased.toLocaleString('ru-RU')+' ₽</span><br><span style="font-size:11px;color:#999">'+purchasedCount+' шт.</span></div>' +
+    '</div>';
+
+  // group by date
   const groups = {};
   filtered.forEach(p => {
     const key = p.date || 'Без даты';
@@ -705,11 +727,6 @@ function renderPurchases() {
     if (b === 'Без даты') return -1;
     return b.localeCompare(a);
   });
-
-  const totalAll = purchases.length;
-  const totalLarge = purchases.filter(p => p.type === 'large').length;
-  const totalRegular = purchases.filter(p => p.type === 'regular').length;
-  document.getElementById('purchasesTotal').textContent = `Всего: ${totalAll} · Крупных: ${totalLarge} · Повседневных: ${totalRegular}`;
 
   if (sortedDates.length === 0) {
     container.innerHTML = '<div class="empty-state">Нет покупок</div>';
@@ -725,15 +742,21 @@ function renderPurchases() {
   container.innerHTML = sortedDates.map(dateKey => {
     const items = groups[dateKey];
     const dayTotal = items.reduce((s, p) => s + (p.amount || 0), 0);
-    items.sort((a, b) => (a.done === b.done ? 0 : a.done ? 1 : -1));
+    items.sort((a, b) => {
+      const sa = (a.purchaseStatus||'planned') === 'purchased' ? 1 : 0;
+      const sb = (b.purchaseStatus||'planned') === 'purchased' ? 1 : 0;
+      return sa - sb;
+    });
     const itemsHtml = items.map(p => {
-      const typeTag = p.type === 'large' ? '<span class="tag tag-large">Крупная</span>' : '<span class="tag tag-regular">Повседневная</span>';
+      const isPurchased = (p.purchaseStatus||'planned') === 'purchased';
+      const statusLabel = isPurchased ? '<span class="tag tag-regular" style="background:#a8d5ba44;color:#2d6a3e">Куплено</span>' : '<span class="tag tag-large" style="background:#f7c94833;color:#7a6300">План</span>';
       const amountStr = p.amount ? p.amount.toLocaleString('ru-RU')+' ₽' : '';
       const catColor = CAT_COLORS[p.category] || '#cdd6d8';
-      return `<div class="item${p.done?' done':''}">
-        <input class="item-checkbox" type="checkbox" ${p.done?'checked':''} onchange="togglePurchase('${p.id}')" />
+      const doneClass = isPurchased ? ' done' : '';
+      return `<div class="item${doneClass}">
+        <input class="item-checkbox" type="checkbox" ${isPurchased?'checked':''} onchange="togglePurchase('${p.id}')" />
         <div class="item-info">
-          <div class="item-title"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${catColor};margin-right:6px;vertical-align:middle"></span>${escHtml(p.title)} ${typeTag}</div>
+          <div class="item-title"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${catColor};margin-right:6px;vertical-align:middle"></span>${escHtml(p.title)} ${statusLabel}</div>
           <div class="item-meta">
             ${amountStr ? '<span style="font-weight:600;font-size:14px">💰 '+amountStr+'</span>' : ''}
             ${p.comment ? '<span style="margin-left:8px">💬 '+escHtml(p.comment)+'</span>' : ''}

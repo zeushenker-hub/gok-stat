@@ -1,7 +1,7 @@
 {
-  "name": "Домашний трекер",
-  "short_name": "ДомTracker",
-  "description": "Трекер домашних дел, покупок и событий для семьи",
+  "name": "iHOME — семейный трекер",
+  "short_name": "iHOME",
+  "description": "Семейный трекер дел, покупок и событий",
   "start_url": "home-tracker.html",
   "display": "standalone",
   "orientation": "portrait-primary",

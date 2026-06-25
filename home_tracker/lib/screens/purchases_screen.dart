@@ -12,15 +12,13 @@ class PurchasesScreen extends StatefulWidget {
 
 class _PurchasesScreenState extends State<PurchasesScreen> {
   List<Purchase> _purchases = [];
-  String _tab = 'all';
+  String _tab = 'all'; // all, planned, purchased
 
   @override
   void initState() {
     super.initState();
     _load();
-    FirestoreService.dataChanges.listen((_) {
-      _load();
-    });
+    FirestoreService.dataChanges.listen((_) => _load());
   }
 
   Future<void> _load() async {
@@ -30,8 +28,8 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
 
   List<Purchase> get _filtered {
     var list = _purchases;
-    if (_tab == 'large') list = list.where((p) => p.type == 'large').toList();
-    else if (_tab == 'regular') list = list.where((p) => p.type == 'regular').toList();
+    if (_tab == 'planned') list = list.where((p) => p.purchaseStatus == 'planned').toList();
+    if (_tab == 'purchased') list = list.where((p) => p.purchaseStatus == 'purchased').toList();
     return list;
   }
 
@@ -50,10 +48,11 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
     return {for (final e in sorted) e.key: e.value};
   }
 
-  Future<void> _toggle(String id) async {
+  Future<void> _toggleStatus(String id) async {
     final idx = _purchases.indexWhere((p) => p.id == id);
     if (idx == -1) return;
-    _purchases[idx].done = !_purchases[idx].done;
+    _purchases[idx].purchaseStatus =
+        _purchases[idx].purchaseStatus == 'planned' ? 'purchased' : 'planned';
     await Storage.savePurchases(_purchases);
     setState(() {});
   }
@@ -83,9 +82,12 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
   @override
   Widget build(BuildContext context) {
     final grouped = _grouped;
-    final total = _purchases.length;
-    final large = _purchases.where((p) => p.type == 'large').length;
-    final regular = _purchases.where((p) => p.type == 'regular').length;
+
+    // Statistics
+    final totalPlanned = _purchases.where((p) => p.purchaseStatus == 'planned').fold<double>(0, (s, p) => s + p.amount);
+    final totalPurchased = _purchases.where((p) => p.purchaseStatus == 'purchased').fold<double>(0, (s, p) => s + p.amount);
+    final plannedCount = _purchases.where((p) => p.purchaseStatus == 'planned').length;
+    final purchasedCount = _purchases.where((p) => p.purchaseStatus == 'purchased').length;
 
     return Scaffold(
       appBar: AppBar(
@@ -96,24 +98,55 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
       ),
       body: Column(
         children: [
+          // Summary card
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: Text('Всего: $total · Крупных: $large · Повседневных: $regular',
-              style: const TextStyle(fontSize: 13, color: Colors.grey)),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('📋 Запланировано', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          Text('${totalPlanned.toStringAsFixed(0)} ₽', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.orange)),
+                          Text('$plannedCount шт.', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                        ],
+                      ),
+                    ),
+                    Container(width: 1, height: 40, color: Colors.grey.shade300),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const Text('✅ Куплено', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          Text('${totalPurchased.toStringAsFixed(0)} ₽', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.green)),
+                          Text('$purchasedCount шт.', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
+          // Filter tabs
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: SegmentedButton<String>(
               segments: const [
                 ButtonSegment(value: 'all', label: Text('Все')),
-                ButtonSegment(value: 'large', label: Text('Крупные')),
-                ButtonSegment(value: 'regular', label: Text('Повседневные')),
+                ButtonSegment(value: 'planned', label: Text('📋 План')),
+                ButtonSegment(value: 'purchased', label: Text('✅ Куплено')),
               ],
               selected: {_tab},
               onSelectionChanged: (s) => setState(() => _tab = s.first),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
+          // Grouped list
           Expanded(
             child: grouped.isEmpty
                 ? const Center(child: Text('Нет покупок', style: TextStyle(color: Colors.grey)))
@@ -123,7 +156,7 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                       final dateKey = entry.key;
                       final items = entry.value;
                       final dayTotal = items.fold<double>(0, (s, p) => s + p.amount);
-                      items.sort((a, b) => a.done == b.done ? 0 : a.done ? 1 : -1);
+                      items.sort((a, b) => a.purchaseStatus == b.purchaseStatus ? 0 : a.purchaseStatus == 'purchased' ? 1 : -1);
 
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,29 +201,51 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
       'Другое': const Color(0xFFCDD6D8),
     };
     final color = catColors[p.category] ?? Colors.grey;
+    final isPurchased = p.purchaseStatus == 'purchased';
     final typeTag = p.type == 'large' ? 'Крупная' : 'Повседневная';
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 2),
       child: ListTile(
         contentPadding: const EdgeInsets.only(left: 4, right: 0),
-        leading: Checkbox(value: p.done, onChanged: (_) => _toggle(p.id)),
+        leading: Checkbox(
+          value: isPurchased,
+          onChanged: (_) => _toggleStatus(p.id),
+          activeColor: Colors.green,
+        ),
         title: Row(
           children: [
             Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
             const SizedBox(width: 8),
             Flexible(
-              child: Text(p.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15), overflow: TextOverflow.ellipsis),
+              child: Text(
+                p.title,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                  decoration: isPurchased ? TextDecoration.lineThrough : null,
+                  color: isPurchased ? Colors.grey : null,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
             const SizedBox(width: 4),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
-                color: p.type == 'large' ? const Color(0xFFF7C948).withOpacity(0.2) : const Color(0xFFA8D5BA).withOpacity(0.3),
+                color: isPurchased
+                    ? const Color(0xFFA8D5BA).withOpacity(0.3)
+                    : const Color(0xFFF7C948).withOpacity(0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: Text(typeTag, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600,
-                color: p.type == 'large' ? const Color(0xFF7A6300) : const Color(0xFF2D6A3E))),
+              child: Text(
+                isPurchased ? 'Куплено' : 'План',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: isPurchased ? const Color(0xFF2D6A3E) : const Color(0xFF7A6300),
+                ),
+              ),
             ),
           ],
         ),
@@ -203,11 +258,22 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
           ],
         ),
         trailing: SizedBox(
-          width: 72,
+          width: 80,
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              IconButton(icon: const Icon(Icons.edit_outlined, size: 18), onPressed: () => _showDialog(p)),
-              IconButton(icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red), onPressed: () => _delete(p.id)),
+              IconButton(
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                onPressed: () => _showDialog(p),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                onPressed: () => _delete(p.id),
+              ),
             ],
           ),
         ),

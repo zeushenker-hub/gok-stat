@@ -2,13 +2,6 @@ import 'package:flutter/material.dart';
 import '../data/storage.dart';
 import '../models/models.dart';
 
-Future<Purchase?> showPurchaseDialog(BuildContext context, {Purchase? purchase}) {
-  return showDialog<Purchase>(
-    context: context,
-    builder: (_) => PurchaseDialog(purchase: purchase),
-  );
-}
-
 class PurchaseDialog extends StatefulWidget {
   final Purchase? purchase;
   const PurchaseDialog({super.key, this.purchase});
@@ -23,6 +16,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
   late String _type;
   late String _category;
   late String _date;
+  late String _purchaseStatus;
 
   String _today() {
     final n = DateTime.now();
@@ -39,6 +33,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
     _type = p?.type ?? 'regular';
     _category = p?.category ?? 'Продукты';
     _date = p?.date ?? _today();
+    _purchaseStatus = p?.purchaseStatus ?? 'planned';
   }
 
   @override
@@ -61,6 +56,16 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
             TextField(controller: _titleCtrl, decoration: const InputDecoration(labelText: 'Название', border: OutlineInputBorder())),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
+              value: _purchaseStatus,
+              items: const [
+                DropdownMenuItem(value: 'planned', child: Text('📋 Запланировано')),
+                DropdownMenuItem(value: 'purchased', child: Text('✅ Куплено')),
+              ],
+              onChanged: (v) => setState(() => _purchaseStatus = v ?? _purchaseStatus),
+              decoration: const InputDecoration(labelText: 'Статус', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
               value: _type,
               items: const [
                 DropdownMenuItem(value: 'regular', child: Text('Повседневная')),
@@ -78,7 +83,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
             ),
             const SizedBox(height: 12),
             TextField(
-              decoration: const InputDecoration(labelText: 'Дата покупки', border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'Дата', border: OutlineInputBorder()),
               readOnly: true,
               controller: TextEditingController(text: _date),
               onTap: () async {
@@ -112,7 +117,7 @@ class _PurchaseDialogState extends State<PurchaseDialog> {
               date: _date,
               amount: double.tryParse(_amountCtrl.text) ?? 0,
               comment: _commentCtrl.text.trim(),
-              done: widget.purchase?.done ?? false,
+              purchaseStatus: _purchaseStatus,
             );
             Navigator.pop(context, purchase);
           },
