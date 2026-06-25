@@ -1822,5 +1822,17 @@
     "call1": "выбрать",
     "afterNdz": "выбрать",
     "comment": null
+  },
+  {
+    "company": "тестовая строка",
+    "inn": "7.0",
+    "okved": "7",
+    "gendir": "тест",
+    "tel1": "7.0",
+    "tel2": "7.0",
+    "responsible": "выбрать",
+    "call1": "Да",
+    "afterNdz": "выбрать",
+    "comment": null
   }
 ]
