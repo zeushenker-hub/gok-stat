@@ -173,7 +173,7 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 
 <script>
 const COLORS = { blue: '#3b82f6', green: '#22c55e', amber: '#eab308', purple: '#a855f7', red: '#ef4444', gray: '#475569' };
-const SHEET_ID = '15PKewFsJYH99OLeC5LvIcHrt9W9tjFBl1067-yVDJAY';
+const SHEET_ID = '2PACX-1vRhJd6AktvhyyZafJDWxg4pHmwugE5twEgtt6Dz3MMWNS6KMuutKvh2r_Aj33LmcH48x8z2pnGNrTcO';
 
 let charts = {};
 let cachedResult = null;
@@ -190,7 +190,7 @@ function loadDataFromSheets() {
 return new Promise((resolve, reject) => {
 const cb = 'gs_' + Math.random().toString(36).slice(2);
 const s = document.createElement('script');
-s.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&tq=&sheet=${encodeURIComponent('ГОК')}&callback=${cb}`;
+s.src = `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/gviz/tq?tqx=out:json&tq=&callback=${cb}`;
 window[cb] = function(resp) {
 delete window[cb]; s.remove();
 if (resp.status !== 'ok') { reject(new Error('Google API error')); return; }
