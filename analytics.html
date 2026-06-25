@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Аналитика — Стратегия RD (ГОК)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+.dashboard { max-width: 1400px; margin: 0 auto; }
+.header { margin-bottom: 32px; }
+.header h1 { font-size: 28px; font-weight: 700; color: #f1f5f9; }
+.header p { color: #94a3b8; margin-top: 4px; font-size: 14px; }
+.header .rule { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px 16px; margin-top: 12px; font-size: 13px; color: #94a3b8; line-height: 1.6; }
+.header .rule strong { color: #e2e8f0; }
+.header .badge { display: inline-block; background: #1e293b; color: #94a3b8; padding: 4px 12px; border-radius: 9999px; font-size: 12px; margin-top: 8px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+.card { background: #1e293b; border-radius: 16px; padding: 20px; border: 1px solid #334155; }
+.card .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px; }
+.card .value { font-size: 32px; font-weight: 700; color: #f1f5f9; }
+.card .sub { font-size: 13px; color: #94a3b8; margin-top: 4px; }
+.card .value.green { color: #22c55e; }
+.card .value.amber { color: #eab308; }
+.card .value.blue { color: #3b82f6; }
+.card .value.red { color: #ef4444; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+.panel { background: #1e293b; border-radius: 16px; padding: 24px; border: 1px solid #334155; }
+.panel h2 { font-size: 16px; font-weight: 600; color: #f1f5f9; margin-bottom: 16px; }
+.panel h2 small { font-weight: 400; font-size: 12px; color: #64748b; }
+.chart-container { position: relative; height: 300px; }
+.chart-container-sm { position: relative; height: 250px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { text-align: left; padding: 10px 8px; border-bottom: 2px solid #334155; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; }
+.badge-green { background: #052e16; color: #4ade80; }
+.badge-blue { background: #0c1929; color: #60a5fa; }
+.badge-amber { background: #271d03; color: #facc15; }
+.badge-red { background: #290b0b; color: #f87171; }
+.badge-gray { background: #1e293b; color: #94a3b8; }
+.full-width { grid-column: 1 / -1; }
+.loading { text-align: center; padding: 60px; color: #94a3b8; font-size: 18px; }
+.loading .spinner { border: 4px solid #1e293b; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="dashboard">
+<div class="header">
+<h1>CRM Аналитика — Стратегия RD</h1>
+<p>Конверсия и эффективность воронки обзвона | Сегмент: ГОК (горно-обогатительные комбинаты)</p>
+<div id="headerBadge" class="badge">Загрузка данных...</div>
+<button id="refreshBtn" onclick="refreshData()" style="display:none;background:#334155;border:1px solid #475569;color:#e2e8f0;padding:4px 12px;border-radius:8px;font-size:12px;margin-top:8px;cursor:pointer">🔄 Обновить данные из Google Sheets</button>
+<div class="rule">
+<strong>Правила расчёта:</strong><br>
+<span class="badge badge-green">Дозвон</span> Звонок1="Да" <strong>ИЛИ</strong> ПослеНДЗ="Да после НДЗ"<br>
+<span class="badge badge-amber">НДЗ</span> (Звонок1="НДЗ" <strong>И</strong> ПослеНДЗ="выбрать") <strong>ИЛИ</strong> (Звонок1="НДЗ" <strong>И</strong> ПослеНДЗ="НДЗ")<br>
+<span class="badge badge-gray">Не обработано</span> всё остальное<br>
+<span class="badge badge-green">Отработано</span> все записи, кроме (Звонок1="выбрать" <strong>И</strong> ПослеНДЗ="выбрать") <strong>И</strong> (Звонок1 пусто <strong>И</strong> ПослеНДЗ пусто)
+</div>
+</div>
+
+<div id="loading" class="loading">
+<div class="spinner"></div>
+Загрузка данных из Google Sheets...
+</div>
+
+<div id="content" style="display:none">
+<div class="cards" id="cards"></div>
+
+<div class="grid-2">
+<div class="panel">
+<h2 id="mainChartTitle">Итоговое распределение</h2>
+<div class="chart-container">
+<canvas id="mainChart"></canvas>
+</div>
+</div>
+<div class="panel">
+<h2>Статус звонка 1</h2>
+<div class="chart-container-sm">
+<canvas id="call1Chart"></canvas>
+</div>
+</div>
+</div>
+
+<div class="grid-3">
+<div class="panel">
+<h2>После НДЗ</h2>
+<div class="chart-container-sm">
+<canvas id="afterNdzChart"></canvas>
+</div>
+</div>
+<div class="panel">
+<h2>По ответственным</h2>
+<div class="chart-container-sm">
+<canvas id="responsibleChart"></canvas>
+</div>
+</div>
+<div class="panel">
+<h2>Дозвон vs НДЗ</h2>
+<div class="chart-container-sm">
+<canvas id="dozvonChart"></canvas>
+</div>
+</div>
+</div>
+
+<div class="grid-2">
+<div class="panel full-width">
+<h2>Конверсия по ответственному менеджеру</h2>
+<table>
+<thead>
+<tr>
+<th>Менеджер</th>
+<th>Всего</th>
+<th>Дозвон</th>
+<th>→ %</th>
+<th>НДЗ</th>
+<th>→ %</th>
+<th>НДЗ+выбрать</th>
+<th>НДЗ+НДЗ</th>
+<th>НДЗ→Да</th>
+<th>Не обраб.</th>
+</tr>
+</thead>
+<tbody id="managerTable"></tbody>
+</table>
+</div>
+
+<div class="panel full-width">
+<h2>Детализация по ОКВЭД</h2>
+<table>
+<thead>
+<tr>
+<th>ОКВЭД</th>
+<th>Описание</th>
+<th>Всего</th>
+<th>Дозвон</th>
+<th>→ %</th>
+<th>НДЗ</th>
+<th>→ %</th>
+</tr>
+</thead>
+<tbody id="okvedTable"></tbody>
+</table>
+</div>
+</div>
+
+<div class="panel full-width">
+<h2>Матрица конверсии — Звонок 1 × После НДЗ</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align:center">После НДЗ: выбрано</th>
+<th style="text-align:center">После НДЗ: НДЗ</th>
+<th style="text-align:center;color:#22c55e">После НДЗ: Да</th>
+<th style="text-align:center">Пусто</th>
+<th style="text-align:center">Итого</th>
+</tr>
+</thead>
+<tbody id="matrixTable"></tbody>
+</table>
+</div>
+</div>
+
+<script>
+const COLORS = { blue: '#3b82f6', green: '#22c55e', amber: '#eab308', purple: '#a855f7', red: '#ef4444', gray: '#475569' };
+const SHEET_ID = '15PKewFsJYH99OLeC5LvIcHrt9W9tjFBl1067-yVDJAY';
+const SHEET_NAME = encodeURIComponent('ГОК');
+
+let charts = {};
+
+function loadData() {
+return new Promise((resolve, reject) => {
+const id = 'cb' + Math.random().toString(36).slice(2);
+const s = document.createElement('script');
+s.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}&callback=${id}`;
+window[id] = function(resp) {
+delete window[id];
+s.remove();
+if (resp.status !== 'ok') { reject(new Error('Google API error')); return; }
+const rows = resp.table.rows;
+const data = [];
+for (let r = 0; r < rows.length; r++) {
+const c = rows[r].c || [];
+data.push({
+company: c[0]?.v || '', inn: String(c[1]?.v ?? ''),
+okved: String(c[2]?.v ?? ''), gendir: c[3]?.v || '',
+tel1: String(c[5]?.v ?? ''), tel2: String(c[6]?.v ?? ''),
+responsible: c[7]?.v || null, call1: c[8]?.v || null,
+afterNdz: c[9]?.v || null, comment: c[10]?.v || null
+});
+}
+resolve(data);
+};
+s.onerror = () => { delete window[id]; reject(new Error('Script load failed')); };
+document.head.appendChild(s);
+});
+}
+
+function analyze(data) {
+const total = data.length;
+
+let dozvon = 0, ndz = 0, ndzVybrat = 0, ndzNdz = 0, ndzDa = 0, neObr = 0, otrabotano = 0;
+
+const matrix = {};
+const byManager = {};
+const byOkved = {};
+
+function addManager(name, field, val) {
+if (!byManager[name]) byManager[name] = { total: 0, dozvon: 0, ndz: 0, ndz_v: 0, ndz_n: 0, ndz_da: 0, ne_obr: 0 };
+if (field === 'total') byManager[name].total += val;
+else byManager[name][field] += val;
+}
+
+for (const row of data) {
+const c1 = row.call1;
+const af = row.afterNdz;
+const mgr = row.responsible || 'Не назначен';
+const ok = (row.okved || '').slice(0, 2) || 'Прочие';
+
+const mk = (c1 || '∅') + '|' + (af || '∅');
+matrix[mk] = (matrix[mk] || 0) + 1;
+
+addManager(mgr, 'total', 1);
+
+const isDozvon = c1 === 'Да' || af === 'Да после НДЗ';
+const isNdzVybrat = c1 === 'НДЗ' && af === 'выбрать';
+const isNdzNdz = c1 === 'НДЗ' && af === 'НДЗ';
+const isNdz = isNdzVybrat || isNdzNdz;
+
+if (isDozvon) {
+dozvon++;
+otrabotano++;
+addManager(mgr, 'dozvon', 1);
+if (af === 'Да после НДЗ') addManager(mgr, 'ndz_da', 1);
+} else if (isNdzVybrat) {
+ndz++; ndzVybrat++; otrabotano++;
+addManager(mgr, 'ndz', 1); addManager(mgr, 'ndz_v', 1);
+} else if (isNdzNdz) {
+ndz++; ndzNdz++; otrabotano++;
+addManager(mgr, 'ndz', 1); addManager(mgr, 'ndz_n', 1);
+} else if (c1 === 'НДЗ' && af === 'Да после НДЗ') {
+dozvon++; otrabotano++;
+addManager(mgr, 'dozvon', 1);
+addManager(mgr, 'ndz_da', 1);
+} else {
+neObr++;
+addManager(mgr, 'ne_obr', 1);
+}
+
+if (c1 === 'НДЗ' && af === 'Да после НДЗ') {
+ndzDa++;
+}
+}
+
+return { total, dozvon, ndz, ndzVybrat, ndzNdz, ndzDa, neObr, otrabotano, matrix, byManager, byOkved, data };
+}
+
+function renderCards(r) {
+const cards = [
+{ label: 'Всего компаний', value: r.total, sub: 'в базе ГОК', cls: '' },
+{ label: 'Дозвон', value: r.dozvon, sub: (r.dozvon / r.total * 100).toFixed(1) + '%', cls: 'green' },
+{ label: 'НДЗ', value: r.ndz, sub: (r.ndz / r.total * 100).toFixed(1) + '%', cls: 'amber' },
+{ label: 'НДЗ + выбрано', value: r.ndzVybrat, sub: 'нужно дозваниваться', cls: 'blue' },
+{ label: 'НДЗ + НДЗ', value: r.ndzNdz, sub: 'повторный НДЗ', cls: 'red' },
+{ label: 'Отработано', value: r.otrabotano, sub: (r.otrabotano / r.total * 100).toFixed(1) + '%', cls: 'green' },
+{ label: 'Не обработано', value: r.neObr, sub: (r.neObr / r.total * 100).toFixed(1) + '%', cls: '' },
+];
+document.getElementById('cards').innerHTML = cards.map(c =>
+`<div class="card"><div class="label">${c.label}</div><div class="value${c.cls ? ' ' + c.cls : ''}">${c.value}</div><div class="sub">${c.sub}</div></div>`
+).join('');
+}
+
+function renderManagerTable(r) {
+const keys = Object.keys(r.byManager).sort((a, b) => r.byManager[b].total - r.byManager[a].total);
+const html = keys.map(name => {
+const m = r.byManager[name];
+const dPct = m.total ? (m.dozvon / m.total * 100).toFixed(1) : 0;
+const nPct = m.total ? (m.ndz / m.total * 100).toFixed(1) : 0;
+const isUnassigned = name === 'Не назначен';
+return `<tr>
+<td>${isUnassigned ? '<em>Не назначен</em>' : '<strong>' + name + '</strong>'}</td>
+<td>${m.total}</td>
+<td><span class="badge ${m.dozvon ? 'badge-green' : 'badge-gray'}">${m.dozvon}</span></td>
+<td><span class="badge ${dPct > 0 ? 'badge-blue' : 'badge-gray'}">${dPct}%</span></td>
+<td><span class="badge ${m.ndz ? 'badge-amber' : 'badge-gray'}">${m.ndz}</span></td>
+<td>${nPct}%</td>
+<td>${m.ndz_v}</td>
+<td>${m.ndz_n}</td>
+<td>${m.ndz_da}</td>
+<td>${m.ne_obr}</td>
+</tr>`;
+}).join('');
+document.getElementById('managerTable').innerHTML = html;
+}
+
+function renderOkvedTable(r) {
+const okvedDesc = {
+'08': 'Добыча прочих полезных ископаемых',
+'07': 'Добыча металлических руд',
+'24': 'Металлургическое производство',
+'20': 'Химическое производство',
+'05': 'Добыча угля',
+'70': 'Деятельность головных офисов',
+'06': 'Добыча сырой нефти и газа',
+'46': 'Торговля оптовая',
+};
+
+for (const row of r.data) {
+const ok = (row.okved || '').slice(0, 2) || 'Прочие';
+if (!r.byOkved[ok]) r.byOkved[ok] = { total: 0, dozvon: 0, ndz: 0 };
+r.byOkved[ok].total++;
+const c1 = row.call1;
+const af = row.afterNdz;
+if (c1 === 'Да' || af === 'Да после НДЗ') r.byOkved[ok].dozvon++;
+else if (c1 === 'НДЗ' && (af === 'выбрать' || af === 'НДЗ')) r.byOkved[ok].ndz++;
+}
+
+const keys = Object.keys(r.byOkved).sort();
+const otherKeys = keys.filter(k => !okvedDesc[k] && k !== 'Прочие');
+const mainKeys = keys.filter(k => okvedDesc[k] || k === 'Прочие');
+const sorted = [...mainKeys, ...otherKeys];
+
+const html = sorted.map(ok => {
+const d = r.byOkved[ok];
+const dPct = d.total ? (d.dozvon / d.total * 100).toFixed(1) : 0;
+const nPct = d.total ? (d.ndz / d.total * 100).toFixed(1) : 0;
+const desc = okvedDesc[ok] || (ok === 'Прочие' ? 'Прочие виды' : '');
+const descDetail = ok === 'Прочие' && otherKeys.length ? otherKeys.join(', ') : desc;
+const dCls = dPct >= 30 ? 'blue' : dPct > 0 ? 'amber' : 'gray';
+const nCls = nPct >= 40 ? 'red' : nPct >= 20 ? 'amber' : 'blue';
+return `<tr><td>${ok}</td><td>${descDetail}</td><td>${d.total}</td><td>${d.dozvon}</td><td><span class="badge badge-${dCls}">${dPct}%</span></td><td>${d.ndz}</td><td><span class="badge badge-${nCls}">${nPct}%</span></td></tr>`;
+}).join('');
+document.getElementById('okvedTable').innerHTML = html;
+}
+
+function renderMatrix(r) {
+const rows = [
+{ label: 'Звонок 1 = Да', mKey: 'Да', color: 'green', badge: 'дозвон' },
+{ label: 'Звонок 1 = НДЗ', mKey: 'НДЗ', color: 'amber', badge: null },
+{ label: 'Звонок 1 = выбрано', mKey: 'выбрать', color: '', badge: null },
+{ label: 'Пусто', mKey: '∅', color: '', badge: null },
+];
+const colKeys = ['выбрать', 'НДЗ', 'Да после НДЗ', '∅'];
+const colLabels = ['выбрано', 'НДЗ', 'Да', 'Пусто'];
+
+let html = '';
+for (const row of rows) {
+let rowTotal = 0;
+let cells = '';
+for (let ci = 0; ci < colKeys.length; ci++) {
+const v = r.matrix[row.mKey + '|' + colKeys[ci]] || 0;
+rowTotal += v;
+const isAmber = row.mKey === 'НДЗ' && (colKeys[ci] === 'выбрать' || colKeys[ci] === 'НДЗ');
+cells += `<td style="text-align:center">${isAmber && v ? '<span class="badge badge-amber">' + v + '</span>' : v}</td>`;
+}
+const labelBadge = row.badge ? ` <span class="badge badge-${row.color}">${row.badge}</span>` : '';
+html += `<tr><td><strong>${row.label}</strong>${labelBadge}</td>${cells}<td style="text-align:center"><strong>${rowTotal}</strong></td></tr>`;
+}
+
+let colTotals = colKeys.map(k => {
+let s = 0;
+for (const row of rows) s += r.matrix[row.mKey + '|' + k] || 0;
+return s;
+});
+
+const totalAll = colTotals.reduce((a, b) => a + b, 0);
+const footerCells = colTotals.map((v, i) => {
+const cls = i === 1 ? 'amber' : i === 2 ? 'green' : '';
+return `<td style="text-align:center">${cls ? '<strong style="color:' + COLORS[cls] + '">' : '<strong>'}${v}${cls ? '</strong>' : '</strong>'}</td>`;
+}).join('');
+html += `<tr style="border-top:2px solid #334155;font-weight:600;"><td><strong>Итого</strong></td>${footerCells}<td style="text-align:center"><strong>${totalAll}</strong></td></tr>`;
+
+document.getElementById('matrixTable').innerHTML = html;
+}
+
+function renderCharts(r) {
+const total = r.total;
+
+if (charts.mainChart) charts.mainChart.destroy();
+if (charts.call1Chart) charts.call1Chart.destroy();
+if (charts.afterNdzChart) charts.afterNdzChart.destroy();
+if (charts.responsibleChart) charts.responsibleChart.destroy();
+if (charts.dozvonChart) charts.dozvonChart.destroy();
+
+document.getElementById('mainChartTitle').textContent = `Итоговое распределение (${total})`;
+
+charts.mainChart = new Chart(document.getElementById('mainChart'), {
+type: 'bar',
+data: {
+labels: [`Распределение (${total})`],
+datasets: [
+{ label: `Дозвон (${r.dozvon})`, data: [r.dozvon], backgroundColor: COLORS.green },
+{ label: `НДЗ (${r.ndz})`, data: [r.ndz], backgroundColor: COLORS.amber },
+{ label: `Не обработано (${r.neObr})`, data: [r.neObr], backgroundColor: COLORS.gray }
+]
+},
+options: {
+responsive: true, maintainAspectRatio: false,
+plugins: {
+legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11, color: '#94a3b8' } } },
+tooltip: {
+callbacks: {
+label: function(ctx) {
+return ctx.dataset.label + ' — ' + ctx.parsed.x + ' (' + (ctx.parsed.x / total * 100).toFixed(1) + '%)';
+}
+}
+}
+},
+scales: {
+x: { stacked: true, ticks: { color: '#94a3b8' } },
+y: { stacked: true, beginAtZero: true, max: total, ticks: { color: '#94a3b8' } }
+}
+}
+});
+
+const call1Data = { 'НДЗ': 0, 'Да': 0, 'выбрать': 0, '∅': 0 };
+for (const row of r.data) {
+const k = row.call1 || '∅';
+call1Data[k] = (call1Data[k] || 0) + 1;
+}
+const call1Labels = Object.keys(call1Data).map(k => k === '∅' ? 'пусто' : k);
+const call1Values = Object.values(call1Data);
+
+charts.call1Chart = new Chart(document.getElementById('call1Chart'), {
+type: 'doughnut',
+data: {
+labels: call1Labels.map((l, i) => `${l} (${call1Values[i]})`),
+datasets: [{ data: call1Values, backgroundColor: ['#eab308', '#22c55e', '#3b82f6', '#475569'] }]
+},
+options: {
+responsive: true, maintainAspectRatio: false,
+plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11, color: '#94a3b8' } } } }
+}
+});
+
+const afterData = { 'выбрать': 0, 'НДЗ': 0, 'Да после НДЗ': 0, '∅': 0 };
+for (const row of r.data) {
+const k = row.afterNdz || '∅';
+afterData[k] = (afterData[k] || 0) + 1;
+}
+const afterLabels = Object.keys(afterData).map(k => k === '∅' ? 'пусто' : k === 'Да после НДЗ' ? 'Да после НДЗ' : k);
+const afterValues = Object.values(afterData);
+
+charts.afterNdzChart = new Chart(document.getElementById('afterNdzChart'), {
+type: 'doughnut',
+data: {
+labels: afterLabels.map((l, i) => `${l} (${afterValues[i]})`),
+datasets: [{ data: afterValues, backgroundColor: ['#3b82f6', '#475569', '#eab308', '#22c55e'] }]
+},
+options: {
+responsive: true, maintainAspectRatio: false,
+plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11, color: '#94a3b8' } } } }
+}
+});
+
+const mgrSorted = Object.entries(r.byManager).sort((a, b) => b[1].total - a[1].total);
+const mgrLabels = mgrSorted.map(([n, d]) => `${n} (${d.total})`);
+const mgrValues = mgrSorted.map(([, d]) => d.total);
+const mgrColors = mgrLabels.map((_, i) => [COLORS.blue, COLORS.green, COLORS.gray, COLORS.purple][i % 4]);
+
+charts.responsibleChart = new Chart(document.getElementById('responsibleChart'), {
+type: 'doughnut',
+data: {
+labels: mgrLabels,
+datasets: [{ data: mgrValues, backgroundColor: mgrColors }]
+},
+options: {
+responsive: true, maintainAspectRatio: false,
+plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11, color: '#94a3b8' } } } }
+}
+});
+
+charts.dozvonChart = new Chart(document.getElementById('dozvonChart'), {
+type: 'bar',
+data: {
+labels: [''],
+datasets: [
+{ label: `Дозвон (${r.dozvon})`, data: [r.dozvon], backgroundColor: COLORS.green },
+{ label: `НДЗ (${r.ndz})`, data: [r.ndz], backgroundColor: COLORS.amber },
+{ label: `Не обработано (${r.neObr})`, data: [r.neObr], backgroundColor: COLORS.gray }
+]
+},
+options: {
+responsive: true, maintainAspectRatio: false,
+indexAxis: 'y',
+plugins: {
+legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11, color: '#94a3b8' } } },
+},
+scales: {
+x: { beginAtZero: true, max: total, ticks: { color: '#94a3b8' } },
+y: { ticks: { color: '#94a3b8' } }
+}
+}
+});
+}
+
+async function init() {
+try {
+const data = await loadData();
+const result = analyze(data);
+
+document.getElementById('headerBadge').textContent = `Всего записей: ${result.total} | Данные: Google Sheets (ГОК) | Обновлено: ${new Date().toLocaleDateString('ru-RU')}`;
+document.getElementById('loading').style.display = 'none';
+document.getElementById('content').style.display = 'block';
+document.getElementById('refreshBtn').style.display = 'inline-block';
+
+renderCards(result);
+renderManagerTable(result);
+renderOkvedTable(result);
+renderMatrix(result);
+renderCharts(result);
+} catch (e) {
+document.getElementById('loading').innerHTML = `<div style="color:#ef4444;font-size:16px">Ошибка загрузки данных: ${e.message}</div>`;
+}
+}
+
+async function refreshData() {
+document.getElementById('refreshBtn').textContent = '🔄 Обновление...';
+document.getElementById('refreshBtn').disabled = true;
+try {
+const resp = await fetch('update_data.py?' + Date.now());
+if (!resp.ok) throw new Error('HTTP ' + resp.status);
+const result = await resp.text();
+alert('Данные обновлены!\n' + result);
+location.reload();
+} catch (e) {
+alert('Ошибка: ' + e.message + '\n\nЗапусти в терминале:\npython3 update_data.py\nзатем обнови страницу (Cmd+R)');
+document.getElementById('refreshBtn').textContent = '🔄 Обновить данные из Google Sheets';
+document.getElementById('refreshBtn').disabled = false;
+}
+}
+
+init();
+</script>
+</body>
+</html>
