@@ -187,30 +187,35 @@ return wrapper.rows;
 
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRhJd6AktvhyyZafJDWxg4pHmwugE5twEgtt6Dz3MMWNS6KMuutKvh2r_Aj33LmcH48x8z2pnGNrTcO/pub?gid=243256728&single=true&output=csv';
 
-async function loadDataFromSheets() {
-const resp = await fetch(CSV_URL, { redirect: 'follow' });
-if (!resp.ok) throw new Error('HTTP ' + resp.status);
-const csv = await resp.text();
+function loadDataFromSheets() {
+return new Promise((resolve, reject) => {
+const iframe = document.createElement('iframe');
+iframe.style.display = 'none';
+iframe.src = CSV_URL;
+iframe.onload = () => {
+try {
+const csv = iframe.contentDocument.body.innerText || iframe.contentDocument.body.textContent;
+document.body.removeChild(iframe);
 const lines = csv.split('\n').filter(l => l.trim());
 const data = [];
 for (let i = 1; i < lines.length; i++) {
 const cells = parseCSV(lines[i]);
 if (cells.length < 11) continue;
 data.push({
-company: cells[0] || '',
-inn: cells[1] || '',
-okved: cells[2] || '',
-gendir: cells[3] || '',
-tel1: cells[5] || '',
-tel2: cells[6] || '',
-responsible: cells[7] || null,
-call1: cells[8] || null,
-afterNdz: cells[9] || null,
-comment: cells[10] || null
+company: cells[0] || '', inn: cells[1] || '',
+okved: cells[2] || '', gendir: cells[3] || '',
+tel1: cells[5] || '', tel2: cells[6] || '',
+responsible: cells[7] || null, call1: cells[8] || null,
+afterNdz: cells[9] || null, comment: cells[10] || null
 });
 }
 window.__dataUpdated = new Date().toLocaleString('ru-RU');
-return data;
+resolve(data);
+} catch (e) { document.body.removeChild(iframe); reject(e); }
+};
+iframe.onerror = () => { document.body.removeChild(iframe); reject(new Error('load failed')); };
+document.body.appendChild(iframe);
+});
 }
 
 function parseCSV(line) {
