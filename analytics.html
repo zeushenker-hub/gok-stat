@@ -63,7 +63,8 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 <span class="badge badge-green">Дозвон</span> Звонок1="Да" <strong>ИЛИ</strong> ПослеНДЗ="Да после НДЗ"<br>
 <span class="badge badge-amber">НДЗ</span> (Звонок1="НДЗ" <strong>И</strong> ПослеНДЗ пусто) <strong>ИЛИ</strong> (Звонок1="НДЗ" <strong>И</strong> ПослеНДЗ="НДЗ")<br>
 <span class="badge badge-gray">Не обработано</span> всё остальное<br>
-<span class="badge badge-green">Отработано</span> все записи, кроме (Звонок1 пусто <strong>И</strong> ПослеНДЗ пусто)
+<span class="badge badge-green">Отработано</span> все записи, кроме (Звонок1 пусто <strong>И</strong> ПослеНДЗ пусто)<br>
+<span class="badge badge-blue">Получен ЛПР</span> Звонок1="Да" <strong>И</strong> ЛПР="Да"
 </div>
 </div>
 
@@ -167,7 +168,7 @@ return wrapper.rows;
 function analyze(data) {
 const total = data.length;
 
-let dozvon = 0, ndz = 0, ndzNdz = 0, ndzDa = 0, neObr = 0, otrabotano = 0;
+let dozvon = 0, ndz = 0, ndzNdz = 0, ndzDa = 0, neObr = 0, otrabotano = 0, lprDa = 0;
 
 const matrix = {};
 const byManager = {};
@@ -198,6 +199,7 @@ dozvon++;
 otrabotano++;
 addManager(mgr, 'dozvon', 1);
 if (af === 'Да после НДЗ') addManager(mgr, 'ndz_da', 1);
+if (row.lpr === 'Да') lprDa++;
 } else if (isNdz && af === 'НДЗ') {
 ndz++; ndzNdz++; otrabotano++;
 addManager(mgr, 'ndz', 1); addManager(mgr, 'ndz_n', 1);
@@ -218,7 +220,7 @@ ndzDa++;
 }
 }
 
-return { total, dozvon, ndz, ndzNdz, ndzDa, neObr, otrabotano, matrix, byManager, byOkved, data };
+return { total, dozvon, ndz, ndzNdz, ndzDa, neObr, otrabotano, lprDa, matrix, byManager, byOkved, data };
 }
 
 function renderCards(r) {
@@ -230,6 +232,7 @@ const funnel = [
 { label: 'Всего компаний', value: r.total, sub: 'в базе ГОК', cls: '' },
 { label: 'Отработано', value: r.otrabotano, sub: oPct + '% от общего', cls: 'green' },
 { label: 'Дозвон', value: r.dozvon, sub: dPct + '% от общего', cls: 'green' },
+{ label: 'Получен ЛПР', value: r.lprDa, sub: (r.lprDa / r.total * 100).toFixed(1) + '% от общего', cls: 'blue' },
 ];
 
 const stats = [

@@ -29,7 +29,8 @@ def fetch_data():
         if len(c) > 7: row['responsible'] = c[7]['v'] if c[7] else None
         if len(c) > 8: row['call1'] = c[8]['v'] if c[8] else None
         if len(c) > 9: row['afterNdz'] = c[9]['v'] if c[9] else None
-        if len(c) > 10: row['comment'] = c[10]['v'] if c[10] else None
+        if len(c) > 10: row['lpr'] = c[10]['v'] if c[10] else None
+        if len(c) > 11: row['comment'] = c[11]['v'] if c[11] else None
         rows.append(row)
     return rows
 
