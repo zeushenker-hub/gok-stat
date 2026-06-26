@@ -124,6 +124,7 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 <th colspan="2">НДЗ</th>
 <th>НДЗ+НДЗ</th>
 <th>НДЗ→Да</th>
+<th colspan="2">ЛПР</th>
 <th>Не обраб.</th>
 </tr>
 </thead>
@@ -175,7 +176,7 @@ const byManager = {};
 const byOkved = {};
 
 function addManager(name, field, val) {
-if (!byManager[name]) byManager[name] = { total: 0, dozvon: 0, ndz: 0, ndz_n: 0, ndz_da: 0, ne_obr: 0 };
+if (!byManager[name]) byManager[name] = { total: 0, dozvon: 0, ndz: 0, ndz_n: 0, ndz_da: 0, lpr: 0, ne_obr: 0 };
 if (field === 'total') byManager[name].total += val;
 else byManager[name][field] += val;
 }
@@ -199,7 +200,7 @@ dozvon++;
 otrabotano++;
 addManager(mgr, 'dozvon', 1);
 if (af === 'Да после НДЗ') addManager(mgr, 'ndz_da', 1);
-if (row.lpr === 'Да') lprDa++;
+if (row.lpr === 'Да') { lprDa++; addManager(mgr, 'lpr', 1); }
 } else if (isNdz && af === 'НДЗ') {
 ndz++; ndzNdz++; otrabotano++;
 addManager(mgr, 'ndz', 1); addManager(mgr, 'ndz_n', 1);
@@ -232,7 +233,7 @@ const funnel = [
 { label: 'Всего компаний', value: r.total, sub: 'в базе ГОК', cls: '' },
 { label: 'Отработано', value: r.otrabotano, sub: oPct + '% от общего', cls: 'green' },
 { label: 'Дозвон', value: r.dozvon, sub: dPct + '% от общего', cls: 'green' },
-{ label: 'Получен ЛПР', value: r.lprDa, sub: (r.lprDa / r.total * 100).toFixed(1) + '% от общего', cls: 'blue' },
+{ label: 'Получен ЛПР', value: r.lprDa, sub: (r.lprDa / r.total * 100).toFixed(1) + '% от общего, ' + (r.lprDa / r.dozvon * 100).toFixed(1) + '% от дозвона', cls: 'blue' },
 ];
 
 const stats = [
@@ -267,6 +268,7 @@ const html = keys.map(name => {
 const m = r.byManager[name];
 const dPct = m.total ? (m.dozvon / m.total * 100).toFixed(1) : 0;
 const nPct = m.total ? (m.ndz / m.total * 100).toFixed(1) : 0;
+const lPct = m.dozvon ? (m.lpr / m.dozvon * 100).toFixed(1) : 0;
 const isUnassigned = name === 'Не назначен';
 return `<tr>
 <td>${isUnassigned ? '<em>Не назначен</em>' : '<strong>' + name + '</strong>'}</td>
@@ -277,6 +279,8 @@ return `<tr>
 <td>${nPct}%</td>
 <td>${m.ndz_n}</td>
 <td>${m.ndz_da}</td>
+<td><span class="badge ${m.lpr ? 'badge-green' : 'badge-gray'}">${m.lpr}</span></td>
+<td>${lPct}%</td>
 <td>${m.ne_obr}</td>
 </tr>`;
 }).join('');
