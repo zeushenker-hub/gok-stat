@@ -3,18 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRM Аналитика — Стратегия RD (ГОК)</title>
+<title>CRM Аналитика — Стратегия RD</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
 .dashboard { max-width: 1400px; margin: 0 auto; }
-.header { margin-bottom: 32px; }
+.header { margin-bottom: 24px; }
 .header h1 { font-size: 28px; font-weight: 700; color: #f1f5f9; }
 .header p { color: #94a3b8; margin-top: 4px; font-size: 14px; }
+.header .badge { display: inline-block; background: #1e293b; color: #94a3b8; padding: 4px 12px; border-radius: 9999px; font-size: 12px; margin-top: 8px; }
 .header .rule { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px 16px; margin-top: 12px; font-size: 13px; color: #94a3b8; line-height: 1.6; }
 .header .rule strong { color: #e2e8f0; }
-.header .badge { display: inline-block; background: #1e293b; color: #94a3b8; padding: 4px 12px; border-radius: 9999px; font-size: 12px; margin-top: 8px; }
+.tabs { display: flex; gap: 4px; margin-top: 20px; border-bottom: 1px solid #334155; padding-bottom: 0; }
+.tab { padding: 10px 24px; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 14px; font-weight: 600; color: #64748b; background: transparent; border: none; transition: all 0.2s; }
+.tab:hover { color: #e2e8f0; background: #1e293b; }
+.tab.active { color: #f1f5f9; background: #1e293b; border: 1px solid #334155; border-bottom: 1px solid #1e293b; margin-bottom: -1px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
 .card { background: #1e293b; border-radius: 16px; padding: 20px; border: 1px solid #334155; }
 .card .label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 6px; }
@@ -48,23 +54,19 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 .loading { text-align: center; padding: 60px; color: #94a3b8; font-size: 18px; }
 .loading .spinner { border: 4px solid #1e293b; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 16px; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-@media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } .funnel-row { flex-direction: column; } }
 </style>
 </head>
 <body>
 <div class="dashboard">
 <div class="header">
 <h1>CRM Аналитика — Стратегия RD</h1>
-<p>Конверсия и эффективность воронки обзвона | Сегмент: ГОК (горно-обогатительные комбинаты)</p>
+<p>Конверсия и эффективность воронки обзвона</p>
 <div id="headerBadge" class="badge">Загрузка данных...</div>
 <div id="updateTimestamp" class="badge" style="display:none;background:transparent;border:1px solid #334155;color:#94a3b8;margin-left:8px"></div>
-<div class="rule">
-<strong>Правила расчёта:</strong><br>
-<span class="badge badge-green">Дозвон</span> Звонок1="Да" <strong>ИЛИ</strong> ПослеНДЗ="Да после НДЗ"<br>
-<span class="badge badge-amber">НДЗ</span> (Звонок1="НДЗ" <strong>И</strong> ПослеНДЗ пусто) <strong>ИЛИ</strong> (Звонок1="НДЗ" <strong>И</strong> ПослеНДЗ="НДЗ")<br>
-<span class="badge badge-gray">Не обработано</span> всё остальное<br>
-<span class="badge badge-green">Отработано</span> все записи, кроме (Звонок1 пусто <strong>И</strong> ПослеНДЗ пусто)<br>
-<span class="badge badge-blue">Получен ЛПР</span> Звонок1="Да" <strong>И</strong> ЛПР="Да"
+<div class="tabs">
+<button class="tab active" data-tab="gok">ГОКи</button>
+<button class="tab" data-tab="grad">Град</button>
 </div>
 </div>
 
@@ -74,19 +76,21 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 </div>
 
 <div id="content" style="display:none">
-<div class="cards" id="cards"></div>
+
+<div class="tab-content active" id="tab-gok">
+<div class="cards" id="gok-cards"></div>
 
 <div class="grid-2">
 <div class="panel">
-<h2 id="mainChartTitle">Итоговое распределение</h2>
+<h2 id="gokMainChartTitle">Итоговое распределение</h2>
 <div class="chart-container">
-<canvas id="mainChart"></canvas>
+<canvas id="gokMainChart"></canvas>
 </div>
 </div>
 <div class="panel">
 <h2>Статус звонка 1</h2>
 <div class="chart-container-sm">
-<canvas id="call1Chart"></canvas>
+<canvas id="gokCall1Chart"></canvas>
 </div>
 </div>
 </div>
@@ -95,19 +99,19 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 <div class="panel">
 <h2>После НДЗ</h2>
 <div class="chart-container-sm">
-<canvas id="afterNdzChart"></canvas>
+<canvas id="gokAfterNdzChart"></canvas>
 </div>
 </div>
 <div class="panel">
 <h2>По ответственным</h2>
 <div class="chart-container-sm">
-<canvas id="responsibleChart"></canvas>
+<canvas id="gokResponsibleChart"></canvas>
 </div>
 </div>
 <div class="panel">
 <h2>Дозвон vs НДЗ</h2>
 <div class="chart-container-sm">
-<canvas id="dozvonChart"></canvas>
+<canvas id="gokDozvonChart"></canvas>
 </div>
 </div>
 </div>
@@ -128,7 +132,7 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 <th>Не обраб.</th>
 </tr>
 </thead>
-<tbody id="managerTable"></tbody>
+<tbody id="gokManagerTable"></tbody>
 </table>
 </div>
 
@@ -146,8 +150,34 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 <th>→ %</th>
 </tr>
 </thead>
-<tbody id="okvedTable"></tbody>
+<tbody id="gokOkvedTable"></tbody>
 </table>
+</div>
+</div>
+</div>
+
+<div class="tab-content" id="tab-grad">
+<div class="cards" id="grad-cards"></div>
+
+<div class="panel full-width" style="margin-bottom:24px">
+<h2>Конверсия по ответственному менеджеру</h2>
+<table>
+<thead>
+<tr>
+<th>Менеджер</th>
+<th>Обработал</th>
+<th>Дозвонились</th>
+<th>Получено контактов ЛПР</th>
+<th>Назначали встречу с ЛПР</th>
+</tr>
+</thead>
+<tbody id="gradManagerTable"></tbody>
+</table>
+</div>
+
+<div class="panel full-width" style="margin-bottom:24px">
+<h2>Статистика по причинам отказа с привязкой к ОКВЭД</h2>
+<div id="gradReasonTableWrapper"></div>
 </div>
 </div>
 
@@ -156,22 +186,18 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 <script>
 const COLORS = { blue: '#3b82f6', green: '#22c55e', amber: '#eab308', purple: '#a855f7', red: '#ef4444', gray: '#475569' };
 
-let charts = {};
+let charts = { gok: {}, grad: {} };
 
-async function loadData() {
-const resp = await fetch('data.json?_=' + Date.now());
+async function loadData(file) {
+const resp = await fetch(file + '?_=' + Date.now());
 if (!resp.ok) throw new Error('HTTP ' + resp.status);
 const wrapper = await resp.json();
-window.__dataUpdated = wrapper.updated || '';
-return wrapper.rows;
+return wrapper;
 }
 
-function analyze(data) {
+function analyzeGok(data) {
 const total = data.length;
-
 let dozvon = 0, ndz = 0, ndzNdz = 0, ndzDa = 0, neObr = 0, otrabotano = 0, lprDa = 0;
-
-const matrix = {};
 const byManager = {};
 const byOkved = {};
 
@@ -185,19 +211,13 @@ for (const row of data) {
 const c1 = row.call1;
 const af = row.afterNdz;
 const mgr = row.responsible || 'Не назначен';
-const ok = (row.okved || '').slice(0, 2) || 'Прочие';
-
-const mk = (c1 || '∅') + '|' + (af || '∅');
-matrix[mk] = (matrix[mk] || 0) + 1;
-
 addManager(mgr, 'total', 1);
 
 const isDozvon = c1 === 'Да' || af === 'Да после НДЗ';
 const isNdz = c1 === 'НДЗ' && (af === 'НДЗ' || af === null);
 
 if (isDozvon) {
-dozvon++;
-otrabotano++;
+dozvon++; otrabotano++;
 addManager(mgr, 'dozvon', 1);
 if (af === 'Да после НДЗ') addManager(mgr, 'ndz_da', 1);
 if (row.lpr === 'Да') { lprDa++; addManager(mgr, 'lpr', 1); }
@@ -221,10 +241,70 @@ ndzDa++;
 }
 }
 
-return { total, dozvon, ndz, ndzNdz, ndzDa, neObr, otrabotano, lprDa, matrix, byManager, byOkved, data };
+return { total, dozvon, ndz, ndzNdz, ndzDa, neObr, otrabotano, lprDa, byManager, byOkved, data };
 }
 
-function renderCards(r) {
+function analyzeGrad(data) {
+const total = data.length;
+let obrabotano = 0, dozvonilis = 0, lprPolucheno = 0, vstrechaNaznachena = 0;
+let ndzCount = 0, neObrabotano = 0;
+const byManager = {};
+const byReason = {};
+
+for (const row of data) {
+const c1 = row.call1;
+const af = row.afterNdz;
+const mgr = row.responsible || 'Не назначен';
+const lpr = row.lpr;
+const meeting = row.meeting;
+const reason = row.reason;
+const okvedMain = (row.okved || '').split('.')[0] || 'Прочие';
+
+if (!byManager[mgr]) byManager[mgr] = { total: 0, obrabotano: 0, dozvonilis: 0, lprPolucheno: 0, vstrechaNaznachena: 0 };
+byManager[mgr].total++;
+
+const isDozvonilis = c1 === 'Да' || af === 'Да после НДЗ';
+const isObrabotano = c1 === 'Да' || c1 === 'НДЗ' || af === 'Да после НДЗ' || af === 'НДЗ';
+
+if (isObrabotano) {
+obrabotano++;
+byManager[mgr].obrabotano++;
+}
+
+if (isDozvonilis) {
+dozvonilis++;
+byManager[mgr].dozvonilis++;
+}
+
+if (lpr === 'Да') {
+lprPolucheno++;
+byManager[mgr].lprPolucheno++;
+}
+
+if (meeting === 'Да') {
+vstrechaNaznachena++;
+byManager[mgr].vstrechaNaznachena++;
+}
+
+if ((c1 === 'НДЗ' && af === 'НДЗ') || (c1 === 'НДЗ' && af === 'Выбрать')) {
+ndzCount++;
+}
+
+if (c1 === 'Выбрать') {
+neObrabotano++;
+}
+
+if (reason && reason !== 'Выбрать') {
+const key = reason + '|' + okvedMain;
+if (!byReason[key]) byReason[key] = { reason, okved: okvedMain, count: 0 };
+byReason[key].count++;
+}
+}
+
+return { total, obrabotano, dozvonilis, lprPolucheno, vstrechaNaznachena, ndzCount, neObrabotano, byManager, byReason, data };
+}
+
+function renderGokCards(r) {
 const dPct = (r.dozvon / r.total * 100).toFixed(1);
 const oPct = (r.otrabotano / r.total * 100).toFixed(1);
 const nPct = (r.neObr / r.total * 100).toFixed(1);
@@ -259,10 +339,50 @@ html += stats.map(c =>
 ).join('');
 html += '</div>';
 
-document.getElementById('cards').innerHTML = html;
+document.getElementById('gok-cards').innerHTML = html;
 }
 
-function renderManagerTable(r) {
+function renderGradCards(r) {
+const dPct = r.total ? (r.dozvonilis / r.total * 100).toFixed(1) : 0;
+const oPct = r.total ? (r.obrabotano / r.total * 100).toFixed(1) : 0;
+const lPct = r.total ? (r.lprPolucheno / r.total * 100).toFixed(1) : 0;
+const vPct = r.total ? (r.vstrechaNaznachena / r.total * 100).toFixed(1) : 0;
+const lFromD = r.dozvonilis ? (r.lprPolucheno / r.dozvonilis * 100).toFixed(1) : 0;
+
+const funnel = [
+{ label: 'Всего контактов', value: r.total, sub: 'в базе Град', cls: '' },
+{ label: 'Обработаны', value: r.obrabotano, sub: oPct + '% от общего', cls: 'green' },
+{ label: 'Дозвонились', value: r.dozvonilis, sub: dPct + '% от общего', cls: 'green' },
+{ label: 'Получили контакт ЛПР', value: r.lprPolucheno, sub: lPct + '% от общего, ' + lFromD + '% от дозвона', cls: 'blue' },
+{ label: 'Назначена встреча с ЛПР', value: r.vstrechaNaznachena, sub: vPct + '% от общего', cls: 'blue' },
+];
+
+const stats = [
+{ label: 'НДЗ', value: r.ndzCount, sub: r.total ? (r.ndzCount / r.total * 100).toFixed(1) + '%' : '0%', cls: 'amber' },
+{ label: 'Не обработано', value: r.neObrabotano, sub: r.total ? (r.neObrabotano / r.total * 100).toFixed(1) + '%' : '0%', cls: '' },
+];
+
+let html = '<div class="funnel-row">';
+html += funnel.map((c, i) =>
+`<div class="card funnel-card">
+${i > 0 ? '<div class="funnel-arrow">↓</div>' : ''}
+<div class="label">${c.label}</div>
+<div class="value${c.cls ? ' ' + c.cls : ''}">${c.value}</div>
+<div class="sub">${c.sub}</div>
+</div>`
+).join('');
+html += '</div>';
+
+html += '<div class="stats-row">';
+html += stats.map(c =>
+`<div class="card"><div class="label">${c.label}</div><div class="value${c.cls ? ' ' + c.cls : ''}">${c.value}</div><div class="sub">${c.sub}</div></div>`
+).join('');
+html += '</div>';
+
+document.getElementById('grad-cards').innerHTML = html;
+}
+
+function renderGokManagerTable(r) {
 const keys = Object.keys(r.byManager).sort((a, b) => r.byManager[b].total - r.byManager[a].total);
 const html = keys.map(name => {
 const m = r.byManager[name];
@@ -284,10 +404,45 @@ return `<tr>
 <td>${m.ne_obr}</td>
 </tr>`;
 }).join('');
-document.getElementById('managerTable').innerHTML = html;
+document.getElementById('gokManagerTable').innerHTML = html;
 }
 
-function renderOkvedTable(r) {
+function renderGradManagerTable(r) {
+const keys = Object.keys(r.byManager).sort((a, b) => r.byManager[b].total - r.byManager[a].total);
+const html = keys.map(name => {
+const m = r.byManager[name];
+const isUnassigned = name === 'Не назначен';
+const nameDisplay = isUnassigned ? '<em>Не назначен</em>' : '<strong>' + name + '</strong>';
+return `<tr>
+<td>${nameDisplay}</td>
+<td><span class="badge ${m.obrabotano ? 'badge-green' : 'badge-gray'}">${m.obrabotano}</span></td>
+<td><span class="badge ${m.dozvonilis ? 'badge-green' : 'badge-gray'}">${m.dozvonilis}</span></td>
+<td><span class="badge ${m.lprPolucheno ? 'badge-blue' : 'badge-gray'}">${m.lprPolucheno}</span></td>
+<td><span class="badge ${m.vstrechaNaznachena ? 'badge-blue' : 'badge-gray'}">${m.vstrechaNaznachena}</span></td>
+</tr>`;
+}).join('');
+document.getElementById('gradManagerTable').innerHTML = html;
+}
+
+function renderGradReasonTable(r) {
+const entries = Object.values(r.byReason);
+if (!entries.length) {
+document.getElementById('gradReasonTableWrapper').innerHTML = '<p style="color:#64748b">Нет данных по причинам отказа</p>';
+return;
+}
+
+entries.sort((a, b) => b.count - a.count);
+
+let html = `<table><thead><tr><th>Причина отказа</th><th>ОКВЭД (отрасль)</th><th>Кол-во</th></tr></thead><tbody>`;
+html += entries.map(e => {
+const okvedLabel = e.okved ? e.okved : 'Прочие';
+return `<tr><td>${e.reason}</td><td>${okvedLabel}</td><td><span class="badge badge-red">${e.count}</span></td></tr>`;
+}).join('');
+html += '</tbody></table>';
+document.getElementById('gradReasonTableWrapper').innerHTML = html;
+}
+
+function renderGokOkvedTable(r) {
 const okvedDesc = {
 '08': 'Добыча прочих полезных ископаемых',
 '07': 'Добыча металлических руд',
@@ -324,21 +479,21 @@ const dCls = dPct >= 30 ? 'blue' : dPct > 0 ? 'amber' : 'gray';
 const nCls = nPct >= 40 ? 'red' : nPct >= 20 ? 'amber' : 'blue';
 return `<tr><td>${ok}</td><td>${descDetail}</td><td>${d.total}</td><td>${d.dozvon}</td><td><span class="badge badge-${dCls}">${dPct}%</span></td><td>${d.ndz}</td><td><span class="badge badge-${nCls}">${nPct}%</span></td></tr>`;
 }).join('');
-document.getElementById('okvedTable').innerHTML = html;
+document.getElementById('gokOkvedTable').innerHTML = html;
 }
 
-function renderCharts(r) {
+function renderGokCharts(r) {
 const total = r.total;
 
-if (charts.mainChart) charts.mainChart.destroy();
-if (charts.call1Chart) charts.call1Chart.destroy();
-if (charts.afterNdzChart) charts.afterNdzChart.destroy();
-if (charts.responsibleChart) charts.responsibleChart.destroy();
-if (charts.dozvonChart) charts.dozvonChart.destroy();
+if (charts.gok.main) charts.gok.main.destroy();
+if (charts.gok.call1) charts.gok.call1.destroy();
+if (charts.gok.afterNdz) charts.gok.afterNdz.destroy();
+if (charts.gok.responsible) charts.gok.responsible.destroy();
+if (charts.gok.dozvon) charts.gok.dozvon.destroy();
 
-document.getElementById('mainChartTitle').textContent = `Итоговое распределение (${total})`;
+document.getElementById('gokMainChartTitle').textContent = `Итоговое распределение (${total})`;
 
-charts.mainChart = new Chart(document.getElementById('mainChart'), {
+charts.gok.main = new Chart(document.getElementById('gokMainChart'), {
 type: 'bar',
 data: {
 labels: [`Распределение (${total})`],
@@ -376,7 +531,7 @@ call1Data[k] = (call1Data[k] || 0) + 1;
 const call1Labels = Object.keys(call1Data).map(k => k === '∅' ? 'пусто' : k);
 const call1Values = Object.values(call1Data);
 
-charts.call1Chart = new Chart(document.getElementById('call1Chart'), {
+charts.gok.call1 = new Chart(document.getElementById('gokCall1Chart'), {
 type: 'doughnut',
 data: {
 labels: call1Labels.map((l, i) => `${l} (${call1Values[i]})`),
@@ -397,7 +552,7 @@ afterData[k] = (afterData[k] || 0) + 1;
 const afterLabels = Object.keys(afterData).map(k => k === '∅' ? 'пусто' : k === 'Да после НДЗ' ? 'Да после НДЗ' : k);
 const afterValues = Object.values(afterData);
 
-charts.afterNdzChart = new Chart(document.getElementById('afterNdzChart'), {
+charts.gok.afterNdz = new Chart(document.getElementById('gokAfterNdzChart'), {
 type: 'doughnut',
 data: {
 labels: afterLabels.map((l, i) => `${l} (${afterValues[i]})`),
@@ -414,7 +569,7 @@ const mgrLabels = mgrSorted.map(([n, d]) => `${n} (${d.total})`);
 const mgrValues = mgrSorted.map(([, d]) => d.total);
 const mgrColors = mgrLabels.map((_, i) => [COLORS.blue, COLORS.green, COLORS.gray, COLORS.purple][i % 4]);
 
-charts.responsibleChart = new Chart(document.getElementById('responsibleChart'), {
+charts.gok.responsible = new Chart(document.getElementById('gokResponsibleChart'), {
 type: 'doughnut',
 data: {
 labels: mgrLabels,
@@ -426,7 +581,7 @@ plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, fo
 }
 });
 
-charts.dozvonChart = new Chart(document.getElementById('dozvonChart'), {
+charts.gok.dozvon = new Chart(document.getElementById('gokDozvonChart'), {
 type: 'bar',
 data: {
 labels: [''],
@@ -450,20 +605,50 @@ y: { ticks: { color: '#94a3b8' } }
 });
 }
 
+function renderGradCharts(r) {
+const total = r.total;
+}
+
+function initTabs() {
+document.querySelectorAll('.tab').forEach(tab => {
+tab.addEventListener('click', function() {
+document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+this.classList.add('active');
+document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+});
+});
+}
+
+let gokData = null, gradData = null;
+let gokResult = null, gradResult = null;
+
 async function init() {
 try {
-const data = await loadData();
-const result = analyze(data);
+const gokWrapper = await loadData('data.json');
+gokData = gokWrapper.rows;
+gokResult = analyzeGok(gokData);
 
-document.getElementById('headerBadge').textContent = `Всего записей: ${result.total} | Данные: Google Sheets (ГОК)`;
-document.getElementById('updateTimestamp').textContent = `Данные актуальны на ${window.__dataUpdated || new Date().toLocaleString('ru-RU')}`;
+const gradWrapper = await loadData('data_grad.json');
+gradData = gradWrapper.rows;
+gradResult = analyzeGrad(gradData);
+
+document.getElementById('headerBadge').textContent = `ГОК: ${gokResult.total} записей | Град: ${gradResult.total} записей | Данные: Google Sheets`;
+document.getElementById('updateTimestamp').textContent = `Данные актуальны на ${gokWrapper.updated || new Date().toLocaleString('ru-RU')}`;
 document.getElementById('updateTimestamp').style.display = 'inline-block';
 document.getElementById('loading').style.display = 'none';
 document.getElementById('content').style.display = 'block';
-renderCards(result);
-renderManagerTable(result);
-renderOkvedTable(result);
-renderCharts(result);
+
+renderGokCards(gokResult);
+renderGokManagerTable(gokResult);
+renderGokOkvedTable(gokResult);
+renderGokCharts(gokResult);
+
+renderGradCards(gradResult);
+renderGradManagerTable(gradResult);
+renderGradReasonTable(gradResult);
+
+initTabs();
 scheduleAutoReload();
 } catch (e) {
 document.getElementById('loading').innerHTML = `<div style="color:#ef4444;font-size:16px">Ошибка загрузки данных: ${e.message}</div>`;
@@ -476,24 +661,28 @@ function scheduleAutoReload() {
 const minutes = 5;
 autoReloadTimer = setInterval(async () => {
 try {
-const resp = await fetch('data.json?_=' + Date.now());
-if (!resp.ok) return;
-const newData = await resp.json();
-if (newData.length > 0) {
-rebuild(newData);
+const gokW = await loadData('data.json');
+const gradW = await loadData('data_grad.json');
+if (gokW.rows.length > 0 && gradW.rows.length > 0) {
+gokResult = analyzeGok(gokW.rows);
+gradResult = analyzeGrad(gradW.rows);
+rebuildAll();
 }
 } catch (_) {}
 }, minutes * 60 * 1000);
 }
 
-function rebuild(data) {
-const result = analyze(data);
-renderCards(result);
-renderManagerTable(result);
-renderOkvedTable(result);
-renderCharts(result);
-const header = document.getElementById('headerBadge');
-header.textContent = `Всего записей: ${result.total} | Данные: Google Sheets (ГОК)`;
+function rebuildAll() {
+renderGokCards(gokResult);
+renderGokManagerTable(gokResult);
+renderGokOkvedTable(gokResult);
+renderGokCharts(gokResult);
+
+renderGradCards(gradResult);
+renderGradManagerTable(gradResult);
+renderGradReasonTable(gradResult);
+
+document.getElementById('headerBadge').textContent = `ГОК: ${gokResult.total} записей | Град: ${gradResult.total} записей | Данные: Google Sheets`;
 }
 
 init();
