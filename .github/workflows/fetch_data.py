@@ -57,8 +57,8 @@ now = datetime.now(TZ).strftime('%d.%m.%Y, %H:%M:%S')
 
 gok_rows = fetch_sheet('ГОК', GOK_COLUMNS)
 grad_rows = fetch_sheet('Град', GRAD_COLUMNS)
-integrator_rows = fetch_sheet('Интегратор', INTEGRATOR_COLUMNS)
-sanpin_rows = fetch_sheet('СанПин', SANPIN_COLUMNS)
+integrator_rows = fetch_sheet('Интеграторы акт', INTEGRATOR_COLUMNS)
+sanpin_rows = fetch_sheet('СанПин акт', SANPIN_COLUMNS)
 
 with open('data.json', 'w', encoding='utf-8') as f:
     f.write('{"updated":"' + now + '","rows_gok":')
