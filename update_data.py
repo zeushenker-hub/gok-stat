@@ -47,11 +47,19 @@ INTEGRATOR_COLUMNS = {
     12: 'refusalReason', 13: 'meetingAppointed', 14: 'comment'
 }
 
+SANPIN_COLUMNS = {
+    0: 'company', 1: 'inn', 7: 'okved', 9: 'gendir',
+    13: 'tel1', 14: 'tel2', 15: 'responsible',
+    16: 'call1', 17: 'afterNdz', 18: 'lpr',
+    19: 'refusalReason', 20: 'meetingAppointed', 21: 'comment'
+}
+
 now = datetime.now(TZ).strftime('%d.%m.%Y, %H:%M:%S')
 
 gok_rows = fetch_sheet('ГОК', GOK_COLUMNS)
 grad_rows = fetch_sheet('Град', GRAD_COLUMNS)
 integrator_rows = fetch_sheet('Интегратор', INTEGRATOR_COLUMNS)
+sanpin_rows = fetch_sheet('СанПин', SANPIN_COLUMNS)
 
 with open(OUTPUT, 'w', encoding='utf-8') as f:
     f.write('{"updated":"' + now + '","rows_gok":')
@@ -60,6 +68,8 @@ with open(OUTPUT, 'w', encoding='utf-8') as f:
     json.dump(grad_rows, f, ensure_ascii=False)
     f.write(',"rows_integrator":')
     json.dump(integrator_rows, f, ensure_ascii=False)
+    f.write(',"rows_sanpin":')
+    json.dump(sanpin_rows, f, ensure_ascii=False)
     f.write('}')
 
-print(f'OK: ГОК={len(gok_rows)}, Град={len(grad_rows)}, Интегратор={len(integrator_rows)} -> {OUTPUT}')
+print(f'OK: ГОК={len(gok_rows)}, Град={len(grad_rows)}, Интегратор={len(integrator_rows)}, СанПин={len(sanpin_rows)} -> {OUTPUT}')

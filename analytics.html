@@ -69,6 +69,7 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 <button class="tab active" data-tab="gok">ГОК</button>
 <button class="tab" data-tab="grad">Град</button>
 <button class="tab" data-tab="integrator">Интегратор</button>
+<button class="tab" data-tab="sanpin">СанПин</button>
 </div>
 
 <div id="loading" class="loading">
@@ -123,6 +124,20 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 </div>
 </div>
 
+<div class="tab-content" id="tab-sanpin">
+<div class="cards" id="sanpin-cards"></div>
+<div class="grid-2">
+<div class="panel"><h2 id="sanpin-mainChartTitle">Итоговое распределение</h2><div class="chart-container"><canvas id="sanpin-mainChart"></canvas></div></div>
+<div class="panel"><h2>Статус звонка 1</h2><div class="chart-container-sm"><canvas id="sanpin-call1Chart"></canvas></div></div>
+</div>
+<div class="grid-2">
+<div class="panel full-width"><h2>Конверсия по менеджеру</h2>
+<table><thead><tr><th>Менеджер</th><th>Обработал</th><th>Дозвонились</th><th>Получено ЛПР</th><th>Назначили встречу</th></tr></thead><tbody id="sanpin-managerTable"></tbody></table></div>
+<div class="panel full-width"><h2>Причины отказа по ОКВЭД</h2>
+<table><thead><tr><th>ОКВЭД</th><th>Всего</th><th>Причина</th><th>Кол-во</th></tr></thead><tbody id="sanpin-refusalTable"></tbody></table></div>
+</div>
+</div>
+
 </div>
 
 <script>
@@ -140,6 +155,7 @@ async function loadData() {
   window.__gok = w.rows_gok || w.rows || [];
   window.__grad = w.rows_grad || [];
   window.__integrator = w.rows_integrator || [];
+  window.__sanpin = w.rows_sanpin || [];
 }
 
 // ГОК
@@ -246,10 +262,10 @@ function initTabs(){
 async function init(){
   try{
     await loadData();
-    document.getElementById('headerBadge').textContent='ГОК: '+window.__gok.length+' | Град: '+window.__grad.length+' | Интегратор: '+window.__integrator.length+' | Данные: Google Sheets';
+    document.getElementById('headerBadge').textContent='ГОК: '+window.__gok.length+' | Град: '+window.__grad.length+' | Интегратор: '+window.__integrator.length+' | СанПин: '+window.__sanpin.length+' | Данные: Google Sheets';
     document.getElementById('updateTimestamp').textContent='Данные актуальны на '+(window.__updated||new Date().toLocaleString('ru-RU')); document.getElementById('updateTimestamp').style.display='inline-block';
     document.getElementById('loading').style.display='none'; document.getElementById('tabs').style.display='flex';
-    renderGok(analyzeGok(window.__gok)); renderGradLike('grad',analyzeGradLike(window.__grad)); renderGradLike('integrator',analyzeGradLike(window.__integrator));
+    renderGok(analyzeGok(window.__gok)); renderGradLike('grad',analyzeGradLike(window.__grad)); renderGradLike('integrator',analyzeGradLike(window.__integrator)); renderGradLike('sanpin',analyzeGradLike(window.__sanpin));
     initTabs(); scheduleAutoReload();
   }catch(e){const d=document.getElementById('loading'); d.innerHTML='<div style="color:#ef4444;font-size:16px"></div>'; d.firstChild.textContent='Ошибка: '+e.message;}
 }
@@ -259,10 +275,10 @@ function scheduleAutoReload(){
   autoReloadTimer=setInterval(async()=>{try{const resp=await fetch('data.json?_='+Date.now());if(!resp.ok)return;const w=await resp.json();if((w.rows_gok&&w.rows_gok.length)||(w.rows_grad&&w.rows_grad.length))rebuild(w);}catch(_){}},5*60*1000);
 }
 function rebuild(w){
-  const gok=w.rows_gok||w.rows||[], grad=w.rows_grad||[], int=w.rows_integrator||[];
-  window.__gok=gok; window.__grad=grad; window.__integrator=int;
-  renderGok(analyzeGok(gok)); renderGradLike('grad',analyzeGradLike(grad)); renderGradLike('integrator',analyzeGradLike(int));
-  document.getElementById('headerBadge').textContent='ГОК: '+gok.length+' | Град: '+grad.length+' | Интегратор: '+int.length+' | Данные: Google Sheets';
+  const gok=w.rows_gok||w.rows||[], grad=w.rows_grad||[], int=w.rows_integrator||[], sanpin=w.rows_sanpin||[];
+  window.__gok=gok; window.__grad=grad; window.__integrator=int; window.__sanpin=sanpin;
+  renderGok(analyzeGok(gok)); renderGradLike('grad',analyzeGradLike(grad)); renderGradLike('integrator',analyzeGradLike(int)); renderGradLike('sanpin',analyzeGradLike(sanpin));
+  document.getElementById('headerBadge').textContent='ГОК: '+gok.length+' | Град: '+grad.length+' | Интегратор: '+int.length+' | СанПин: '+sanpin.length+' | Данные: Google Sheets';
 }
 
 init();
