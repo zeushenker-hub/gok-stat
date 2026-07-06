@@ -159,11 +159,85 @@ const COLORS = { blue: '#3b82f6', green: '#22c55e', amber: '#eab308', purple: '#
 let charts = {};
 let tabulatorInstances = {};
 
-function listFilter(headerEl, inputEl) {
-  const col = this;
-  inputEl.addEventListener('change', function() { col.setHeaderFilterValue(this.value); });
-  inputEl.addEventListener('keyup', function() { col.setHeaderFilterValue(this.value); });
+function buildMultiSelectHeader(column, allData) {
+  const values = new Set();
+  const field = column.getField();
+  allData.forEach(row => {
+    const v = row.getData ? row.getData()[field] : row[field];
+    if (v !== null && v !== undefined && v !== '') values.add(String(v));
+  });
+  const sorted = Array.from(values).sort();
+  const container = document.createElement('div');
+  container.style.position = 'relative';
+  const display = document.createElement('div');
+  display.textContent = '▼ ' + sorted.length;
+  display.style.cssText = 'cursor:pointer;padding:2px 6px;font-size:11px;color:#94a3b8;border:1px solid #334155;border-radius:4px;background:#0f172a;user-select:none;';
+  container.appendChild(display);
+  const dropdown = document.createElement('div');
+  dropdown.style.cssText = 'display:none;position:absolute;top:100%;left:0;z-index:100;background:#1e293b;border:1px solid #334155;border-radius:6px;max-height:200px;overflow-y:auto;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,0.4);';
+  const selected = new Set(sorted);
+  sorted.forEach(v => {
+    const label = document.createElement('label');
+    label.style.cssText = 'display:block;padding:4px 10px;cursor:pointer;font-size:12px;color:#e2e8f0;white-space:nowrap;';
+    label.addEventListener('mouseenter', () => label.style.background = '#334155');
+    label.addEventListener('mouseleave', () => label.style.background = 'transparent');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = true;
+    cb.style.marginRight = '6px';
+    cb.addEventListener('change', () => {
+      if (cb.checked) selected.add(v); else selected.delete(v);
+      display.textContent = '▼ ' + (selected.size === sorted.length ? sorted.length : selected.size + '/' + sorted.length);
+      if (selected.size === sorted.length || selected.size === 0) {
+        column.setHeaderFilterValue('');
+      } else {
+        column.setHeaderFilterValue(Array.from(selected));
+      }
+    });
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(v));
+    dropdown.appendChild(label);
+  });
+  const clearBtn = document.createElement('button');
+  clearBtn.textContent = 'Сбросить';
+  clearBtn.style.cssText = 'display:block;width:100%;padding:4px;font-size:11px;background:transparent;border:none;border-top:1px solid #334155;color:#64748b;cursor:pointer;';
+  clearBtn.addEventListener('click', () => {
+    dropdown.querySelectorAll('input[type=checkbox]').forEach(c => { c.checked = true; });
+    selected.clear(); sorted.forEach(v => selected.add(v));
+    display.textContent = '▼ ' + sorted.length;
+    column.setHeaderFilterValue('');
+  });
+  dropdown.appendChild(clearBtn);
+  container.appendChild(dropdown);
+  display.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+  });
+  document.addEventListener('click', function closeDropdown() {
+    dropdown.style.display = 'none';
+    document.removeEventListener('click', closeDropdown);
+  });
+  container.addEventListener('click', (e) => e.stopPropagation());
+  return container;
 }
+
+function multiSelectFilter(headerValue, rowValue, rowData, filterParams) {
+  if (!headerValue || !headerValue.length) return true;
+  return headerValue.includes(String(rowValue));
+}
+
+function makeMultiColumn(title, field) {
+  return {
+    title, field,
+    headerFilter: buildMultiSelectHeader,
+    headerFilterParams: { field: field },
+    headerFilterFunc: multiSelectFilter,
+  };
+}
+
+
+
+const enumFields = ['responsible','call1','afterNdz','lpr','refusalReason','meetingAppointed','integrator'];
 
 const gokTableColumns = [
   { title: "Компания", field: "company", headerFilter: "input" },
@@ -172,10 +246,10 @@ const gokTableColumns = [
   { title: "Ген.директор", field: "gendir", headerFilter: "input" },
   { title: "Тел.1", field: "tel1", headerFilter: "input" },
   { title: "Тел.2", field: "tel2", headerFilter: "input" },
-  { title: "Ответственный", field: "responsible", headerFilter: "input" },
-  { title: "Звонок 1", field: "call1", headerFilter: "input" },
-  { title: "После НДЗ", field: "afterNdz", headerFilter: "input" },
-  { title: "ЛПР", field: "lpr", headerFilter: "input" },
+  makeMultiColumn("Ответственный", "responsible"),
+  makeMultiColumn("Звонок 1", "call1"),
+  makeMultiColumn("После НДЗ", "afterNdz"),
+  makeMultiColumn("ЛПР", "lpr"),
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
@@ -188,29 +262,29 @@ const gradTableColumns = [
   { title: "Ген.директор", field: "gendir", headerFilter: "input" },
   { title: "Тел.1", field: "tel1", headerFilter: "input" },
   { title: "Тел.2", field: "tel2", headerFilter: "input" },
-  { title: "Ответственный", field: "responsible", headerFilter: "input" },
-  { title: "Звонок 1", field: "call1", headerFilter: "input" },
-  { title: "После НДЗ", field: "afterNdz", headerFilter: "input" },
-  { title: "ЛПР", field: "lpr", headerFilter: "input" },
-  { title: "Причина отказа", field: "refusalReason", headerFilter: "input" },
-  { title: "Встреча", field: "meetingAppointed", headerFilter: "input" },
+  makeMultiColumn("Ответственный", "responsible"),
+  makeMultiColumn("Звонок 1", "call1"),
+  makeMultiColumn("После НДЗ", "afterNdz"),
+  makeMultiColumn("ЛПР", "lpr"),
+  makeMultiColumn("Причина отказа", "refusalReason"),
+  makeMultiColumn("Встреча", "meetingAppointed"),
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
 const integratorTableColumns = [
-  { title: "Интегратор", field: "integrator", headerFilter: "input" },
+  makeMultiColumn("Интегратор", "integrator"),
   { title: "Компания", field: "company", headerFilter: "input" },
   { title: "ИНН", field: "inn", headerFilter: "input" },
   { title: "ОКВЭД", field: "okved", headerFilter: "input" },
   { title: "Ген.директор", field: "gendir", headerFilter: "input" },
   { title: "Тел.1", field: "tel1", headerFilter: "input" },
   { title: "Тел.2", field: "tel2", headerFilter: "input" },
-  { title: "Ответственный", field: "responsible", headerFilter: "input" },
-  { title: "Звонок 1", field: "call1", headerFilter: "input" },
-  { title: "После НДЗ", field: "afterNdz", headerFilter: "input" },
-  { title: "ЛПР", field: "lpr", headerFilter: "input" },
-  { title: "Причина отказа", field: "refusalReason", headerFilter: "input" },
-  { title: "Встреча", field: "meetingAppointed", headerFilter: "input" },
+  makeMultiColumn("Ответственный", "responsible"),
+  makeMultiColumn("Звонок 1", "call1"),
+  makeMultiColumn("После НДЗ", "afterNdz"),
+  makeMultiColumn("ЛПР", "lpr"),
+  makeMultiColumn("Причина отказа", "refusalReason"),
+  makeMultiColumn("Встреча", "meetingAppointed"),
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
@@ -221,12 +295,12 @@ const sanpinTableColumns = [
   { title: "Ген.директор", field: "gendir", headerFilter: "input" },
   { title: "Тел.1", field: "tel1", headerFilter: "input" },
   { title: "Тел.2", field: "tel2", headerFilter: "input" },
-  { title: "Ответственный", field: "responsible", headerFilter: "input" },
-  { title: "Звонок 1", field: "call1", headerFilter: "input" },
-  { title: "После НДЗ", field: "afterNdz", headerFilter: "input" },
-  { title: "ЛПР", field: "lpr", headerFilter: "input" },
-  { title: "Причина отказа", field: "refusalReason", headerFilter: "input" },
-  { title: "Встреча", field: "meetingAppointed", headerFilter: "input" },
+  makeMultiColumn("Ответственный", "responsible"),
+  makeMultiColumn("Звонок 1", "call1"),
+  makeMultiColumn("После НДЗ", "afterNdz"),
+  makeMultiColumn("ЛПР", "lpr"),
+  makeMultiColumn("Причина отказа", "refusalReason"),
+  makeMultiColumn("Встреча", "meetingAppointed"),
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
