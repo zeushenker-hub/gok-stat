@@ -172,12 +172,45 @@ const gokTableColumns = [
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
-const gradLikeTableColumns = [
+const gradTableColumns = [
   { title: "Компания", field: "company", headerFilter: "input" },
   { title: "ИНН", field: "inn", headerFilter: "input" },
   { title: "ОКВЭД", field: "okved", headerFilter: "input" },
   { title: "Регион", field: "region", headerFilter: "input" },
   { title: "Город", field: "city", headerFilter: "input" },
+  { title: "Ген.директор", field: "gendir", headerFilter: "input" },
+  { title: "Тел.1", field: "tel1", headerFilter: "input" },
+  { title: "Тел.2", field: "tel2", headerFilter: "input" },
+  { title: "Ответственный", field: "responsible", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "Звонок 1", field: "call1", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "После НДЗ", field: "afterNdz", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "ЛПР", field: "lpr", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "Причина отказа", field: "refusalReason", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "Встреча", field: "meetingAppointed", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "Комментарий", field: "comment", headerFilter: "input" },
+];
+
+const integratorTableColumns = [
+  { title: "Интегратор", field: "integrator", headerFilter: "input" },
+  { title: "Компания", field: "company", headerFilter: "input" },
+  { title: "ИНН", field: "inn", headerFilter: "input" },
+  { title: "ОКВЭД", field: "okved", headerFilter: "input" },
+  { title: "Ген.директор", field: "gendir", headerFilter: "input" },
+  { title: "Тел.1", field: "tel1", headerFilter: "input" },
+  { title: "Тел.2", field: "tel2", headerFilter: "input" },
+  { title: "Ответственный", field: "responsible", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "Звонок 1", field: "call1", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "После НДЗ", field: "afterNdz", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "ЛПР", field: "lpr", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "Причина отказа", field: "refusalReason", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "Встреча", field: "meetingAppointed", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "Комментарий", field: "comment", headerFilter: "input" },
+];
+
+const sanpinTableColumns = [
+  { title: "Компания", field: "company", headerFilter: "input" },
+  { title: "ИНН", field: "inn", headerFilter: "input" },
+  { title: "ОКВЭД", field: "okved", headerFilter: "input" },
   { title: "Ген.директор", field: "gendir", headerFilter: "input" },
   { title: "Тел.1", field: "tel1", headerFilter: "input" },
   { title: "Тел.2", field: "tel2", headerFilter: "input" },
@@ -338,9 +371,9 @@ async function init(){
     document.getElementById('loading').style.display='none'; document.getElementById('tabs').style.display='flex';
     renderGok(analyzeGok(window.__gok)); renderGradLike('grad',analyzeGradLike(window.__grad)); renderGradLike('integrator',analyzeGradLike(window.__integrator)); renderGradLike('sanpin',analyzeGradLike(window.__sanpin));
     renderDataTable('gok-datatable', window.__gok, gokTableColumns);
-    renderDataTable('grad-datatable', window.__grad, gradLikeTableColumns);
-    renderDataTable('integrator-datatable', window.__integrator, gradLikeTableColumns);
-    renderDataTable('sanpin-datatable', window.__sanpin, gradLikeTableColumns);
+    renderDataTable('grad-datatable', window.__grad, gradTableColumns);
+    renderDataTable('integrator-datatable', window.__integrator, integratorTableColumns);
+    renderDataTable('sanpin-datatable', window.__sanpin, sanpinTableColumns);
     initTabs(); scheduleAutoReload();
   }catch(e){const d=document.getElementById('loading'); d.innerHTML='<div style="color:#ef4444;font-size:16px"></div>'; d.firstChild.textContent='Ошибка: '+e.message;}
 }
@@ -354,9 +387,9 @@ function rebuild(w){
   window.__gok=gok; window.__grad=grad; window.__integrator=int; window.__sanpin=sanpin;
   renderGok(analyzeGok(gok)); renderGradLike('grad',analyzeGradLike(grad)); renderGradLike('integrator',analyzeGradLike(int)); renderGradLike('sanpin',analyzeGradLike(sanpin));
   renderDataTable('gok-datatable', gok, gokTableColumns);
-  renderDataTable('grad-datatable', grad, gradLikeTableColumns);
-  renderDataTable('integrator-datatable', int, gradLikeTableColumns);
-  renderDataTable('sanpin-datatable', sanpin, gradLikeTableColumns);
+  renderDataTable('grad-datatable', grad, gradTableColumns);
+  renderDataTable('integrator-datatable', int, integratorTableColumns);
+  renderDataTable('sanpin-datatable', sanpin, sanpinTableColumns);
   document.getElementById('headerBadge').textContent='ГОК: '+gok.length+' | Град: '+grad.length+' | Интегратор: '+int.length+' | СанПин: '+sanpin.length+' | Данные: Google Sheets';
 }
 
