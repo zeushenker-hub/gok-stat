@@ -226,18 +226,18 @@ function multiSelectFilter(headerValue, rowValue, rowData, filterParams) {
   return headerValue.includes(String(rowValue));
 }
 
-function makeMultiColumn(title, field) {
+function makeMultiColumn(title, field, dataGetter) {
   return {
     title, field,
-    headerFilter: buildMultiSelectHeader,
-    headerFilterParams: { field: field },
+    headerFilter: (column) => {
+      const allData = typeof dataGetter === 'function' ? dataGetter() : (window.__gok || []);
+      return buildMultiSelectHeader(column, allData);
+    },
     headerFilterFunc: multiSelectFilter,
   };
 }
 
 
-
-const enumFields = ['responsible','call1','afterNdz','lpr','refusalReason','meetingAppointed','integrator'];
 
 const gokTableColumns = [
   { title: "Компания", field: "company", headerFilter: "input" },
@@ -246,10 +246,10 @@ const gokTableColumns = [
   { title: "Ген.директор", field: "gendir", headerFilter: "input" },
   { title: "Тел.1", field: "tel1", headerFilter: "input" },
   { title: "Тел.2", field: "tel2", headerFilter: "input" },
-  makeMultiColumn("Ответственный", "responsible"),
-  makeMultiColumn("Звонок 1", "call1"),
-  makeMultiColumn("После НДЗ", "afterNdz"),
-  makeMultiColumn("ЛПР", "lpr"),
+  makeMultiColumn("Ответственный", "responsible", () => window.__gok),
+  makeMultiColumn("Звонок 1", "call1", () => window.__gok),
+  makeMultiColumn("После НДЗ", "afterNdz", () => window.__gok),
+  makeMultiColumn("ЛПР", "lpr", () => window.__gok),
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
@@ -262,29 +262,29 @@ const gradTableColumns = [
   { title: "Ген.директор", field: "gendir", headerFilter: "input" },
   { title: "Тел.1", field: "tel1", headerFilter: "input" },
   { title: "Тел.2", field: "tel2", headerFilter: "input" },
-  makeMultiColumn("Ответственный", "responsible"),
-  makeMultiColumn("Звонок 1", "call1"),
-  makeMultiColumn("После НДЗ", "afterNdz"),
-  makeMultiColumn("ЛПР", "lpr"),
-  makeMultiColumn("Причина отказа", "refusalReason"),
-  makeMultiColumn("Встреча", "meetingAppointed"),
+  makeMultiColumn("Ответственный", "responsible", () => window.__grad),
+  makeMultiColumn("Звонок 1", "call1", () => window.__grad),
+  makeMultiColumn("После НДЗ", "afterNdz", () => window.__grad),
+  makeMultiColumn("ЛПР", "lpr", () => window.__grad),
+  makeMultiColumn("Причина отказа", "refusalReason", () => window.__grad),
+  makeMultiColumn("Встреча", "meetingAppointed", () => window.__grad),
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
 const integratorTableColumns = [
-  makeMultiColumn("Интегратор", "integrator"),
+  makeMultiColumn("Интегратор", "integrator", () => window.__integrator),
   { title: "Компания", field: "company", headerFilter: "input" },
   { title: "ИНН", field: "inn", headerFilter: "input" },
   { title: "ОКВЭД", field: "okved", headerFilter: "input" },
   { title: "Ген.директор", field: "gendir", headerFilter: "input" },
   { title: "Тел.1", field: "tel1", headerFilter: "input" },
   { title: "Тел.2", field: "tel2", headerFilter: "input" },
-  makeMultiColumn("Ответственный", "responsible"),
-  makeMultiColumn("Звонок 1", "call1"),
-  makeMultiColumn("После НДЗ", "afterNdz"),
-  makeMultiColumn("ЛПР", "lpr"),
-  makeMultiColumn("Причина отказа", "refusalReason"),
-  makeMultiColumn("Встреча", "meetingAppointed"),
+  makeMultiColumn("Ответственный", "responsible", () => window.__integrator),
+  makeMultiColumn("Звонок 1", "call1", () => window.__integrator),
+  makeMultiColumn("После НДЗ", "afterNdz", () => window.__integrator),
+  makeMultiColumn("ЛПР", "lpr", () => window.__integrator),
+  makeMultiColumn("Причина отказа", "refusalReason", () => window.__integrator),
+  makeMultiColumn("Встреча", "meetingAppointed", () => window.__integrator),
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
@@ -295,12 +295,12 @@ const sanpinTableColumns = [
   { title: "Ген.директор", field: "gendir", headerFilter: "input" },
   { title: "Тел.1", field: "tel1", headerFilter: "input" },
   { title: "Тел.2", field: "tel2", headerFilter: "input" },
-  makeMultiColumn("Ответственный", "responsible"),
-  makeMultiColumn("Звонок 1", "call1"),
-  makeMultiColumn("После НДЗ", "afterNdz"),
-  makeMultiColumn("ЛПР", "lpr"),
-  makeMultiColumn("Причина отказа", "refusalReason"),
-  makeMultiColumn("Встреча", "meetingAppointed"),
+  makeMultiColumn("Ответственный", "responsible", () => window.__sanpin),
+  makeMultiColumn("Звонок 1", "call1", () => window.__sanpin),
+  makeMultiColumn("После НДЗ", "afterNdz", () => window.__sanpin),
+  makeMultiColumn("ЛПР", "lpr", () => window.__sanpin),
+  makeMultiColumn("Причина отказа", "refusalReason", () => window.__sanpin),
+  makeMultiColumn("Встреча", "meetingAppointed", () => window.__sanpin),
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
