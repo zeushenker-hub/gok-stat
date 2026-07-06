@@ -265,11 +265,13 @@ function renderDataTable(containerId, data, columns) {
   });
 }
 
-async function loadData(file) {
-const resp = await fetch(file + '?_=' + Date.now());
+async function loadData() {
+const resp = await fetch('data.json?_=' + Date.now());
 if (!resp.ok) throw new Error('HTTP ' + resp.status);
 const wrapper = await resp.json();
-return wrapper;
+window.__updated = wrapper.updated || '';
+window.__gok = wrapper.rows_gok || wrapper.rows || [];
+window.__grad = wrapper.rows_grad || [];
 }
 
 function analyzeGok(data) {
@@ -697,21 +699,16 @@ document.getElementById('tab-' + this.dataset.tab).classList.add('active');
 });
 }
 
-let gokData = null, gradData = null;
 let gokResult = null, gradResult = null;
 
 async function init() {
 try {
-const gokWrapper = await loadData('data.json');
-gokData = gokWrapper.rows;
-gokResult = analyzeGok(gokData);
+await loadData();
+gokResult = analyzeGok(window.__gok);
+gradResult = analyzeGrad(window.__grad);
 
-const gradWrapper = await loadData('data_grad.json');
-gradData = gradWrapper.rows;
-gradResult = analyzeGrad(gradData);
-
-document.getElementById('headerBadge').textContent = `ГОК: ${gokResult.total} записей | Град: ${gradResult.total} записей | Данные: Google Sheets`;
-document.getElementById('updateTimestamp').textContent = `Данные актуальны на ${gokWrapper.updated || new Date().toLocaleString('ru-RU')}`;
+document.getElementById('headerBadge').textContent = `ГОК: ${window.__gok.length} | Град: ${window.__grad.length} | Данные: Google Sheets`;
+document.getElementById('updateTimestamp').textContent = `Данные актуальны на ${window.__updated || new Date().toLocaleString('ru-RU')}`;
 document.getElementById('updateTimestamp').style.display = 'inline-block';
 document.getElementById('loading').style.display = 'none';
 document.getElementById('content').style.display = 'block';
@@ -720,12 +717,12 @@ renderGokCards(gokResult);
 renderGokManagerTable(gokResult);
 renderGokOkvedTable(gokResult);
 renderGokCharts(gokResult);
-renderDataTable('gok-datatable', gokData, gokTableColumns);
+renderDataTable('gok-datatable', window.__gok, gokTableColumns);
 
 renderGradCards(gradResult);
 renderGradManagerTable(gradResult);
 renderGradReasonTable(gradResult);
-renderDataTable('grad-datatable', gradData, gradTableColumns);
+renderDataTable('grad-datatable', window.__grad, gradTableColumns);
 
 initTabs();
 scheduleAutoReload();
@@ -740,11 +737,13 @@ function scheduleAutoReload() {
 const minutes = 5;
 autoReloadTimer = setInterval(async () => {
 try {
-const gokW = await loadData('data.json');
-const gradW = await loadData('data_grad.json');
-if (gokW.rows.length > 0 && gradW.rows.length > 0) {
-gokResult = analyzeGok(gokW.rows);
-gradResult = analyzeGrad(gradW.rows);
+const resp = await fetch('data.json?_=' + Date.now());
+if (!resp.ok) return;
+const w = await resp.json();
+if ((w.rows_gok && w.rows_gok.length) || (w.rows_grad && w.rows_grad.length)) {
+window.__updated = w.updated || '';
+window.__gok = w.rows_gok || w.rows || [];
+window.__grad = w.rows_grad || [];
 rebuildAll();
 }
 } catch (_) {}
@@ -752,18 +751,21 @@ rebuildAll();
 }
 
 function rebuildAll() {
+gokResult = analyzeGok(window.__gok);
+gradResult = analyzeGrad(window.__grad);
+
 renderGokCards(gokResult);
 renderGokManagerTable(gokResult);
 renderGokOkvedTable(gokResult);
 renderGokCharts(gokResult);
-renderDataTable('gok-datatable', gokData, gokTableColumns);
+renderDataTable('gok-datatable', window.__gok, gokTableColumns);
 
 renderGradCards(gradResult);
 renderGradManagerTable(gradResult);
 renderGradReasonTable(gradResult);
-renderDataTable('grad-datatable', gradData, gradTableColumns);
+renderDataTable('grad-datatable', window.__grad, gradTableColumns);
 
-document.getElementById('headerBadge').textContent = `ГОК: ${gokResult.total} записей | Град: ${gradResult.total} записей | Данные: Google Sheets`;
+document.getElementById('headerBadge').textContent = `ГОК: ${window.__gok.length} | Град: ${window.__grad.length} | Данные: Google Sheets`;
 }
 
 init();
