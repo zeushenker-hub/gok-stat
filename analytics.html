@@ -15,12 +15,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .header h1 { font-size: 28px; font-weight: 700; color: #f1f5f9; }
 .header p { color: #94a3b8; margin-top: 4px; font-size: 14px; }
 .header .badge { display: inline-block; background: #1e293b; color: #94a3b8; padding: 4px 12px; border-radius: 9999px; font-size: 12px; margin-top: 8px; }
-.header .rule { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px 16px; margin-top: 12px; font-size: 13px; color: #94a3b8; line-height: 1.6; }
-.header .rule strong { color: #e2e8f0; }
-.tabs { display: flex; gap: 4px; margin-top: 20px; border-bottom: 1px solid #334155; padding-bottom: 0; }
-.tab { padding: 10px 24px; border-radius: 8px 8px 0 0; cursor: pointer; font-size: 14px; font-weight: 600; color: #64748b; background: transparent; border: none; transition: all 0.2s; }
-.tab:hover { color: #e2e8f0; background: #1e293b; }
-.tab.active { color: #f1f5f9; background: #1e293b; border: 1px solid #334155; border-bottom: 1px solid #1e293b; margin-bottom: -1px; }
+.tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid #334155; }
+.tab { padding: 10px 24px; cursor: pointer; border: none; background: transparent; color: #64748b; font-size: 14px; font-weight: 600; border-bottom: 2px solid transparent; transition: all .2s; }
+.tab:hover { color: #e2e8f0; }
+.tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
@@ -32,6 +30,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .card .value.amber { color: #eab308; }
 .card .value.blue { color: #3b82f6; }
 .card .value.red { color: #ef4444; }
+.card .value.purple { color: #a855f7; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
 .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 24px; }
 .panel { background: #1e293b; border-radius: 16px; padding: 24px; border: 1px solid #334155; }
@@ -63,7 +62,7 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 .tabulator .tabulator-footer { border-top: 1px solid #334155; }
 .tabulator .tabulator-filter { border: 1px solid #334155; background: #0f172a; color: #e2e8f0; border-radius: 4px; padding: 2px 6px; font-size: 11px; margin-top: 2px; }
 .tabulator .tabulator-filter:focus { outline: none; border-color: #3b82f6; }
-@media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } .funnel-row { flex-direction: column; } }
+@media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -73,10 +72,13 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 <p>Конверсия и эффективность воронки обзвона</p>
 <div id="headerBadge" class="badge">Загрузка данных...</div>
 <div id="updateTimestamp" class="badge" style="display:none;background:transparent;border:1px solid #334155;color:#94a3b8;margin-left:8px"></div>
-<div class="tabs">
-<button class="tab active" data-tab="gok">ГОКи</button>
-<button class="tab" data-tab="grad">Град</button>
 </div>
+
+<div class="tabs" id="tabs" style="display:none">
+<button class="tab active" data-tab="gok">ГОК</button>
+<button class="tab" data-tab="grad">Град</button>
+<button class="tab" data-tab="integrator">Интеграторы</button>
+<button class="tab" data-tab="sanpin">СанПин</button>
 </div>
 
 <div id="loading" class="loading">
@@ -84,119 +86,68 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 Загрузка данных из Google Sheets...
 </div>
 
-<div id="content" style="display:none">
-
 <div class="tab-content active" id="tab-gok">
 <div class="cards" id="gok-cards"></div>
-
 <div class="grid-2">
-<div class="panel">
-<h2 id="gokMainChartTitle">Итоговое распределение</h2>
-<div class="chart-container">
-<canvas id="gokMainChart"></canvas>
+<div class="panel"><h2 id="gok-mainChartTitle">Итоговое распределение</h2><div class="chart-container"><canvas id="gok-mainChart"></canvas></div></div>
+<div class="panel"><h2>Статус звонка 1</h2><div class="chart-container-sm"><canvas id="gok-call1Chart"></canvas></div></div>
 </div>
-</div>
-<div class="panel">
-<h2>Статус звонка 1</h2>
-<div class="chart-container-sm">
-<canvas id="gokCall1Chart"></canvas>
-</div>
-</div>
-</div>
-
 <div class="grid-3">
-<div class="panel">
-<h2>После НДЗ</h2>
-<div class="chart-container-sm">
-<canvas id="gokAfterNdzChart"></canvas>
+<div class="panel"><h2>После НДЗ</h2><div class="chart-container-sm"><canvas id="gok-afterNdzChart"></canvas></div></div>
+<div class="panel"><h2>По ответственным</h2><div class="chart-container-sm"><canvas id="gok-responsibleChart"></canvas></div></div>
+<div class="panel"><h2>Дозвон vs НДЗ</h2><div class="chart-container-sm"><canvas id="gok-dozvonChart"></canvas></div></div>
 </div>
-</div>
-<div class="panel">
-<h2>По ответственным</h2>
-<div class="chart-container-sm">
-<canvas id="gokResponsibleChart"></canvas>
-</div>
-</div>
-<div class="panel">
-<h2>Дозвон vs НДЗ</h2>
-<div class="chart-container-sm">
-<canvas id="gokDozvonChart"></canvas>
-</div>
-</div>
-</div>
-
 <div class="grid-2">
-<div class="panel full-width">
-<h2>Конверсия по ответственному менеджеру</h2>
-<table>
-<thead>
-<tr>
-<th>Менеджер</th>
-<th>Всего</th>
-<th colspan="2">Дозвон</th>
-<th colspan="2">НДЗ</th>
-<th>НДЗ+НДЗ</th>
-<th>НДЗ→Да</th>
-<th colspan="2">ЛПР</th>
-<th>Не обраб.</th>
-</tr>
-</thead>
-<tbody id="gokManagerTable"></tbody>
-</table>
-</div>
-
-<div class="panel full-width">
-<h2>Детализация по ОКВЭД</h2>
-<table>
-<thead>
-<tr>
-<th>ОКВЭД</th>
-<th>Описание</th>
-<th>Всего</th>
-<th>Дозвон</th>
-<th>→ %</th>
-<th>НДЗ</th>
-<th>→ %</th>
-</tr>
-</thead>
-<tbody id="gokOkvedTable"></tbody>
-</table>
-</div>
-
-<div class="panel full-width" style="margin-top:24px">
-<h2>Детальная таблица <small>с фильтрацией</small></h2>
-<div id="gok-datatable"></div>
-</div>
+<div class="panel full-width"><h2>Конверсия по менеджеру</h2>
+<table><thead><tr><th>Менеджер</th><th>Всего</th><th colspan="2">Дозвон</th><th colspan="2">НДЗ</th><th>НДЗ+НДЗ</th><th>НДЗ→Да</th><th colspan="2">ЛПР</th><th>Не обраб.</th></tr></thead><tbody id="gok-managerTable"></tbody></table></div>
+<div class="panel full-width"><h2>Детализация по ОКВЭД</h2>
+<table><thead><tr><th>ОКВЭД</th><th>Описание</th><th>Всего</th><th>Дозвон</th><th>→ %</th><th>НДЗ</th><th>→ %</th></tr></thead><tbody id="gok-okvedTable"></tbody></table></div>
+<div class="panel full-width" style="margin-top:24px"><h2>Детальная таблица <small>с фильтрацией</small></h2><div id="gok-datatable"></div></div>
 </div>
 </div>
 
 <div class="tab-content" id="tab-grad">
 <div class="cards" id="grad-cards"></div>
-
-<div class="panel full-width" style="margin-bottom:24px">
-<h2>Конверсия по ответственному менеджеру</h2>
-<table>
-<thead>
-<tr>
-<th>Менеджер</th>
-<th>Обработал</th>
-<th>Дозвонились</th>
-<th>Получено контактов ЛПР</th>
-<th>Назначали встречу с ЛПР</th>
-</tr>
-</thead>
-<tbody id="gradManagerTable"></tbody>
-</table>
+<div class="grid-2">
+<div class="panel"><h2 id="grad-mainChartTitle">Итоговое распределение</h2><div class="chart-container"><canvas id="grad-mainChart"></canvas></div></div>
+<div class="panel"><h2>Статус звонка 1</h2><div class="chart-container-sm"><canvas id="grad-call1Chart"></canvas></div></div>
+</div>
+<div class="grid-2">
+<div class="panel full-width"><h2>Конверсия по менеджеру</h2>
+<table><thead><tr><th>Менеджер</th><th>Обработал</th><th>Дозвонились</th><th>Получено ЛПР</th><th>Назначили встречу</th></tr></thead><tbody id="grad-managerTable"></tbody></table></div>
+<div class="panel full-width"><h2>Причины отказа по ОКВЭД</h2>
+<table><thead><tr><th>ОКВЭД</th><th>Всего</th><th>Причина</th><th>Кол-во</th></tr></thead><tbody id="grad-refusalTable"></tbody></table></div>
+<div class="panel full-width" style="margin-top:24px"><h2>Детальная таблица <small>с фильтрацией</small></h2><div id="grad-datatable"></div></div>
+</div>
 </div>
 
-<div class="panel full-width" style="margin-top:24px">
-<h2>Детальная таблица <small>с фильтрацией</small></h2>
-<div id="grad-datatable"></div>
+<div class="tab-content" id="tab-integrator">
+<div class="cards" id="integrator-cards"></div>
+<div class="grid-2">
+<div class="panel"><h2 id="integrator-mainChartTitle">Итоговое распределение</h2><div class="chart-container"><canvas id="integrator-mainChart"></canvas></div></div>
+<div class="panel"><h2>Статус звонка 1</h2><div class="chart-container-sm"><canvas id="integrator-call1Chart"></canvas></div></div>
+</div>
+<div class="grid-2">
+<div class="panel full-width"><h2>Конверсия по менеджеру</h2>
+<table><thead><tr><th>Менеджер</th><th>Обработал</th><th>Дозвонились</th><th>Получено ЛПР</th><th>Назначили встречу</th></tr></thead><tbody id="integrator-managerTable"></tbody></table></div>
+<div class="panel full-width"><h2>Причины отказа по ОКВЭД</h2>
+<table><thead><tr><th>ОКВЭД</th><th>Всего</th><th>Причина</th><th>Кол-во</th></tr></thead><tbody id="integrator-refusalTable"></tbody></table></div>
+<div class="panel full-width" style="margin-top:24px"><h2>Детальная таблица <small>с фильтрацией</small></h2><div id="integrator-datatable"></div></div>
+</div>
 </div>
 
-<div class="panel full-width" style="margin-bottom:24px">
-<h2>Статистика по причинам отказа с привязкой к ОКВЭД</h2>
-<div id="gradReasonTableWrapper"></div>
+<div class="tab-content" id="tab-sanpin">
+<div class="cards" id="sanpin-cards"></div>
+<div class="grid-2">
+<div class="panel"><h2 id="sanpin-mainChartTitle">Итоговое распределение</h2><div class="chart-container"><canvas id="sanpin-mainChart"></canvas></div></div>
+<div class="panel"><h2>Статус звонка 1</h2><div class="chart-container-sm"><canvas id="sanpin-call1Chart"></canvas></div></div>
+</div>
+<div class="grid-2">
+<div class="panel full-width"><h2>Конверсия по менеджеру</h2>
+<table><thead><tr><th>Менеджер</th><th>Обработал</th><th>Дозвонились</th><th>Получено ЛПР</th><th>Назначили встречу</th></tr></thead><tbody id="sanpin-managerTable"></tbody></table></div>
+<div class="panel full-width"><h2>Причины отказа по ОКВЭД</h2>
+<table><thead><tr><th>ОКВЭД</th><th>Всего</th><th>Причина</th><th>Кол-во</th></tr></thead><tbody id="sanpin-refusalTable"></tbody></table></div>
+<div class="panel full-width" style="margin-top:24px"><h2>Детальная таблица <small>с фильтрацией</small></h2><div id="sanpin-datatable"></div></div>
 </div>
 </div>
 
@@ -204,8 +155,7 @@ tbody td { padding: 10px 8px; border-bottom: 1px solid #1e293b; }
 
 <script>
 const COLORS = { blue: '#3b82f6', green: '#22c55e', amber: '#eab308', purple: '#a855f7', red: '#ef4444', gray: '#475569' };
-
-let charts = { gok: {}, grad: {} };
+let charts = {};
 let tabulatorInstances = {};
 
 const gokTableColumns = [
@@ -222,7 +172,7 @@ const gokTableColumns = [
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
-const gradTableColumns = [
+const gradLikeTableColumns = [
   { title: "Компания", field: "company", headerFilter: "input" },
   { title: "ИНН", field: "inn", headerFilter: "input" },
   { title: "ОКВЭД", field: "okved", headerFilter: "input" },
@@ -235,8 +185,8 @@ const gradTableColumns = [
   { title: "Звонок 1", field: "call1", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
   { title: "После НДЗ", field: "afterNdz", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
   { title: "ЛПР", field: "lpr", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "Причина отказа", field: "reason", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "Встреча", field: "meeting", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "Причина отказа", field: "refusalReason", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "Встреча", field: "meetingAppointed", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
@@ -265,507 +215,149 @@ function renderDataTable(containerId, data, columns) {
   });
 }
 
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function notEmpty(v) { return v !== null && v !== undefined && v !== '' && String(v).trim() !== '' && v !== 'Выбрать'; }
+
 async function loadData() {
-const resp = await fetch('data.json?_=' + Date.now());
-if (!resp.ok) throw new Error('HTTP ' + resp.status);
-const wrapper = await resp.json();
-window.__updated = wrapper.updated || '';
-window.__gok = wrapper.rows_gok || wrapper.rows || [];
-window.__grad = wrapper.rows_grad || [];
+  const resp = await fetch('data.json?_=' + Date.now());
+  if (!resp.ok) throw new Error('HTTP ' + resp.status);
+  const w = await resp.json();
+  window.__updated = w.updated || '';
+  window.__gok = w.rows_gok || w.rows || [];
+  window.__grad = w.rows_grad || [];
+  window.__integrator = w.rows_integrator || [];
+  window.__sanpin = w.rows_sanpin || [];
 }
 
+// ГОК
 function analyzeGok(data) {
-const total = data.length;
-let dozvon = 0, ndz = 0, ndzNdz = 0, ndzDa = 0, neObr = 0, otrabotano = 0, lprDa = 0;
-const byManager = {};
-const byOkved = {};
-
-function addManager(name, field, val) {
-if (!byManager[name]) byManager[name] = { total: 0, dozvon: 0, ndz: 0, ndz_n: 0, ndz_da: 0, lpr: 0, ne_obr: 0 };
-if (field === 'total') byManager[name].total += val;
-else byManager[name][field] += val;
+  const r = { total: data.length, dozvon:0, ndz:0, ndzNdz:0, ndzDa:0, neObr:0, otrabotano:0, lprDa:0, byManager:{}, byOkved:{}, data };
+  const addM = (n,f,v) => { if(!r.byManager[n]) r.byManager[n]={total:0,dozvon:0,ndz:0,ndz_n:0,ndz_da:0,lpr:0,ne_obr:0}; if(f==='total') r.byManager[n].total+=v; else r.byManager[n][f]+=v; };
+  for(const row of data) {
+    const c1=row.call1, af=row.afterNdz, mgr=row.responsible||'Не назначен', ok=(row.okved||'').slice(0,2)||'Прочие';
+    addM(mgr,'total',1);
+    const isD=c1==='Да'||af==='Да после НДЗ', isN=c1==='НДЗ'&&(af==='НДЗ'||af===null);
+    if(isD){ r.dozvon++; r.otrabotano++; addM(mgr,'dozvon',1); if(af==='Да после НДЗ') addM(mgr,'ndz_da',1); if(row.lpr==='Да'){ r.lprDa++; addM(mgr,'lpr',1); } }
+    else if(isN&&af==='НДЗ'){ r.ndz++; r.ndzNdz++; r.otrabotano++; addM(mgr,'ndz',1); addM(mgr,'ndz_n',1); }
+    else if(isN){ r.ndz++; r.otrabotano++; addM(mgr,'ndz',1); }
+    else if(c1==='НДЗ'&&af==='Да после НДЗ'){ r.dozvon++; r.otrabotano++; addM(mgr,'dozvon',1); addM(mgr,'ndz_da',1); }
+    else{ r.neObr++; addM(mgr,'ne_obr',1); }
+    if(c1==='НДЗ'&&af==='Да после НДЗ') r.ndzDa++;
+  }
+  return r;
 }
-
-for (const row of data) {
-const c1 = row.call1;
-const af = row.afterNdz;
-const mgr = row.responsible || 'Не назначен';
-addManager(mgr, 'total', 1);
-
-const isDozvon = c1 === 'Да' || af === 'Да после НДЗ';
-const isNdz = c1 === 'НДЗ' && (af === 'НДЗ' || af === null);
-
-if (isDozvon) {
-dozvon++; otrabotano++;
-addManager(mgr, 'dozvon', 1);
-if (af === 'Да после НДЗ') addManager(mgr, 'ndz_da', 1);
-if (row.lpr === 'Да') { lprDa++; addManager(mgr, 'lpr', 1); }
-} else if (isNdz && af === 'НДЗ') {
-ndz++; ndzNdz++; otrabotano++;
-addManager(mgr, 'ndz', 1); addManager(mgr, 'ndz_n', 1);
-} else if (isNdz) {
-ndz++; otrabotano++;
-addManager(mgr, 'ndz', 1);
-} else if (c1 === 'НДЗ' && af === 'Да после НДЗ') {
-dozvon++; otrabotano++;
-addManager(mgr, 'dozvon', 1);
-addManager(mgr, 'ndz_da', 1);
-} else {
-neObr++;
-addManager(mgr, 'ne_obr', 1);
-}
-
-if (c1 === 'НДЗ' && af === 'Да после НДЗ') {
-ndzDa++;
-}
-}
-
-return { total, dozvon, ndz, ndzNdz, ndzDa, neObr, otrabotano, lprDa, byManager, byOkved, data };
-}
-
-function analyzeGrad(data) {
-const total = data.length;
-let obrabotano = 0, dozvonilis = 0, lprPolucheno = 0, vstrechaNaznachena = 0;
-let ndzCount = 0, neObrabotano = 0;
-const byManager = {};
-const byReason = {};
-
-for (const row of data) {
-const c1 = row.call1;
-const af = row.afterNdz;
-const mgr = row.responsible || 'Не назначен';
-const lpr = row.lpr;
-const meeting = row.meeting;
-const reason = row.reason;
-const okvedMain = (row.okved || '').split('.')[0] || 'Прочие';
-
-if (!byManager[mgr]) byManager[mgr] = { total: 0, obrabotano: 0, dozvonilis: 0, lprPolucheno: 0, vstrechaNaznachena: 0 };
-byManager[mgr].total++;
-
-const isDozvonilis = c1 === 'Да' || af === 'Да после НДЗ';
-const isObrabotano = c1 === 'Да' || c1 === 'НДЗ' || af === 'Да после НДЗ' || af === 'НДЗ';
-
-if (isObrabotano) {
-obrabotano++;
-byManager[mgr].obrabotano++;
-}
-
-if (isDozvonilis) {
-dozvonilis++;
-byManager[mgr].dozvonilis++;
-}
-
-if (lpr === 'Да') {
-lprPolucheno++;
-byManager[mgr].lprPolucheno++;
-}
-
-if (meeting === 'Да') {
-vstrechaNaznachena++;
-byManager[mgr].vstrechaNaznachena++;
-}
-
-if ((c1 === 'НДЗ' && af === 'НДЗ') || (c1 === 'НДЗ' && af === 'Выбрать')) {
-ndzCount++;
-}
-
-if (c1 === 'Выбрать') {
-neObrabotano++;
-}
-
-if (reason && reason !== 'Выбрать') {
-const key = reason + '|' + okvedMain;
-if (!byReason[key]) byReason[key] = { reason, okved: okvedMain, count: 0 };
-byReason[key].count++;
-}
-}
-
-return { total, obrabotano, dozvonilis, lprPolucheno, vstrechaNaznachena, ndzCount, neObrabotano, byManager, byReason, data };
-}
-
 function renderGokCards(r) {
-const dPct = (r.dozvon / r.total * 100).toFixed(1);
-const oPct = (r.otrabotano / r.total * 100).toFixed(1);
-const nPct = (r.neObr / r.total * 100).toFixed(1);
-
-const funnel = [
-{ label: 'Всего компаний', value: r.total, sub: 'в базе ГОК', cls: '' },
-{ label: 'Отработано', value: r.otrabotano, sub: oPct + '% от общего', cls: 'green' },
-{ label: 'Дозвон', value: r.dozvon, sub: dPct + '% от общего', cls: 'green' },
-{ label: 'Получен ЛПР', value: r.lprDa, sub: (r.lprDa / r.total * 100).toFixed(1) + '% от общего, ' + (r.lprDa / r.dozvon * 100).toFixed(1) + '% от дозвона', cls: 'blue' },
-];
-
-const stats = [
-{ label: 'НДЗ', value: r.ndz, sub: (r.ndz / r.total * 100).toFixed(1) + '%', cls: 'amber' },
-{ label: 'НДЗ + НДЗ', value: r.ndzNdz, sub: 'повторный НДЗ', cls: 'red' },
-{ label: 'Не обработано', value: r.neObr, sub: nPct + '%', cls: '' },
-];
-
-let html = '<div class="funnel-row">';
-html += funnel.map((c, i) =>
-`<div class="card funnel-card">
-${i > 0 ? '<div class="funnel-arrow">↓</div>' : ''}
-<div class="label">${c.label}</div>
-<div class="value${c.cls ? ' ' + c.cls : ''}">${c.value}</div>
-<div class="sub">${c.sub}</div>
-</div>`
-).join('');
-html += '</div>';
-
-html += '<div class="stats-row">';
-html += stats.map(c =>
-`<div class="card"><div class="label">${c.label}</div><div class="value${c.cls ? ' ' + c.cls : ''}">${c.value}</div><div class="sub">${c.sub}</div></div>`
-).join('');
-html += '</div>';
-
-document.getElementById('gok-cards').innerHTML = html;
+  const dPct=r.total?(r.dozvon/r.total*100).toFixed(1):'0.0', oPct=r.total?(r.otrabotano/r.total*100).toFixed(1):'0.0', nPct=r.total?(r.neObr/r.total*100).toFixed(1):'0.0';
+  let h='<div class="funnel-row">';
+  [{l:'Всего компаний',v:r.total,s:'в базе ГОК',c:''},{l:'Отработано',v:r.otrabotano,s:oPct+'% от общего',c:'green'},{l:'Дозвон',v:r.dozvon,s:dPct+'% от общего',c:'green'},{l:'Получен ЛПР',v:r.lprDa,s:(r.total?(r.lprDa/r.total*100).toFixed(1):'0.0')+'% от общего, '+(r.dozvon?(r.lprDa/r.dozvon*100).toFixed(1):'0.0')+'% от дозвона',c:'blue'}].forEach((c,i)=>{h+='<div class="card'+(i?'':'').trim()+'">'+(i?'<div class="funnel-arrow">↓</div>':'')+'<div class="label">'+c.l+'</div><div class="value'+(c.c?' '+c.c:'')+'">'+c.v+'</div><div class="sub">'+c.s+'</div></div>';});
+  h+='</div><div class="stats-row">';
+  [{l:'НДЗ',v:r.ndz,s:(r.total?(r.ndz/r.total*100).toFixed(1):'0.0')+'%',c:'amber'},{l:'НДЗ + НДЗ',v:r.ndzNdz,s:'повторный НДЗ',c:'red'},{l:'Не обработано',v:r.neObr,s:nPct+'%',c:''}].forEach(c=>{h+='<div class="card"><div class="label">'+c.l+'</div><div class="value'+(c.c?' '+c.c:'')+'">'+c.v+'</div><div class="sub">'+c.s+'</div></div>';});
+  h+='</div>'; document.getElementById('gok-cards').innerHTML=h;
 }
-
-function renderGradCards(r) {
-const dPct = r.total ? (r.dozvonilis / r.total * 100).toFixed(1) : 0;
-const oPct = r.total ? (r.obrabotano / r.total * 100).toFixed(1) : 0;
-const lPct = r.total ? (r.lprPolucheno / r.total * 100).toFixed(1) : 0;
-const vPct = r.total ? (r.vstrechaNaznachena / r.total * 100).toFixed(1) : 0;
-const lFromD = r.dozvonilis ? (r.lprPolucheno / r.dozvonilis * 100).toFixed(1) : 0;
-
-const funnel = [
-{ label: 'Всего контактов', value: r.total, sub: 'в базе Град', cls: '' },
-{ label: 'Обработаны', value: r.obrabotano, sub: oPct + '% от общего', cls: 'green' },
-{ label: 'Дозвонились', value: r.dozvonilis, sub: dPct + '% от общего', cls: 'green' },
-{ label: 'Получили контакт ЛПР', value: r.lprPolucheno, sub: lPct + '% от общего, ' + lFromD + '% от дозвона', cls: 'blue' },
-{ label: 'Назначена встреча с ЛПР', value: r.vstrechaNaznachena, sub: vPct + '% от общего', cls: 'blue' },
-];
-
-const stats = [
-{ label: 'НДЗ', value: r.ndzCount, sub: r.total ? (r.ndzCount / r.total * 100).toFixed(1) + '%' : '0%', cls: 'amber' },
-{ label: 'Не обработано', value: r.neObrabotano, sub: r.total ? (r.neObrabotano / r.total * 100).toFixed(1) + '%' : '0%', cls: '' },
-];
-
-let html = '<div class="funnel-row">';
-html += funnel.map((c, i) =>
-`<div class="card funnel-card">
-${i > 0 ? '<div class="funnel-arrow">↓</div>' : ''}
-<div class="label">${c.label}</div>
-<div class="value${c.cls ? ' ' + c.cls : ''}">${c.value}</div>
-<div class="sub">${c.sub}</div>
-</div>`
-).join('');
-html += '</div>';
-
-html += '<div class="stats-row">';
-html += stats.map(c =>
-`<div class="card"><div class="label">${c.label}</div><div class="value${c.cls ? ' ' + c.cls : ''}">${c.value}</div><div class="sub">${c.sub}</div></div>`
-).join('');
-html += '</div>';
-
-document.getElementById('grad-cards').innerHTML = html;
-}
-
 function renderGokManagerTable(r) {
-const keys = Object.keys(r.byManager).sort((a, b) => r.byManager[b].total - r.byManager[a].total);
-const html = keys.map(name => {
-const m = r.byManager[name];
-const dPct = m.total ? (m.dozvon / m.total * 100).toFixed(1) : 0;
-const nPct = m.total ? (m.ndz / m.total * 100).toFixed(1) : 0;
-const lPct = m.dozvon ? (m.lpr / m.dozvon * 100).toFixed(1) : 0;
-const isUnassigned = name === 'Не назначен';
-return `<tr>
-<td>${isUnassigned ? '<em>Не назначен</em>' : '<strong>' + name + '</strong>'}</td>
-<td>${m.total}</td>
-<td><span class="badge ${m.dozvon ? 'badge-green' : 'badge-gray'}">${m.dozvon}</span></td>
-<td><span class="badge ${dPct > 0 ? 'badge-blue' : 'badge-gray'}">${dPct}%</span></td>
-<td><span class="badge ${m.ndz ? 'badge-amber' : 'badge-gray'}">${m.ndz}</span></td>
-<td>${nPct}%</td>
-<td>${m.ndz_n}</td>
-<td>${m.ndz_da}</td>
-<td><span class="badge ${m.lpr ? 'badge-green' : 'badge-gray'}">${m.lpr}</span></td>
-<td>${lPct}%</td>
-<td>${m.ne_obr}</td>
-</tr>`;
-}).join('');
-document.getElementById('gokManagerTable').innerHTML = html;
+  const keys=Object.keys(r.byManager).sort((a,b)=>r.byManager[b].total-r.byManager[a].total);
+  document.getElementById('gok-managerTable').innerHTML=keys.map(n=>{const m=r.byManager[n], dPct=m.total?(m.dozvon/m.total*100).toFixed(1):'0.0', nPct=m.total?(m.ndz/m.total*100).toFixed(1):'0.0', lPct=m.dozvon?(m.lpr/m.dozvon*100).toFixed(1):'0.0'; return '<tr><td>'+(n==='Не назначен'?'<em>Не назначен</em>':'<strong>'+esc(n)+'</strong>')+'</td><td>'+m.total+'</td><td><span class="badge '+(m.dozvon?'badge-green':'badge-gray')+'">'+m.dozvon+'</span></td><td><span class="badge '+(dPct>0?'badge-blue':'badge-gray')+'">'+dPct+'%</span></td><td><span class="badge '+(m.ndz?'badge-amber':'badge-gray')+'">'+m.ndz+'</span></td><td>'+nPct+'%</td><td>'+m.ndz_n+'</td><td>'+m.ndz_da+'</td><td><span class="badge '+(m.lpr?'badge-green':'badge-gray')+'">'+m.lpr+'</span></td><td>'+lPct+'%</td><td>'+m.ne_obr+'</td></tr>';}).join('');
 }
-
-function renderGradManagerTable(r) {
-const keys = Object.keys(r.byManager).sort((a, b) => r.byManager[b].total - r.byManager[a].total);
-const html = keys.map(name => {
-const m = r.byManager[name];
-const isUnassigned = name === 'Не назначен';
-const nameDisplay = isUnassigned ? '<em>Не назначен</em>' : '<strong>' + name + '</strong>';
-return `<tr>
-<td>${nameDisplay}</td>
-<td><span class="badge ${m.obrabotano ? 'badge-green' : 'badge-gray'}">${m.obrabotano}</span></td>
-<td><span class="badge ${m.dozvonilis ? 'badge-green' : 'badge-gray'}">${m.dozvonilis}</span></td>
-<td><span class="badge ${m.lprPolucheno ? 'badge-blue' : 'badge-gray'}">${m.lprPolucheno}</span></td>
-<td><span class="badge ${m.vstrechaNaznachena ? 'badge-blue' : 'badge-gray'}">${m.vstrechaNaznachena}</span></td>
-</tr>`;
-}).join('');
-document.getElementById('gradManagerTable').innerHTML = html;
-}
-
-function renderGradReasonTable(r) {
-const entries = Object.values(r.byReason);
-if (!entries.length) {
-document.getElementById('gradReasonTableWrapper').innerHTML = '<p style="color:#64748b">Нет данных по причинам отказа</p>';
-return;
-}
-
-entries.sort((a, b) => b.count - a.count);
-
-let html = `<table><thead><tr><th>Причина отказа</th><th>ОКВЭД (отрасль)</th><th>Кол-во</th></tr></thead><tbody>`;
-html += entries.map(e => {
-const okvedLabel = e.okved ? e.okved : 'Прочие';
-return `<tr><td>${e.reason}</td><td>${okvedLabel}</td><td><span class="badge badge-red">${e.count}</span></td></tr>`;
-}).join('');
-html += '</tbody></table>';
-document.getElementById('gradReasonTableWrapper').innerHTML = html;
-}
-
 function renderGokOkvedTable(r) {
-const okvedDesc = {
-'08': 'Добыча прочих полезных ископаемых',
-'07': 'Добыча металлических руд',
-'24': 'Металлургическое производство',
-'20': 'Химическое производство',
-'05': 'Добыча угля',
-'70': 'Деятельность головных офисов',
-'06': 'Добыча сырой нефти и газа',
-'46': 'Торговля оптовая',
-};
-
-for (const row of r.data) {
-const ok = (row.okved || '').slice(0, 2) || 'Прочие';
-if (!r.byOkved[ok]) r.byOkved[ok] = { total: 0, dozvon: 0, ndz: 0 };
-r.byOkved[ok].total++;
-const c1 = row.call1;
-const af = row.afterNdz;
-if (c1 === 'Да' || af === 'Да после НДЗ') r.byOkved[ok].dozvon++;
-else if (c1 === 'НДЗ' && (af === null || af === 'НДЗ')) r.byOkved[ok].ndz++;
+  const desc={'08':'Добыча прочих','07':'Добыча руд','24':'Металлургия','20':'Химия','05':'Добыча угля','70':'Головные офисы','06':'Нефть/газ','46':'Торговля'};
+  for(const row of r.data){ const ok=(row.okved||'').slice(0,2)||'Прочие'; if(!r.byOkved[ok]) r.byOkved[ok]={total:0,dozvon:0,ndz:0}; r.byOkved[ok].total++; const c1=row.call1,af=row.afterNdz; if(c1==='Да'||af==='Да после НДЗ') r.byOkved[ok].dozvon++; else if(c1==='НДЗ'&&(af===null||af==='НДЗ')) r.byOkved[ok].ndz++; }
+  const keys=Object.keys(r.byOkved).sort(), other=keys.filter(k=>!desc[k]&&k!=='Прочие'), main=keys.filter(k=>desc[k]||k==='Прочие'), sorted=[...main,...other];
+  document.getElementById('gok-okvedTable').innerHTML=sorted.map(ok=>{const d=r.byOkved[ok], dPct=d.total?(d.dozvon/d.total*100).toFixed(1):'0.0', nPct=d.total?(d.ndz/d.total*100).toFixed(1):'0.0', descD=ok==='Прочие'&&other.length?other.join(', '):(desc[ok]||''); return '<tr><td>'+ok+'</td><td>'+esc(descD)+'</td><td>'+d.total+'</td><td>'+d.dozvon+'</td><td><span class="badge badge-'+(dPct>=30?'blue':dPct>0?'amber':'gray')+'">'+dPct+'%</span></td><td>'+d.ndz+'</td><td><span class="badge badge-'+(nPct>=40?'red':nPct>=20?'amber':'blue')+'">'+nPct+'%</span></td></tr>';}).join('');
 }
-
-const keys = Object.keys(r.byOkved).sort();
-const otherKeys = keys.filter(k => !okvedDesc[k] && k !== 'Прочие');
-const mainKeys = keys.filter(k => okvedDesc[k] || k === 'Прочие');
-const sorted = [...mainKeys, ...otherKeys];
-
-const html = sorted.map(ok => {
-const d = r.byOkved[ok];
-const dPct = d.total ? (d.dozvon / d.total * 100).toFixed(1) : 0;
-const nPct = d.total ? (d.ndz / d.total * 100).toFixed(1) : 0;
-const desc = okvedDesc[ok] || (ok === 'Прочие' ? 'Прочие виды' : '');
-const descDetail = ok === 'Прочие' && otherKeys.length ? otherKeys.join(', ') : desc;
-const dCls = dPct >= 30 ? 'blue' : dPct > 0 ? 'amber' : 'gray';
-const nCls = nPct >= 40 ? 'red' : nPct >= 20 ? 'amber' : 'blue';
-return `<tr><td>${ok}</td><td>${descDetail}</td><td>${d.total}</td><td>${d.dozvon}</td><td><span class="badge badge-${dCls}">${dPct}%</span></td><td>${d.ndz}</td><td><span class="badge badge-${nCls}">${nPct}%</span></td></tr>`;
-}).join('');
-document.getElementById('gokOkvedTable').innerHTML = html;
-}
-
 function renderGokCharts(r) {
-const total = r.total;
+  const total=r.total;
+  ['mainChart','call1Chart','afterNdzChart','responsibleChart','dozvonChart'].forEach(k=>{const id='gok-'+k.charAt(0).toLowerCase()+k.slice(1); if(charts[id]){charts[id].destroy();delete charts[id];}});
+  document.getElementById('gok-mainChartTitle').textContent='Итоговое распределение ('+total+')';
+  charts['gok-mainChart']=new Chart(document.getElementById('gok-mainChart'),{type:'bar',data:{labels:[''],datasets:[{label:'Дозвон ('+r.dozvon+')',data:[r.dozvon],backgroundColor:COLORS.green},{label:'НДЗ ('+r.ndz+')',data:[r.ndz],backgroundColor:COLORS.amber},{label:'Не обработано ('+r.neObr+')',data:[r.neObr],backgroundColor:COLORS.gray}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:10,font:{size:11,color:'#94a3b8'}}},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+' — '+ctx.parsed.x+' ('+(ctx.parsed.x/total*100).toFixed(1)+'%)';}}}},scales:{x:{stacked:true,ticks:{color:'#94a3b8'}},y:{stacked:true,beginAtZero:true,max:total,ticks:{color:'#94a3b8'}}}}});
+  const c1d={'НДЗ':0,'Да':0,'∅':0}; for(const row of r.data){const k=row.call1&notEmpty(row.call1)?row.call1:'∅';if(k==='выбрать')continue;c1d[k]=(c1d[k]||0)+1;}
+  charts['gok-call1Chart']=new Chart(document.getElementById('gok-call1Chart'),{type:'doughnut',data:{labels:Object.keys(c1d).map((l,i)=>l==='∅'?'пусто':l+' ('+Object.values(c1d)[i]+')'),datasets:[{data:Object.values(c1d),backgroundColor:['#eab308','#22c55e','#475569']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:10,font:{size:11,color:'#94a3b8'}}}}}});
+  const af={'НДЗ':0,'Да после НДЗ':0,'∅':0}; for(const row of r.data){const k=row.afterNdz&&notEmpty(row.afterNdz)?row.afterNdz:'∅';if(k==='выбрать')continue;af[k]=(af[k]||0)+1;}
+  charts['gok-afterNdzChart']=new Chart(document.getElementById('gok-afterNdzChart'),{type:'doughnut',data:{labels:Object.keys(af).map((l,i)=>l==='∅'?'пусто':l+' ('+Object.values(af)[i]+')'),datasets:[{data:Object.values(af),backgroundColor:['#eab308','#22c55e','#475569']}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:10,font:{size:11,color:'#94a3b8'}}}}}});
+  const mgrS=Object.entries(r.byManager).sort((a,b)=>b[1].total-a[1].total), mgrL=mgrS.map(([n,d])=>n+' ('+d.total+')'), mgrV=mgrS.map(([,d])=>d.total), mgrC=mgrL.map((_,i)=>[COLORS.blue,COLORS.green,COLORS.gray,COLORS.purple][i%4]);
+  charts['gok-responsibleChart']=new Chart(document.getElementById('gok-responsibleChart'),{type:'doughnut',data:{labels:mgrL,datasets:[{data:mgrV,backgroundColor:mgrC}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:10,font:{size:11,color:'#94a3b8'}}}}}});
+  charts['gok-dozvonChart']=new Chart(document.getElementById('gok-dozvonChart'),{type:'bar',data:{labels:[''],datasets:[{label:'Дозвон ('+r.dozvon+')',data:[r.dozvon],backgroundColor:COLORS.green},{label:'НДЗ ('+r.ndz+')',data:[r.ndz],backgroundColor:COLORS.amber},{label:'Не обработано ('+r.neObr+')',data:[r.neObr],backgroundColor:COLORS.gray}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:10,font:{size:11,color:'#94a3b8'}}}},scales:{x:{beginAtZero:true,max:total,ticks:{color:'#94a3b8'}},y:{ticks:{color:'#94a3b8'}}}}});
+}
+function renderGok(r){ renderGokCards(r); renderGokManagerTable(r); renderGokOkvedTable(r); renderGokCharts(r); }
 
-if (charts.gok.main) charts.gok.main.destroy();
-if (charts.gok.call1) charts.gok.call1.destroy();
-if (charts.gok.afterNdz) charts.gok.afterNdz.destroy();
-if (charts.gok.responsible) charts.gok.responsible.destroy();
-if (charts.gok.dozvon) charts.gok.dozvon.destroy();
+// Град / Интегратор (общая логика)
+function analyzeGradLike(data) {
+  const r={total:data.length,processed:0,dozvon:0,lpr:0,meeting:0,ndzCount:0,neObr:0,byManager:{},byOkvedRefusal:{},data};
+  for(const row of data){
+    const c1=row.call1, af=row.afterNdz, mgr=row.responsible&&notEmpty(row.responsible)?row.responsible:'Не назначен', ok=(row.okved||'').split('.')[0]||'Прочие';
+    if(!r.byManager[mgr]) r.byManager[mgr]={processed:0,dozvon:0,lpr:0,meeting:0};
+    if(c1==='Да'||c1==='НДЗ'||af==='Да после НДЗ'||af==='НДЗ'){ r.processed++; r.byManager[mgr].processed++; }
+    if(c1==='Да'||af==='Да после НДЗ'){ r.dozvon++; r.byManager[mgr].dozvon++; }
+    if(row.lpr==='Да'){ r.lpr++; r.byManager[mgr].lpr++; }
+    if(row.meetingAppointed==='Да'){ r.meeting++; r.byManager[mgr].meeting++; }
+    if(c1==='НДЗ'&&(af==='НДЗ'||af==='Выбрать')) r.ndzCount++;
+    if(!notEmpty(c1)) r.neObr++;
+    const reason=row.refusalReason;
+    if(notEmpty(reason)&&reason!=='Выбрать'){ if(!r.byOkvedRefusal[ok]) r.byOkvedRefusal[ok]={total:0,reasons:{}}; r.byOkvedRefusal[ok].total++; r.byOkvedRefusal[ok].reasons[reason]=(r.byOkvedRefusal[ok].reasons[reason]||0)+1; }
+  }
+  return r;
+}
+function renderGradLikeCards(prefix,r) {
+  const total=r.total, dPct=total?(r.dozvon/total*100).toFixed(1):'0.0', pPct=total?(r.processed/total*100).toFixed(1):'0.0', lPct=total?(r.lpr/total*100).toFixed(1):'0.0', mPct=total?(r.meeting/total*100).toFixed(1):'0.0', lFromD=r.dozvon?(r.lpr/r.dozvon*100).toFixed(1):'0.0', mFromL=r.lpr?(r.meeting/r.lpr*100).toFixed(1):'0.0';
+  let h='<div class="funnel-row">';
+  [{l:'Всего контактов',v:total,s:'в базе',c:''},{l:'Обработаны',v:r.processed,s:pPct+'% от общего',c:'green'},{l:'Дозвонились',v:r.dozvon,s:dPct+'% от общего',c:'green'},{l:'Получили контакт ЛПР',v:r.lpr,s:lPct+'% от общего, '+lFromD+'% от дозвона',c:'blue'},{l:'Назначена встреча',v:r.meeting,s:mPct+'% от общего, '+mFromL+'% от ЛПР',c:'purple'}].forEach((c,i)=>{h+='<div class="card">'+(i?'<div class="funnel-arrow">↓</div>':'')+'<div class="label">'+c.l+'</div><div class="value'+(c.c?' '+c.c:'')+'">'+c.v+'</div><div class="sub">'+c.s+'</div></div>';});
+  h+='</div><div class="stats-row">';
+  [{l:'НДЗ',v:r.ndzCount,s:(total?(r.ndzCount/total*100).toFixed(1):'0.0')+'%',c:'amber'},{l:'Не обработано',v:r.neObr,s:(total?(r.neObr/total*100).toFixed(1):'0.0')+'%',c:'red'}].forEach(c=>{h+='<div class="card"><div class="label">'+c.l+'</div><div class="value'+(c.c?' '+c.c:'')+'">'+c.v+'</div><div class="sub">'+c.s+'</div></div>';});
+  h+='</div>'; document.getElementById(prefix+'-cards').innerHTML=h;
+}
+function renderGradLikeManagerTable(prefix,r) {
+  const keys=Object.keys(r.byManager).sort((a,b)=>r.byManager[b].processed-r.byManager[a].processed);
+  document.getElementById(prefix+'-managerTable').innerHTML=keys.map(n=>{const m=r.byManager[n]; return '<tr><td>'+(n==='Не назначен'?'<em>Не назначен</em>':'<strong>'+esc(n)+'</strong>')+'</td><td>'+m.processed+'</td><td><span class="badge '+(m.dozvon?'badge-green':'badge-gray')+'">'+m.dozvon+'</span></td><td><span class="badge '+(m.lpr?'badge-blue':'badge-gray')+'">'+m.lpr+'</span></td><td><span class="badge '+(m.meeting?'badge-amber':'badge-gray')+'">'+m.meeting+'</span></td></tr>';}).join('');
+}
+function renderGradLikeRefusalTable(prefix,r) {
+  const okvedOrder=Object.keys(r.byOkvedRefusal).sort();
+  let html='';
+  for(const ok of okvedOrder){const d=r.byOkvedRefusal[ok];const reasons=Object.entries(d.reasons).sort((a,b)=>b[1]-a[1]);let first=true;for(const[reason,count]of reasons){html+='<tr>'+(first?'<td rowspan="'+reasons.length+'"><strong>'+esc(ok)+'</strong></td><td rowspan="'+reasons.length+'">'+d.total+'</td>':'')+'<td>'+esc(reason)+'</td><td>'+count+'</td></tr>';first=false;}}
+  if(!html) html='<tr><td colspan="4" style="color:#64748b;text-align:center">Нет данных</td></tr>';
+  document.getElementById(prefix+'-refusalTable').innerHTML=html;
+}
+function renderGradLikeCharts(prefix,r) {
+  const total=r.total;
+  ['mainChart','call1Chart'].forEach(k=>{const id=prefix+'-'+k.charAt(0).toLowerCase()+k.slice(1); if(charts[id]){charts[id].destroy();delete charts[id];}});
+  document.getElementById(prefix+'-mainChartTitle').textContent='Итоговое распределение ('+total+')';
+  charts[prefix+'-mainChart']=new Chart(document.getElementById(prefix+'-mainChart'),{type:'bar',data:{labels:[''],datasets:[{label:'Обработано ('+r.processed+')',data:[r.processed],backgroundColor:COLORS.green},{label:'Дозвон ('+r.dozvon+')',data:[r.dozvon],backgroundColor:COLORS.blue},{label:'ЛПР ('+r.lpr+')',data:[r.lpr],backgroundColor:COLORS.amber},{label:'Встреча ('+r.meeting+')',data:[r.meeting],backgroundColor:COLORS.purple},{label:'Не обработано ('+r.neObr+')',data:[r.neObr],backgroundColor:COLORS.gray}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:10,font:{size:11,color:'#94a3b8'}}},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+' — '+ctx.parsed.x+' ('+(ctx.parsed.x/total*100).toFixed(1)+'%)';}}}},scales:{x:{stacked:true,ticks:{color:'#94a3b8'}},y:{stacked:true,beginAtZero:true,max:total,ticks:{color:'#94a3b8'}}}}});
+  const c1d={}; for(const row of r.data){const k=row.call1&&notEmpty(row.call1)?row.call1:'∅';c1d[k]=(c1d[k]||0)+1;}
+  const cl=Object.keys(c1d).map(k=>k==='∅'?'пусто':k), cv=Object.values(c1d);
+  charts[prefix+'-call1Chart']=new Chart(document.getElementById(prefix+'-call1Chart'),{type:'doughnut',data:{labels:cl.map((l,i)=>l+' ('+cv[i]+')'),datasets:[{data:cv,backgroundColor:cl.map(l=>l==='Да'?COLORS.green:l==='НДЗ'?COLORS.amber:COLORS.gray)}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{boxWidth:12,padding:10,font:{size:11,color:'#94a3b8'}}}}}});
+}
+function renderGradLike(prefix,r){ renderGradLikeCards(prefix,r); renderGradLikeManagerTable(prefix,r); renderGradLikeRefusalTable(prefix,r); renderGradLikeCharts(prefix,r); }
 
-document.getElementById('gokMainChartTitle').textContent = `Итоговое распределение (${total})`;
-
-charts.gok.main = new Chart(document.getElementById('gokMainChart'), {
-type: 'bar',
-data: {
-labels: [`Распределение (${total})`],
-datasets: [
-{ label: `Дозвон (${r.dozvon})`, data: [r.dozvon], backgroundColor: COLORS.green },
-{ label: `НДЗ (${r.ndz})`, data: [r.ndz], backgroundColor: COLORS.amber },
-{ label: `Не обработано (${r.neObr})`, data: [r.neObr], backgroundColor: COLORS.gray }
-]
-},
-options: {
-responsive: true, maintainAspectRatio: false,
-plugins: {
-legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11, color: '#94a3b8' } } },
-tooltip: {
-callbacks: {
-label: function(ctx) {
-return ctx.dataset.label + ' — ' + ctx.parsed.x + ' (' + (ctx.parsed.x / total * 100).toFixed(1) + '%)';
-}
-}
-}
-},
-scales: {
-x: { stacked: true, ticks: { color: '#94a3b8' } },
-y: { stacked: true, beginAtZero: true, max: total, ticks: { color: '#94a3b8' } }
-}
-}
-});
-
-const call1Data = { 'НДЗ': 0, 'Да': 0, '∅': 0 };
-for (const row of r.data) {
-const k = row.call1 || '∅';
-if (k === 'выбрать') continue;
-call1Data[k] = (call1Data[k] || 0) + 1;
-}
-const call1Labels = Object.keys(call1Data).map(k => k === '∅' ? 'пусто' : k);
-const call1Values = Object.values(call1Data);
-
-charts.gok.call1 = new Chart(document.getElementById('gokCall1Chart'), {
-type: 'doughnut',
-data: {
-labels: call1Labels.map((l, i) => `${l} (${call1Values[i]})`),
-datasets: [{ data: call1Values, backgroundColor: ['#eab308', '#22c55e', '#475569'] }]
-},
-options: {
-responsive: true, maintainAspectRatio: false,
-plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11, color: '#94a3b8' } } } }
-}
-});
-
-const afterData = { 'НДЗ': 0, 'Да после НДЗ': 0, '∅': 0 };
-for (const row of r.data) {
-const k = row.afterNdz || '∅';
-if (k === 'выбрать') continue;
-afterData[k] = (afterData[k] || 0) + 1;
-}
-const afterLabels = Object.keys(afterData).map(k => k === '∅' ? 'пусто' : k === 'Да после НДЗ' ? 'Да после НДЗ' : k);
-const afterValues = Object.values(afterData);
-
-charts.gok.afterNdz = new Chart(document.getElementById('gokAfterNdzChart'), {
-type: 'doughnut',
-data: {
-labels: afterLabels.map((l, i) => `${l} (${afterValues[i]})`),
-datasets: [{ data: afterValues, backgroundColor: ['#eab308', '#22c55e', '#475569'] }]
-},
-options: {
-responsive: true, maintainAspectRatio: false,
-plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11, color: '#94a3b8' } } } }
-}
-});
-
-const mgrSorted = Object.entries(r.byManager).sort((a, b) => b[1].total - a[1].total);
-const mgrLabels = mgrSorted.map(([n, d]) => `${n} (${d.total})`);
-const mgrValues = mgrSorted.map(([, d]) => d.total);
-const mgrColors = mgrLabels.map((_, i) => [COLORS.blue, COLORS.green, COLORS.gray, COLORS.purple][i % 4]);
-
-charts.gok.responsible = new Chart(document.getElementById('gokResponsibleChart'), {
-type: 'doughnut',
-data: {
-labels: mgrLabels,
-datasets: [{ data: mgrValues, backgroundColor: mgrColors }]
-},
-options: {
-responsive: true, maintainAspectRatio: false,
-plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11, color: '#94a3b8' } } } }
-}
-});
-
-charts.gok.dozvon = new Chart(document.getElementById('gokDozvonChart'), {
-type: 'bar',
-data: {
-labels: [''],
-datasets: [
-{ label: `Дозвон (${r.dozvon})`, data: [r.dozvon], backgroundColor: COLORS.green },
-{ label: `НДЗ (${r.ndz})`, data: [r.ndz], backgroundColor: COLORS.amber },
-{ label: `Не обработано (${r.neObr})`, data: [r.neObr], backgroundColor: COLORS.gray }
-]
-},
-options: {
-responsive: true, maintainAspectRatio: false,
-indexAxis: 'y',
-plugins: {
-legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10, font: { size: 11, color: '#94a3b8' } } },
-},
-scales: {
-x: { beginAtZero: true, max: total, ticks: { color: '#94a3b8' } },
-y: { ticks: { color: '#94a3b8' } }
-}
-}
-});
+function initTabs(){
+  document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',function(){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(tc=>tc.classList.remove('active'));this.classList.add('active');document.getElementById('tab-'+this.dataset.tab).classList.add('active');});});
 }
 
-function renderGradCharts(r) {
-const total = r.total;
+async function init(){
+  try{
+    await loadData();
+    document.getElementById('headerBadge').textContent='ГОК: '+window.__gok.length+' | Град: '+window.__grad.length+' | Интегратор: '+window.__integrator.length+' | СанПин: '+window.__sanpin.length+' | Данные: Google Sheets';
+    document.getElementById('updateTimestamp').textContent='Данные актуальны на '+(window.__updated||new Date().toLocaleString('ru-RU')); document.getElementById('updateTimestamp').style.display='inline-block';
+    document.getElementById('loading').style.display='none'; document.getElementById('tabs').style.display='flex';
+    renderGok(analyzeGok(window.__gok)); renderGradLike('grad',analyzeGradLike(window.__grad)); renderGradLike('integrator',analyzeGradLike(window.__integrator)); renderGradLike('sanpin',analyzeGradLike(window.__sanpin));
+    renderDataTable('gok-datatable', window.__gok, gokTableColumns);
+    renderDataTable('grad-datatable', window.__grad, gradLikeTableColumns);
+    renderDataTable('integrator-datatable', window.__integrator, gradLikeTableColumns);
+    renderDataTable('sanpin-datatable', window.__sanpin, gradLikeTableColumns);
+    initTabs(); scheduleAutoReload();
+  }catch(e){const d=document.getElementById('loading'); d.innerHTML='<div style="color:#ef4444;font-size:16px"></div>'; d.firstChild.textContent='Ошибка: '+e.message;}
 }
 
-function initTabs() {
-document.querySelectorAll('.tab').forEach(tab => {
-tab.addEventListener('click', function() {
-document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-this.classList.add('active');
-document.getElementById('tab-' + this.dataset.tab).classList.add('active');
-});
-});
+let autoReloadTimer=null;
+function scheduleAutoReload(){
+  autoReloadTimer=setInterval(async()=>{try{const resp=await fetch('data.json?_='+Date.now());if(!resp.ok)return;const w=await resp.json();if((w.rows_gok&&w.rows_gok.length)||(w.rows_grad&&w.rows_grad.length))rebuild(w);}catch(_){}},5*60*1000);
 }
-
-let gokResult = null, gradResult = null;
-
-async function init() {
-try {
-await loadData();
-gokResult = analyzeGok(window.__gok);
-gradResult = analyzeGrad(window.__grad);
-
-document.getElementById('headerBadge').textContent = `ГОК: ${window.__gok.length} | Град: ${window.__grad.length} | Данные: Google Sheets`;
-document.getElementById('updateTimestamp').textContent = `Данные актуальны на ${window.__updated || new Date().toLocaleString('ru-RU')}`;
-document.getElementById('updateTimestamp').style.display = 'inline-block';
-document.getElementById('loading').style.display = 'none';
-document.getElementById('content').style.display = 'block';
-
-renderGokCards(gokResult);
-renderGokManagerTable(gokResult);
-renderGokOkvedTable(gokResult);
-renderGokCharts(gokResult);
-renderDataTable('gok-datatable', window.__gok, gokTableColumns);
-
-renderGradCards(gradResult);
-renderGradManagerTable(gradResult);
-renderGradReasonTable(gradResult);
-renderDataTable('grad-datatable', window.__grad, gradTableColumns);
-
-initTabs();
-scheduleAutoReload();
-} catch (e) {
-document.getElementById('loading').innerHTML = `<div style="color:#ef4444;font-size:16px">Ошибка загрузки данных: ${e.message}</div>`;
-}
-}
-
-let autoReloadTimer = null;
-
-function scheduleAutoReload() {
-const minutes = 5;
-autoReloadTimer = setInterval(async () => {
-try {
-const resp = await fetch('data.json?_=' + Date.now());
-if (!resp.ok) return;
-const w = await resp.json();
-if ((w.rows_gok && w.rows_gok.length) || (w.rows_grad && w.rows_grad.length)) {
-window.__updated = w.updated || '';
-window.__gok = w.rows_gok || w.rows || [];
-window.__grad = w.rows_grad || [];
-rebuildAll();
-}
-} catch (_) {}
-}, minutes * 60 * 1000);
-}
-
-function rebuildAll() {
-gokResult = analyzeGok(window.__gok);
-gradResult = analyzeGrad(window.__grad);
-
-renderGokCards(gokResult);
-renderGokManagerTable(gokResult);
-renderGokOkvedTable(gokResult);
-renderGokCharts(gokResult);
-renderDataTable('gok-datatable', window.__gok, gokTableColumns);
-
-renderGradCards(gradResult);
-renderGradManagerTable(gradResult);
-renderGradReasonTable(gradResult);
-renderDataTable('grad-datatable', window.__grad, gradTableColumns);
-
-document.getElementById('headerBadge').textContent = `ГОК: ${window.__gok.length} | Град: ${window.__grad.length} | Данные: Google Sheets`;
+function rebuild(w){
+  const gok=w.rows_gok||w.rows||[], grad=w.rows_grad||[], int=w.rows_integrator||[], sanpin=w.rows_sanpin||[];
+  window.__gok=gok; window.__grad=grad; window.__integrator=int; window.__sanpin=sanpin;
+  renderGok(analyzeGok(gok)); renderGradLike('grad',analyzeGradLike(grad)); renderGradLike('integrator',analyzeGradLike(int)); renderGradLike('sanpin',analyzeGradLike(sanpin));
+  renderDataTable('gok-datatable', gok, gokTableColumns);
+  renderDataTable('grad-datatable', grad, gradLikeTableColumns);
+  renderDataTable('integrator-datatable', int, gradLikeTableColumns);
+  renderDataTable('sanpin-datatable', sanpin, gradLikeTableColumns);
+  document.getElementById('headerBadge').textContent='ГОК: '+gok.length+' | Град: '+grad.length+' | Интегратор: '+int.length+' | СанПин: '+sanpin.length+' | Данные: Google Sheets';
 }
 
 init();
