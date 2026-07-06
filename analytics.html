@@ -158,6 +158,12 @@ const COLORS = { blue: '#3b82f6', green: '#22c55e', amber: '#eab308', purple: '#
 let charts = {};
 let tabulatorInstances = {};
 
+function listFilter(headerEl, inputEl) {
+  const col = this;
+  inputEl.addEventListener('change', function() { col.setHeaderFilterValue(this.value); });
+  inputEl.addEventListener('keyup', function() { col.setHeaderFilterValue(this.value); });
+}
+
 const gokTableColumns = [
   { title: "Компания", field: "company", headerFilter: "input" },
   { title: "ИНН", field: "inn", headerFilter: "input" },
@@ -165,10 +171,10 @@ const gokTableColumns = [
   { title: "Ген.директор", field: "gendir", headerFilter: "input" },
   { title: "Тел.1", field: "tel1", headerFilter: "input" },
   { title: "Тел.2", field: "tel2", headerFilter: "input" },
-  { title: "Ответственный", field: "responsible", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "Звонок 1", field: "call1", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "После НДЗ", field: "afterNdz", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "ЛПР", field: "lpr", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "Ответственный", field: "responsible", headerFilter: "input" },
+  { title: "Звонок 1", field: "call1", headerFilter: "input" },
+  { title: "После НДЗ", field: "afterNdz", headerFilter: "input" },
+  { title: "ЛПР", field: "lpr", headerFilter: "input" },
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
@@ -181,12 +187,12 @@ const gradTableColumns = [
   { title: "Ген.директор", field: "gendir", headerFilter: "input" },
   { title: "Тел.1", field: "tel1", headerFilter: "input" },
   { title: "Тел.2", field: "tel2", headerFilter: "input" },
-  { title: "Ответственный", field: "responsible", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "Звонок 1", field: "call1", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "После НДЗ", field: "afterNdz", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "ЛПР", field: "lpr", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "Причина отказа", field: "refusalReason", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "Встреча", field: "meetingAppointed", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "Ответственный", field: "responsible", headerFilter: "input" },
+  { title: "Звонок 1", field: "call1", headerFilter: "input" },
+  { title: "После НДЗ", field: "afterNdz", headerFilter: "input" },
+  { title: "ЛПР", field: "lpr", headerFilter: "input" },
+  { title: "Причина отказа", field: "refusalReason", headerFilter: "input" },
+  { title: "Встреча", field: "meetingAppointed", headerFilter: "input" },
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
@@ -198,12 +204,12 @@ const integratorTableColumns = [
   { title: "Ген.директор", field: "gendir", headerFilter: "input" },
   { title: "Тел.1", field: "tel1", headerFilter: "input" },
   { title: "Тел.2", field: "tel2", headerFilter: "input" },
-  { title: "Ответственный", field: "responsible", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "Звонок 1", field: "call1", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "После НДЗ", field: "afterNdz", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "ЛПР", field: "lpr", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "Причина отказа", field: "refusalReason", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "Встреча", field: "meetingAppointed", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "Ответственный", field: "responsible", headerFilter: "input" },
+  { title: "Звонок 1", field: "call1", headerFilter: "input" },
+  { title: "После НДЗ", field: "afterNdz", headerFilter: "input" },
+  { title: "ЛПР", field: "lpr", headerFilter: "input" },
+  { title: "Причина отказа", field: "refusalReason", headerFilter: "input" },
+  { title: "Встреча", field: "meetingAppointed", headerFilter: "input" },
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
@@ -214,20 +220,20 @@ const sanpinTableColumns = [
   { title: "Ген.директор", field: "gendir", headerFilter: "input" },
   { title: "Тел.1", field: "tel1", headerFilter: "input" },
   { title: "Тел.2", field: "tel2", headerFilter: "input" },
-  { title: "Ответственный", field: "responsible", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "Звонок 1", field: "call1", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "После НДЗ", field: "afterNdz", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "ЛПР", field: "lpr", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "Причина отказа", field: "refusalReason", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
-  { title: "Встреча", field: "meetingAppointed", headerFilter: "list", headerFilterParams: { valuesLookup: true } },
+  { title: "Ответственный", field: "responsible", headerFilter: "input" },
+  { title: "Звонок 1", field: "call1", headerFilter: "input" },
+  { title: "После НДЗ", field: "afterNdz", headerFilter: "input" },
+  { title: "ЛПР", field: "lpr", headerFilter: "input" },
+  { title: "Причина отказа", field: "refusalReason", headerFilter: "input" },
+  { title: "Встреча", field: "meetingAppointed", headerFilter: "input" },
   { title: "Комментарий", field: "comment", headerFilter: "input" },
 ];
 
 function renderDataTable(containerId, data, columns) {
   const container = document.getElementById(containerId);
-  if (!container) return;
+  if (!container) { console.warn('DataTable container not found:', containerId); return; }
   if (tabulatorInstances[containerId]) {
-    tabulatorInstances[containerId].destroy();
+    try { tabulatorInstances[containerId].destroy(); } catch(e) {}
     delete tabulatorInstances[containerId];
   }
   container.innerHTML = '';
@@ -235,17 +241,22 @@ function renderDataTable(containerId, data, columns) {
     container.innerHTML = '<p style="color:#64748b;text-align:center;padding:20px">Нет данных</p>';
     return;
   }
-  tabulatorInstances[containerId] = new Tabulator(containerId, {
-    data: data,
-    columns: columns,
-    layout: "fitColumns",
-    pagination: "local",
-    paginationSize: 25,
-    paginationSizeSelector: [10, 25, 50, 100, true],
-    headerFilter: true,
-    height: "500px",
-    placeholder: "Нет данных",
-  });
+  try {
+    tabulatorInstances[containerId] = new Tabulator(container, {
+      data: data,
+      columns: columns,
+      layout: "fitColumns",
+      pagination: "local",
+      paginationSize: 25,
+      paginationSizeSelector: [10, 25, 50, 100, true],
+      headerFilter: true,
+      height: "500px",
+      placeholder: "Нет данных",
+    });
+  } catch(e) {
+    console.error('Tabulator init error for', containerId, e);
+    container.innerHTML = '<p style="color:#ef4444;text-align:center;padding:20px">Ошибка загрузки таблицы</p>';
+  }
 }
 
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
